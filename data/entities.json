@@ -1,0 +1,206 @@
+{
+  "entities": [
+    {
+      "name": "Player",
+      "type": "player",
+      "movement": "static",
+      "spawnPosition": [0.0, 0.0],
+      "maxHealth": 100.0,
+      "contactDamage": 0.0,
+      "attacksEnabled": false,
+      "spawnRule": { "enabled": false }
+    },
+    {
+      "name": "Basic Enemy Shooter",
+      "type": "enemy",
+      "movement": "sine",
+      "spawnPosition": [0.0, -180.0],
+      "baseVelocity": [0.0, 18.0],
+      "sineAmplitude": 120.0,
+      "sineFrequencyHz": 0.55,
+      "maxHealth": 30.0,
+      "contactDamage": 5.0,
+      "attacksEnabled": true,
+      "attackPatternName": "Composed Helix",
+      "attackIntervalSeconds": 0.45,
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 0.5,
+        "intervalSeconds": 2.5,
+        "maxAlive": 4
+      }
+    },
+    {
+      "name": "Asterion Dreadnought",
+      "type": "boss",
+      "movement": "linear",
+      "spawnPosition": [0.0, -230.0],
+      "baseVelocity": [0.0, 24.0],
+      "maxHealth": 450.0,
+      "contactDamage": 14.0,
+      "attacksEnabled": true,
+      "attackPatternName": "Wave Weave",
+      "attackIntervalSeconds": 0.7,
+      "boss": {
+        "introDurationSeconds": 2.0,
+        "phases": [
+          {
+            "attackPatternName": "Wave Weave",
+            "movement": "linear",
+            "durationSeconds": 4.0,
+            "difficultyScale": 1.0
+          },
+          {
+            "attackPatternName": "Composed Helix",
+            "movement": "sine",
+            "durationSeconds": 5.0,
+            "difficultyScale": 1.3
+          },
+          {
+            "attackPatternName": "Wave Weave",
+            "movement": "chase",
+            "durationSeconds": 5.0,
+            "difficultyScale": 1.6
+          }
+        ],
+        "rewardDrop": {
+          "upgradeCurrency": 180.0,
+          "healthRecovery": 20.0,
+          "buffDurationSeconds": 6.0
+        }
+      },
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 7.0,
+        "intervalSeconds": 24.0,
+        "maxAlive": 1
+      }
+    },
+    {
+      "name": "Nyx Seraph",
+      "type": "boss",
+      "movement": "sine",
+      "spawnPosition": [180.0, -180.0],
+      "baseVelocity": [0.0, 18.0],
+      "sineAmplitude": 90.0,
+      "sineFrequencyHz": 0.4,
+      "maxHealth": 520.0,
+      "contactDamage": 16.0,
+      "attacksEnabled": true,
+      "attackPatternName": "Composed Helix",
+      "attackIntervalSeconds": 0.65,
+      "boss": {
+        "introDurationSeconds": 1.5,
+        "phases": [
+          {
+            "attackPatternName": "Composed Helix",
+            "movement": "sine",
+            "durationSeconds": 4.5,
+            "difficultyScale": 1.1
+          },
+          {
+            "attackPatternName": "Wave Weave",
+            "movement": "chase",
+            "durationSeconds": 4.5,
+            "difficultyScale": 1.5
+          },
+          {
+            "attackPatternName": "Composed Helix",
+            "movement": "linear",
+            "durationSeconds": 5.0,
+            "difficultyScale": 1.8
+          }
+        ],
+        "rewardDrop": {
+          "upgradeCurrency": 220.0,
+          "healthRecovery": 35.0,
+          "buffDurationSeconds": 8.0
+        }
+      },
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 14.0,
+        "intervalSeconds": 28.0,
+        "maxAlive": 1
+      }
+    },
+    {
+      "name": "Currency Crystal",
+      "type": "resource",
+      "movement": "static",
+      "spawnPosition": [18.0, 0.0],
+      "interactionRadius": 28.0,
+      "maxHealth": 1.0,
+      "contactDamage": 0.0,
+      "attacksEnabled": false,
+      "resourceYield": {
+        "upgradeCurrency": 50.0,
+        "healthRecovery": 0.0,
+        "buffDurationSeconds": 0.0
+      },
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 0.2,
+        "intervalSeconds": 6.0,
+        "maxAlive": 2
+      }
+    },
+    {
+      "name": "Med Bloom",
+      "type": "resource",
+      "movement": "static",
+      "spawnPosition": [-30.0, 8.0],
+      "interactionRadius": 42.0,
+      "maxHealth": 1.0,
+      "contactDamage": 0.0,
+      "attacksEnabled": false,
+      "resourceYield": {
+        "upgradeCurrency": 0.0,
+        "healthRecovery": 25.0,
+        "buffDurationSeconds": 0.0
+      },
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 1.0,
+        "intervalSeconds": 9.0,
+        "maxAlive": 1
+      }
+    },
+    {
+      "name": "Overclock Node",
+      "type": "resource",
+      "movement": "static",
+      "spawnPosition": [40.0, 20.0],
+      "interactionRadius": 48.0,
+      "maxHealth": 1.0,
+      "contactDamage": 0.0,
+      "attacksEnabled": false,
+      "resourceYield": {
+        "upgradeCurrency": 10.0,
+        "healthRecovery": 5.0,
+        "buffDurationSeconds": 8.0
+      },
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 2.0,
+        "intervalSeconds": 12.0,
+        "maxAlive": 1
+      }
+    },
+    {
+      "name": "Lava Vent",
+      "type": "hazard",
+      "movement": "static",
+      "spawnPosition": [220.0, 130.0],
+      "maxHealth": 9999.0,
+      "contactDamage": 10.0,
+      "attacksEnabled": false,
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 1.0,
+        "intervalSeconds": 10.0,
+        "maxAlive": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "windowWidth": 1280,
+  "windowHeight": 720,
+  "windowTitle": "EngineDemo",
+  "fixedDeltaSeconds": 0.0166666667,
+  "maxFrameSteps": 8,
+  "simulationSeed": 1337,
+  "projectileCapacity": 12000,
+  "projectileSpawnBurst": 128,
+  "contentPackPath": "content.pak"
+}

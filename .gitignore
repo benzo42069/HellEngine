@@ -1,0 +1,8 @@
+build/
+imgui.ini
+content.pak
+
+meta_progression.json
+
+# Binary assets
+assets/sprites/*.bmp
