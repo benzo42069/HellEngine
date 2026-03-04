@@ -1,0 +1,162 @@
+{
+  "patterns": [
+    {
+      "name": "Composed Helix",
+      "seedOffset": 101,
+      "loopSequence": true,
+      "layers": [
+        {
+          "name": "radial-core",
+          "type": "radial",
+          "bulletCount": 24,
+          "bulletSpeed": 150.0,
+          "projectileRadius": 3.0,
+          "cooldownSeconds": 0.20,
+          "modifiers": {
+            "rotationDeg": 0.0,
+            "phaseOffsetDeg": 0.0,
+            "speedCurveAmp": 0.15,
+            "angleOscillationDeg": 10.0,
+            "angleOscillationHz": 0.7,
+            "deterministicJitterDeg": 0.5
+          },
+          "timeline": [
+            {"timeSeconds": 0.0, "extraRotationDeg": 0.0, "speedScale": 1.0},
+            {"timeSeconds": 2.0, "extraRotationDeg": 20.0, "speedScale": 1.15}
+          ]
+        },
+        {
+          "name": "spiral-shell",
+          "type": "spiral",
+          "bulletCount": 8,
+          "bulletSpeed": 175.0,
+          "projectileRadius": 3.0,
+          "cooldownSeconds": 0.06,
+          "angleStepDeg": 12.0,
+          "modifiers": {
+            "rotationDeg": 30.0,
+            "phaseOffsetDeg": 45.0,
+            "speedCurveAmp": 0.08,
+            "angleOscillationDeg": 16.0,
+            "angleOscillationHz": 1.1,
+            "deterministicJitterDeg": 0.3
+          },
+          "subpatterns": [
+            {"layerIndex": 2, "phaseOffsetDeg": 20.0}
+          ]
+        },
+        {
+          "name": "spread-sub",
+          "type": "spread",
+          "bulletCount": 7,
+          "bulletSpeed": 165.0,
+          "projectileRadius": 2.8,
+          "cooldownSeconds": 0.18,
+          "spreadAngleDeg": 40.0,
+          "modifiers": {
+            "rotationDeg": 0.0,
+            "phaseOffsetDeg": -15.0,
+            "speedCurveAmp": 0.05,
+            "angleOscillationDeg": 0.0,
+            "angleOscillationHz": 1.0,
+            "deterministicJitterDeg": 0.8
+          }
+        }
+      ],
+      "sequence": [
+        {"durationSeconds": 1.0, "activeLayers": [0]},
+        {"durationSeconds": 1.2, "activeLayers": [0, 1]},
+        {"durationSeconds": 1.0, "activeLayers": [1, 2]}
+      ]
+    },
+    {
+      "name": "Wave Weave",
+      "seedOffset": 202,
+      "loopSequence": true,
+      "layers": [
+        {
+          "name": "wave-main",
+          "type": "wave",
+          "bulletCount": 18,
+          "bulletSpeed": 140.0,
+          "cooldownSeconds": 0.08,
+          "waveAmplitudeDeg": 26.0,
+          "waveFrequencyHz": 1.4,
+          "modifiers": {
+            "rotationDeg": 0.0,
+            "phaseOffsetDeg": 0.0,
+            "speedCurveAmp": 0.12,
+            "angleOscillationDeg": 6.0,
+            "angleOscillationHz": 0.9,
+            "deterministicJitterDeg": 0.4
+          }
+        },
+        {
+          "name": "aimed-accent",
+          "type": "aimed",
+          "bulletCount": 5,
+          "bulletSpeed": 210.0,
+          "cooldownSeconds": 0.14,
+          "spreadAngleDeg": 14.0,
+          "aimJitterDeg": 2.0,
+          "modifiers": {
+            "rotationDeg": 0.0,
+            "phaseOffsetDeg": 0.0,
+            "speedCurveAmp": 0.05,
+            "angleOscillationDeg": 8.0,
+            "angleOscillationHz": 1.6,
+            "deterministicJitterDeg": 0.7
+          }
+        }
+      ],
+      "sequence": [
+        {"durationSeconds": 1.4, "activeLayers": [0]},
+        {"durationSeconds": 1.0, "activeLayers": [0, 1]}
+      ]
+    },
+    {
+      "name": "Spread Lattice",
+      "seedOffset": 303,
+      "loopSequence": true,
+      "layers": [
+        {
+          "name": "spread-left",
+          "type": "spread",
+          "bulletCount": 9,
+          "bulletSpeed": 180.0,
+          "cooldownSeconds": 0.12,
+          "spreadAngleDeg": 52.0,
+          "modifiers": {
+            "rotationDeg": -20.0,
+            "phaseOffsetDeg": 0.0,
+            "speedCurveAmp": 0.06,
+            "angleOscillationDeg": 12.0,
+            "angleOscillationHz": 1.2,
+            "deterministicJitterDeg": 0.5
+          }
+        },
+        {
+          "name": "spread-right",
+          "type": "spread",
+          "bulletCount": 9,
+          "bulletSpeed": 180.0,
+          "cooldownSeconds": 0.12,
+          "spreadAngleDeg": 52.0,
+          "modifiers": {
+            "rotationDeg": 20.0,
+            "phaseOffsetDeg": 180.0,
+            "speedCurveAmp": 0.06,
+            "angleOscillationDeg": 12.0,
+            "angleOscillationHz": 1.2,
+            "deterministicJitterDeg": 0.5
+          }
+        }
+      ],
+      "sequence": [
+        {"durationSeconds": 0.8, "activeLayers": [0]},
+        {"durationSeconds": 0.8, "activeLayers": [1]},
+        {"durationSeconds": 1.0, "activeLayers": [0, 1]}
+      ]
+    }
+  ]
+}
