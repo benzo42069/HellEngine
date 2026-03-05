@@ -1,11 +1,16 @@
 #include <engine/entities.h>
 
+#include <engine/content_pipeline.h>
+#include <engine/diagnostics.h>
+#include <engine/logging.h>
+
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <numbers>
+#include <unordered_map>
 
 namespace engine {
 
@@ -40,65 +45,115 @@ void parseResourceYield(const nlohmann::json& json, ResourceYield& y) {
 } // namespace
 
 bool EntityDatabase::loadFromFile(const std::string& path) {
-    std::ifstream in(path);
-    if (!in.good()) return false;
-
-    nlohmann::json json;
-    in >> json;
-    if (!json.contains("entities") || !json["entities"].is_array()) return false;
+    const std::vector<std::string> packPaths = splitPackPaths(path);
+    if (packPaths.empty()) return false;
 
     templates_.clear();
-    for (const auto& e : json["entities"]) {
-        EntityTemplate t;
-        t.name = e.value("name", "entity");
-        t.type = parseEntityType(e.value("type", "enemy"));
-        t.movement = parseMovement(e.value("movement", "static"));
-        if (e.contains("spawnPosition") && e["spawnPosition"].is_array() && e["spawnPosition"].size() >= 2) {
-            t.spawnPosition = {e["spawnPosition"][0].get<float>(), e["spawnPosition"][1].get<float>()};
-        }
-        if (e.contains("baseVelocity") && e["baseVelocity"].is_array() && e["baseVelocity"].size() >= 2) {
-            t.baseVelocity = {e["baseVelocity"][0].get<float>(), e["baseVelocity"][1].get<float>()};
-        }
-        t.sineAmplitude = e.value("sineAmplitude", 0.0F);
-        t.sineFrequencyHz = e.value("sineFrequencyHz", 1.0F);
-        t.maxHealth = e.value("maxHealth", 10.0F);
-        t.contactDamage = e.value("contactDamage", 1.0F);
-        t.interactionRadius = e.value("interactionRadius", 16.0F);
-        if (e.contains("resourceYield") && e["resourceYield"].is_object()) {
-            parseResourceYield(e["resourceYield"], t.resourceYield);
-        }
-        t.attacksEnabled = e.value("attacksEnabled", false);
-        t.attackPatternName = e.value("attackPatternName", "");
-        t.attackIntervalSeconds = e.value("attackIntervalSeconds", 0.5F);
+    std::unordered_map<std::string, std::size_t> guidToIndex;
 
-        if (e.contains("boss") && e["boss"].is_object()) {
-            const auto& boss = e["boss"];
-            t.boss.enabled = true;
-            t.boss.introDurationSeconds = boss.value("introDurationSeconds", 1.2F);
-            if (boss.contains("rewardDrop") && boss["rewardDrop"].is_object()) {
-                parseResourceYield(boss["rewardDrop"], t.boss.rewardDrop);
+    for (const std::string& packPath : packPaths) {
+        std::ifstream in(packPath);
+        if (!in.good()) {
+            logWarn("Entity pack not found: " + packPath);
+            continue;
+        }
+
+        nlohmann::json json;
+        try {
+            in >> json;
+        } catch (const std::exception& ex) {
+            ErrorReport err = makeError(ErrorCode::ContentLoadFailed, std::string("JSON parse failed: ") + ex.what());
+            addContext(err, "path", packPath);
+            pushStack(err, "EntityDatabase::loadFromFile/parse");
+            logErrorReport(err);
+            continue;
+        }
+
+        std::string migrationMessage;
+        if (!migratePackJson(json, migrationMessage)) {
+            logError("Entity pack schema error: " + migrationMessage + " path=" + packPath);
+            return false;
+        }
+        if (!migrationMessage.empty()) {
+            logWarn(migrationMessage + " path=" + packPath);
+        }
+
+        PackMetadata metadata;
+        std::string metaError;
+        if (!parsePackMetadata(json, metadata, metaError)) {
+            logError("Entity pack metadata error: " + metaError + " path=" + packPath);
+            return false;
+        }
+        constexpr int kRuntimePackVersion = 3;
+        if (kRuntimePackVersion < metadata.minRuntimePackVersion || kRuntimePackVersion > metadata.maxRuntimePackVersion) {
+            logError("Entity pack compatibility mismatch for pack=" + metadata.packId + " path=" + packPath + " runtimeVersion=" + std::to_string(kRuntimePackVersion));
+            return false;
+        }
+
+        if (!json.contains("entities") || !json["entities"].is_array()) continue;
+
+        for (const auto& e : json["entities"]) {
+            EntityTemplate t;
+            t.name = e.value("name", "entity");
+            t.guid = e.value("guid", stableGuidForAsset("enemy", t.name));
+            if (t.guid.empty()) t.guid = stableGuidForAsset("enemy", t.name);
+            t.type = parseEntityType(e.value("type", "enemy"));
+            t.movement = parseMovement(e.value("movement", "static"));
+            if (e.contains("spawnPosition") && e["spawnPosition"].is_array() && e["spawnPosition"].size() >= 2) {
+                t.spawnPosition = {e["spawnPosition"][0].get<float>(), e["spawnPosition"][1].get<float>()};
             }
-            if (boss.contains("phases") && boss["phases"].is_array()) {
-                for (const auto& p : boss["phases"]) {
-                    BossPhase phase;
-                    phase.attackPatternName = p.value("attackPatternName", t.attackPatternName);
-                    phase.movement = parseMovement(p.value("movement", "static"));
-                    phase.durationSeconds = p.value("durationSeconds", 4.0F);
-                    phase.difficultyScale = p.value("difficultyScale", 1.0F);
-                    t.boss.phases.push_back(phase);
+            if (e.contains("baseVelocity") && e["baseVelocity"].is_array() && e["baseVelocity"].size() >= 2) {
+                t.baseVelocity = {e["baseVelocity"][0].get<float>(), e["baseVelocity"][1].get<float>()};
+            }
+            t.sineAmplitude = e.value("sineAmplitude", 0.0F);
+            t.sineFrequencyHz = e.value("sineFrequencyHz", 1.0F);
+            t.maxHealth = e.value("maxHealth", 10.0F);
+            t.contactDamage = e.value("contactDamage", 1.0F);
+            t.interactionRadius = e.value("interactionRadius", 16.0F);
+            if (e.contains("resourceYield") && e["resourceYield"].is_object()) {
+                parseResourceYield(e["resourceYield"], t.resourceYield);
+            }
+            t.attacksEnabled = e.value("attacksEnabled", false);
+            t.attackPatternGuid = e.value("attackPatternGuid", "");
+            t.attackPatternName = e.value("attackPatternName", "");
+            t.attackIntervalSeconds = e.value("attackIntervalSeconds", 0.5F);
+
+            if (e.contains("boss") && e["boss"].is_object()) {
+                const auto& boss = e["boss"];
+                t.boss.enabled = true;
+                t.boss.introDurationSeconds = boss.value("introDurationSeconds", 1.2F);
+                if (boss.contains("rewardDrop") && boss["rewardDrop"].is_object()) {
+                    parseResourceYield(boss["rewardDrop"], t.boss.rewardDrop);
+                }
+                if (boss.contains("phases") && boss["phases"].is_array()) {
+                    for (const auto& p : boss["phases"]) {
+                        BossPhase phase;
+                        phase.attackPatternGuid = p.value("attackPatternGuid", "");
+                        phase.attackPatternName = p.value("attackPatternName", t.attackPatternName);
+                        phase.movement = parseMovement(p.value("movement", "static"));
+                        phase.durationSeconds = p.value("durationSeconds", 4.0F);
+                        phase.difficultyScale = p.value("difficultyScale", 1.0F);
+                        t.boss.phases.push_back(phase);
+                    }
                 }
             }
-        }
 
-        if (e.contains("spawnRule") && e["spawnRule"].is_object()) {
-            const auto& sr = e["spawnRule"];
-            t.spawnRule.enabled = sr.value("enabled", false);
-            t.spawnRule.initialDelaySeconds = sr.value("initialDelaySeconds", 0.0F);
-            t.spawnRule.intervalSeconds = sr.value("intervalSeconds", 1.0F);
-            t.spawnRule.maxAlive = sr.value("maxAlive", 1U);
-        }
+            if (e.contains("spawnRule") && e["spawnRule"].is_object()) {
+                const auto& sr = e["spawnRule"];
+                t.spawnRule.enabled = sr.value("enabled", false);
+                t.spawnRule.initialDelaySeconds = sr.value("initialDelaySeconds", 0.0F);
+                t.spawnRule.intervalSeconds = sr.value("intervalSeconds", 1.0F);
+                t.spawnRule.maxAlive = sr.value("maxAlive", 1U);
+            }
 
-        templates_.push_back(t);
+            if (auto found = guidToIndex.find(t.guid); found != guidToIndex.end()) {
+                logWarn("Entity conflict override guid=" + t.guid + " old=" + templates_[found->second].name + " new=" + t.name + " pack=" + metadata.packId);
+                templates_[found->second] = std::move(t);
+            } else {
+                guidToIndex[t.guid] = templates_.size();
+                templates_.push_back(std::move(t));
+            }
+        }
     }
 
     return !templates_.empty();
@@ -109,6 +164,7 @@ void EntityDatabase::loadFallbackDefaults() {
 
     EntityTemplate enemy;
     enemy.name = "Basic Enemy";
+    enemy.guid = stableGuidForAsset("enemy", enemy.name);
     enemy.type = EntityType::Enemy;
     enemy.movement = MovementBehavior::Sine;
     enemy.spawnPosition = {0.0F, -180.0F};
@@ -120,12 +176,14 @@ void EntityDatabase::loadFallbackDefaults() {
     enemy.interactionRadius = 16.0F;
     enemy.attacksEnabled = true;
     enemy.attackPatternName = "Composed Helix";
+    enemy.attackPatternGuid = stableGuidForAsset("pattern", enemy.attackPatternName);
     enemy.attackIntervalSeconds = 0.35F;
     enemy.spawnRule = SpawnRule {.enabled = true, .initialDelaySeconds = 0.5F, .intervalSeconds = 2.5F, .maxAlive = 4};
     templates_.push_back(enemy);
 
     EntityTemplate boss;
     boss.name = "Fallback Warden";
+    boss.guid = stableGuidForAsset("enemy", boss.name);
     boss.type = EntityType::Boss;
     boss.movement = MovementBehavior::Linear;
     boss.spawnPosition = {0.0F, -220.0F};
@@ -133,12 +191,13 @@ void EntityDatabase::loadFallbackDefaults() {
     boss.maxHealth = 300.0F;
     boss.attacksEnabled = true;
     boss.attackPatternName = "Wave Weave";
+    boss.attackPatternGuid = stableGuidForAsset("pattern", boss.attackPatternName);
     boss.attackIntervalSeconds = 0.6F;
     boss.boss.enabled = true;
     boss.boss.introDurationSeconds = 1.5F;
     boss.boss.phases = {
-        BossPhase {.attackPatternName = "Wave Weave", .movement = MovementBehavior::Linear, .durationSeconds = 4.0F, .difficultyScale = 1.0F},
-        BossPhase {.attackPatternName = "Composed Helix", .movement = MovementBehavior::Chase, .durationSeconds = 5.0F, .difficultyScale = 1.3F},
+        BossPhase {.attackPatternGuid = stableGuidForAsset("pattern", "Wave Weave"), .attackPatternName = "Wave Weave", .movement = MovementBehavior::Linear, .durationSeconds = 4.0F, .difficultyScale = 1.0F},
+        BossPhase {.attackPatternGuid = stableGuidForAsset("pattern", "Composed Helix"), .attackPatternName = "Composed Helix", .movement = MovementBehavior::Chase, .durationSeconds = 5.0F, .difficultyScale = 1.3F},
     };
     boss.boss.rewardDrop = ResourceYield {.upgradeCurrency = 100.0F, .healthRecovery = 20.0F, .buffDurationSeconds = 4.0F};
     boss.spawnRule = SpawnRule {.enabled = true, .initialDelaySeconds = 6.0F, .intervalSeconds = 20.0F, .maxAlive = 1};
@@ -217,12 +276,10 @@ void EntitySystem::emitPatternFromTemplate(
     if (patternName.empty()) return;
 
     const auto& patterns = patternBank_->patterns();
-    const auto found = std::find_if(patterns.begin(), patterns.end(), [&](const PatternDefinition& p) {
-        return p.name == patternName;
-    });
-    if (found == patterns.end()) return;
+    const std::size_t patternIdx = patternBank_->findPatternIndexByGuidOrName(patternName);
+    if (patternIdx >= patterns.size()) return;
 
-    const PatternDefinition& pattern = *found;
+    const PatternDefinition& pattern = patterns[patternIdx];
     if (pattern.layers.empty()) return;
 
     const PatternLayer& layer = pattern.layers.front();
@@ -287,7 +344,7 @@ void EntitySystem::update(const float dt, ProjectileSystem& projectiles, const V
         e.ageSeconds += dt;
 
         MovementBehavior movement = t.movement;
-        std::string attackPattern = t.attackPatternName;
+        std::string attackPattern = !t.attackPatternGuid.empty() ? t.attackPatternGuid : t.attackPatternName;
         float difficultyScale = 1.0F;
 
         if (t.type == EntityType::Boss && t.boss.enabled && !t.boss.phases.empty()) {
@@ -301,7 +358,7 @@ void EntitySystem::update(const float dt, ProjectileSystem& projectiles, const V
             } else {
                 const BossPhase& phase = t.boss.phases[e.activeBossPhase];
                 movement = phase.movement;
-                attackPattern = phase.attackPatternName;
+                attackPattern = !phase.attackPatternGuid.empty() ? phase.attackPatternGuid : phase.attackPatternName;
                 difficultyScale = phase.difficultyScale;
                 e.phaseTimeRemaining -= dt;
 

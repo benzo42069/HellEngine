@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "packVersion": 3,
+  "archetypes": [
+    {
+      "id": "striker",
+      "name": "Striker",
+      "guid": "archetype-a3c0bcd15d5f836e"
+    },
+    {
+      "id": "vanguard",
+      "name": "Vanguard",
+      "guid": "archetype-2c6c349a42c8cec8"
+    }
+  ]
+}

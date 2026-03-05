@@ -11,7 +11,7 @@
           "bulletCount": 24,
           "bulletSpeed": 150.0,
           "projectileRadius": 3.0,
-          "cooldownSeconds": 0.20,
+          "cooldownSeconds": 0.2,
           "modifiers": {
             "rotationDeg": 0.0,
             "phaseOffsetDeg": 0.0,
@@ -21,8 +21,16 @@
             "deterministicJitterDeg": 0.5
           },
           "timeline": [
-            {"timeSeconds": 0.0, "extraRotationDeg": 0.0, "speedScale": 1.0},
-            {"timeSeconds": 2.0, "extraRotationDeg": 20.0, "speedScale": 1.15}
+            {
+              "timeSeconds": 0.0,
+              "extraRotationDeg": 0.0,
+              "speedScale": 1.0
+            },
+            {
+              "timeSeconds": 2.0,
+              "extraRotationDeg": 20.0,
+              "speedScale": 1.15
+            }
           ]
         },
         {
@@ -42,7 +50,10 @@
             "deterministicJitterDeg": 0.3
           },
           "subpatterns": [
-            {"layerIndex": 2, "phaseOffsetDeg": 20.0}
+            {
+              "layerIndex": 2,
+              "phaseOffsetDeg": 20.0
+            }
           ]
         },
         {
@@ -64,10 +75,28 @@
         }
       ],
       "sequence": [
-        {"durationSeconds": 1.0, "activeLayers": [0]},
-        {"durationSeconds": 1.2, "activeLayers": [0, 1]},
-        {"durationSeconds": 1.0, "activeLayers": [1, 2]}
-      ]
+        {
+          "durationSeconds": 1.0,
+          "activeLayers": [
+            0
+          ]
+        },
+        {
+          "durationSeconds": 1.2,
+          "activeLayers": [
+            0,
+            1
+          ]
+        },
+        {
+          "durationSeconds": 1.0,
+          "activeLayers": [
+            1,
+            2
+          ]
+        }
+      ],
+      "guid": "pattern-9b5229bbb5bf6fe9"
     },
     {
       "name": "Wave Weave",
@@ -110,9 +139,21 @@
         }
       ],
       "sequence": [
-        {"durationSeconds": 1.4, "activeLayers": [0]},
-        {"durationSeconds": 1.0, "activeLayers": [0, 1]}
-      ]
+        {
+          "durationSeconds": 1.4,
+          "activeLayers": [
+            0
+          ]
+        },
+        {
+          "durationSeconds": 1.0,
+          "activeLayers": [
+            0,
+            1
+          ]
+        }
+      ],
+      "guid": "pattern-7305ed346ff7c0ae"
     },
     {
       "name": "Spread Lattice",
@@ -153,10 +194,29 @@
         }
       ],
       "sequence": [
-        {"durationSeconds": 0.8, "activeLayers": [0]},
-        {"durationSeconds": 0.8, "activeLayers": [1]},
-        {"durationSeconds": 1.0, "activeLayers": [0, 1]}
-      ]
+        {
+          "durationSeconds": 0.8,
+          "activeLayers": [
+            0
+          ]
+        },
+        {
+          "durationSeconds": 0.8,
+          "activeLayers": [
+            1
+          ]
+        },
+        {
+          "durationSeconds": 1.0,
+          "activeLayers": [
+            0,
+            1
+          ]
+        }
+      ],
+      "guid": "pattern-8972ab15fd92c898"
     }
-  ]
+  ],
+  "schemaVersion": 2,
+  "packVersion": 3
 }

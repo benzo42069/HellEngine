@@ -1,6 +1,8 @@
 #include <engine/editor_tools.h>
 #include <engine/encounter_graph.h>
 #include <engine/pattern_generator.h>
+#include <engine/pattern_graph.h>
+#include <engine/public/plugins.h>
 
 #include <backends/imgui_impl_sdl2.h>
 #include <backends/imgui_impl_sdlrenderer2.h>
@@ -14,6 +16,7 @@
 #include <filesystem>
 #include <fstream>
 #include <numeric>
+#include <sstream>
 
 namespace engine {
 
@@ -119,6 +122,14 @@ void ControlCenterToolSuite::initialize(SDL_Window* window, SDL_Renderer* render
     ImGui_ImplSDLRenderer2_Init(renderer);
     renderer_ = renderer;
     initialized_ = true;
+
+    std::filesystem::create_directories("data/layouts");
+    if (std::filesystem::exists("data/layouts/control_center_layout.ini")) {
+        ImGui::LoadIniSettingsFromDisk("data/layouts/control_center_layout.ini");
+        workspaceLayoutInitialized_ = true;
+    }
+
+    appendConsole("Control Center initialized");
 }
 
 void ControlCenterToolSuite::shutdown() {
@@ -142,6 +153,13 @@ void ControlCenterToolSuite::beginFrame() {
     ImGui::NewFrame();
 }
 
+void ControlCenterToolSuite::appendConsole(const std::string& message) {
+    consoleLines_.push_back(message);
+    while (consoleLines_.size() > 256) {
+        consoleLines_.pop_front();
+    }
+}
+
 void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapshot) {
     if (!initialized_) return;
 
@@ -150,46 +168,164 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
 
     if (browserEntries_.empty()) {
         browserEntries_ = {"data/entities.json", "data/difficulty_profiles.json", "assets/patterns/sandbox_patterns.json", "data/generated_demo/demo_traits.json", "data/generated_encounters/stage_encounter.json"};
+        selectedAssetPath_ = browserEntries_.front();
     }
 
     if (validatorRequested_) {
         validationReport_ = runControlCenterValidation("data", snapshot);
         statusMessage_ = validationReport_.issues.empty() ? "Validator: PASS" : "Validator: issues found";
+        appendConsole(statusMessage_);
         validatorRequested_ = false;
     }
 
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Workspace")) {
-            if (ImGui::MenuItem("Save Layout")) {
-                std::filesystem::create_directories("data/layouts");
-                ImGui::SaveIniSettingsToDisk("data/layouts/control_center_layout.ini");
-                statusMessage_ = "Saved workspace layout";
-                if (validatorAutoOnSave_) validatorRequested_ = true;
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(viewport->Size);
+    const ImGuiWindowFlags workspaceFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
+        | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_MenuBar;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
+    ImGui::Begin("Tools Workspace", nullptr, workspaceFlags);
+    ImGui::PopStyleVar(2);
+
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("Tools")) {
+            if (ImGui::BeginMenu("Workspace")) {
+                if (ImGui::MenuItem("Save Layout")) {
+                    std::filesystem::create_directories("data/layouts");
+                    ImGui::SaveIniSettingsToDisk("data/layouts/control_center_layout.ini");
+                    statusMessage_ = "Saved workspace layout";
+                    appendConsole(statusMessage_);
+                    if (validatorAutoOnSave_) validatorRequested_ = true;
+                }
+                if (ImGui::MenuItem("Load Layout")) {
+                    ImGui::LoadIniSettingsFromDisk("data/layouts/control_center_layout.ini");
+                    statusMessage_ = "Loaded workspace layout";
+                    appendConsole(statusMessage_);
+                }
+                ImGui::Checkbox("Auto validate on save", &validatorAutoOnSave_);
+                ImGui::EndMenu();
             }
-            if (ImGui::MenuItem("Load Layout")) {
-                ImGui::LoadIniSettingsFromDisk("data/layouts/control_center_layout.ini");
-                statusMessage_ = "Loaded workspace layout";
+
+            if (ImGui::BeginMenu("Panels")) {
+                ImGui::MenuItem("Content Browser", nullptr, &showContentBrowser_);
+                ImGui::MenuItem("Inspector", nullptr, &showInspector_);
+                ImGui::MenuItem("Preview Viewport", nullptr, &showPreviewViewport_);
+                ImGui::MenuItem("Console / Log", nullptr, &showConsole_);
+                ImGui::MenuItem("Pattern Generator", nullptr, &showPatternEditor_);
+                ImGui::MenuItem("Projectile Editor", nullptr, &showEntityEditor_);
+                ImGui::MenuItem("Wave Editor", nullptr, &showWaveEditor_);
+                ImGui::MenuItem("Trait Editor", nullptr, &showTraitEditor_);
+                ImGui::MenuItem("Profiler", nullptr, &showProfiler_);
+                ImGui::MenuItem("Validator", nullptr, &showValidator_);
+                ImGui::EndMenu();
             }
-            ImGui::Separator();
-            ImGui::Checkbox("Auto validate on save", &validatorAutoOnSave_);
+
+            if (ImGui::BeginMenu("Actions")) {
+                if (ImGui::MenuItem("Generate Demo Content")) {
+                    std::string error;
+                    if (generateDemoContent("data/generated_demo", &error)) {
+                        statusMessage_ = "Generated demo content in data/generated_demo";
+                    } else {
+                        statusMessage_ = "Generate failed: " + error;
+                    }
+                    appendConsole(statusMessage_);
+                }
+                if (ImGui::MenuItem("Run Validator")) {
+                    validatorRequested_ = true;
+                }
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMenu();
         }
-        if (ImGui::BeginMenu("Tools")) {
-            if (ImGui::MenuItem("Generate Demo Content")) {
-                std::string error;
-                if (generateDemoContent("data/generated_demo", &error)) {
-                    statusMessage_ = "Generated demo content in data/generated_demo";
-                } else {
-                    statusMessage_ = "Generate failed: " + error;
+        ImGui::EndMenuBar();
+    }
+
+    ImGui::TextUnformatted("Unified tools workspace");
+    ImGui::SameLine();
+    ImGui::TextDisabled("| %s", statusMessage_.c_str());
+
+    if (ImGui::BeginTable("tools_workspace_grid", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp)) {
+        ImGui::TableSetupColumn("Assets", ImGuiTableColumnFlags_WidthStretch, 0.26F);
+        ImGui::TableSetupColumn("Preview", ImGuiTableColumnFlags_WidthStretch, 0.48F);
+        ImGui::TableSetupColumn("Inspector", ImGuiTableColumnFlags_WidthStretch, 0.26F);
+        ImGui::TableNextRow();
+
+        ImGui::TableSetColumnIndex(0);
+        if (showContentBrowser_ && ImGui::BeginChild("Content Browser", ImVec2(0.0F, 0.0F), ImGuiChildFlags_Border)) {
+            ImGui::TextUnformatted("Content Browser");
+            ImGui::InputText("Search", &browserSearch_);
+            ImGui::InputText("Tag Filter", &browserTagFilter_);
+            ImGui::Separator();
+            for (const std::string& e : browserEntries_) {
+                if (!containsCaseInsensitive(e, browserSearch_)) continue;
+                if (!browserTagFilter_.empty() && !containsCaseInsensitive(e, browserTagFilter_)) continue;
+                const bool selected = (selectedAssetPath_ == e);
+                if (ImGui::Selectable(e.c_str(), selected)) {
+                    selectedAssetPath_ = e;
+                    selectedAssetTag_ = browserTagFilter_;
                 }
             }
-            if (ImGui::MenuItem("Run Validator")) {
-                validatorRequested_ = true;
-            }
-            ImGui::EndMenu();
+            ImGui::EndChild();
         }
-        ImGui::EndMainMenuBar();
+
+        ImGui::TableSetColumnIndex(1);
+        if (showPreviewViewport_ && ImGui::BeginChild("Preview Viewport", ImVec2(0.0F, 0.0F), ImGuiChildFlags_Border)) {
+            ImGui::TextUnformatted("Preview Viewport");
+            ImGui::Text("Tick %llu", static_cast<unsigned long long>(snapshot.tick));
+            ImGui::Text("Difficulty %s  (x%.2f)", snapshot.difficultyProfileLabel, snapshot.difficultyOverall);
+            ImGui::Text("Projectiles %u | Entities %u", snapshot.projectileCount, snapshot.entityCount);
+            ImGui::Separator();
+            ImGui::TextWrapped("Preview placeholder bound to runtime counters. This keeps tooling cohesive while preview hooks are integrated.");
+            if (showProfiler_) {
+                ImGui::SeparatorText("Profiler");
+                ImGui::Text("Frame %.2fms (%d FPS)", snapshot.frameTimeMs, snapshot.fps);
+                ImGui::Text("Sim %.2f  Pat %.2f  Bul %.2f  Col %.2f  Ren %.2f", snapshot.simMs, snapshot.patternMs, snapshot.bulletMs, snapshot.collisionMs, snapshot.renderMs);
+                ImGui::Text("DrawCalls %u  Batches %u", snapshot.drawCalls, snapshot.renderBatches);
+                ImGui::Text("GPU Bullets %u  GPU Update %.3fms  GPU Render %.3fms", snapshot.gpuActiveBullets, snapshot.gpuUpdateMs, snapshot.gpuRenderMs);
+            }
+            ImGui::EndChild();
+        }
+
+        ImGui::TableSetColumnIndex(2);
+        if (showInspector_ && ImGui::BeginChild("Inspector", ImVec2(0.0F, 0.0F), ImGuiChildFlags_Border)) {
+            ImGui::TextUnformatted("Inspector");
+            if (selectedAssetPath_.empty()) {
+                ImGui::TextDisabled("No asset selected.");
+            } else {
+                ImGui::Text("Path: %s", selectedAssetPath_.c_str());
+                ImGui::Text("Tag: %s", selectedAssetTag_.empty() ? "(none)" : selectedAssetTag_.c_str());
+                std::error_code ec;
+                const auto size = std::filesystem::exists(selectedAssetPath_, ec) ? std::filesystem::file_size(selectedAssetPath_, ec) : 0;
+                if (!ec && size > 0) {
+                    ImGui::Text("Size: %llu bytes", static_cast<unsigned long long>(size));
+                }
+                ImGui::TextWrapped("Selected asset metadata and entity hooks appear here.");
+            }
+            ImGui::Separator();
+            ImGui::Text("Upgrade UI open: %s", snapshot.upgradeScreenOpen ? "yes" : "no");
+            ImGui::Text("Runtime force rarity: %s", snapshot.forceRarityLabel);
+            ImGui::EndChild();
+        }
+
+        ImGui::EndTable();
     }
+
+    if (showConsole_) {
+        ImGui::BeginChild("Console", ImVec2(0.0F, 170.0F), ImGuiChildFlags_Border);
+        ImGui::TextUnformatted("Console / Log");
+        ImGui::Separator();
+        for (const std::string& line : consoleLines_) {
+            ImGui::TextWrapped("%s", line.c_str());
+        }
+        if (ImGui::Button("Clear Console")) {
+            consoleLines_.clear();
+        }
+        ImGui::EndChild();
+    }
+
+    ImGui::End();
 
     auto buildEncounterAsset = [this]() {
         EncounterGraphAsset asset;
@@ -207,27 +343,10 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
         return asset;
     };
 
-    ImGui::Begin("Control Center Status", &open_);
-    ImGui::TextUnformatted(statusMessage_.c_str());
-    ImGui::Text("Tick %llu", static_cast<unsigned long long>(snapshot.tick));
-    ImGui::Text("Difficulty %s %.2f", snapshot.difficultyProfileLabel, snapshot.difficultyOverall);
-    ImGui::End();
-
-    if (showContentBrowser_) {
-        ImGui::Begin("Content Browser");
-        ImGui::InputText("Search", &browserSearch_);
-        ImGui::InputText("Tag Filter", &browserTagFilter_);
-        for (const std::string& e : browserEntries_) {
-            if (!containsCaseInsensitive(e, browserSearch_)) continue;
-            if (!browserTagFilter_.empty() && !containsCaseInsensitive(e, browserTagFilter_)) continue;
-            ImGui::BulletText("%s", e.c_str());
-        }
-        ImGui::End();
-    }
 
     if (showPatternEditor_) {
         ImGui::Begin("Pattern Graph Editor + Generator");
-        ImGui::TextUnformatted("Edit pattern layers, cadence, spread and deterministic jitter.");
+        ImGui::TextUnformatted("Compiled graph authoring (node palette + inspector + preview sandbox).");
 
         const char* styles[] = {"Balanced", "Spiral Dance", "Burst Fan", "Sniper Lanes"};
         ImGui::Combo("Style Preset", &patternGenerator_.stylePreset, styles, 4);
@@ -263,6 +382,101 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
         if (ImGui::Button("Mutate")) patternGenerator_.requestMutate = true;
         ImGui::SameLine();
         if (ImGui::Button("Remix")) patternGenerator_.requestRemix = true;
+
+        if (graphNodeIds_.empty()) {
+            graphNodeIds_ = {"010-emit", "020-wait", "030-loop"};
+            graphNodeTypes_ = {0, 5, 6};
+            graphNodeA_ = {12.0F, 0.12F, 8.0F};
+            graphNodeB_ = {140.0F, 0.0F, 0.0F};
+            graphNodeC_ = {3.0F, 0.0F, 0.0F};
+            graphNodeD_ = {0.0F, 0.0F, 0.0F};
+            graphNodeTarget_ = {"", "", "010-emit"};
+        }
+
+        ImGui::SeparatorText("Node Palette");
+        const char* nodeTypes[] = {"Emit Ring", "Emit Spread", "Emit Spiral", "Emit Wave", "Emit Aimed", "Wait", "Loop", "Rotate", "Phase", "Random"};
+        for (int i = 0; i < 10; ++i) {
+            ImGui::PushID(i);
+            if (ImGui::Button(nodeTypes[i])) {
+                const int next = static_cast<int>(graphNodeIds_.size()) + 1;
+                char id[32];
+                std::snprintf(id, sizeof(id), "%03d-node", 10 * next);
+                graphNodeIds_.push_back(id);
+                graphNodeTypes_.push_back(i);
+                graphNodeA_.push_back(i == 5 ? 0.1F : 8.0F);
+                graphNodeB_.push_back(120.0F);
+                graphNodeC_.push_back(3.0F);
+                graphNodeD_.push_back(0.0F);
+                graphNodeTarget_.push_back("010-emit");
+                selectedGraphNode_ = static_cast<int>(graphNodeIds_.size()) - 1;
+            }
+            if (i < 9) ImGui::SameLine();
+            ImGui::PopID();
+        }
+
+        ImGui::SeparatorText("Node Inspector");
+        for (std::size_t i = 0; i < graphNodeIds_.size(); ++i) {
+            ImGui::PushID(static_cast<int>(i));
+            if (ImGui::Selectable(graphNodeIds_[i].c_str(), selectedGraphNode_ == static_cast<int>(i))) {
+                selectedGraphNode_ = static_cast<int>(i);
+            }
+            ImGui::PopID();
+        }
+        selectedGraphNode_ = std::clamp(selectedGraphNode_, 0, static_cast<int>(graphNodeIds_.size()) - 1);
+        if (!graphNodeIds_.empty()) {
+            const std::size_t i = static_cast<std::size_t>(selectedGraphNode_);
+            ImGui::InputText("Node ID", &graphNodeIds_[i]);
+            ImGui::Combo("Node Type", &graphNodeTypes_[i], nodeTypes, 10);
+            ImGui::SliderFloat("A", &graphNodeA_[i], -360.0F, 360.0F);
+            ImGui::SliderFloat("B", &graphNodeB_[i], -360.0F, 360.0F);
+            ImGui::SliderFloat("C", &graphNodeC_[i], -360.0F, 360.0F);
+            ImGui::SliderFloat("D", &graphNodeD_[i], -360.0F, 360.0F);
+            ImGui::InputText("Loop Target", &graphNodeTarget_[i]);
+        }
+
+        PatternGraphAsset previewAsset;
+        previewAsset.id = "editor-preview";
+        for (std::size_t i = 0; i < graphNodeIds_.size(); ++i) {
+            PatternGraphNode node;
+            node.id = graphNodeIds_[i];
+            switch (std::clamp(graphNodeTypes_[i], 0, 9)) {
+                case 0: node.type = PatternGraphNodeType::EmitRing; node.params = {{"count", graphNodeA_[i]}, {"speed", graphNodeB_[i]}, {"radius", graphNodeC_[i]}, {"angle", graphNodeD_[i]}}; break;
+                case 1: node.type = PatternGraphNodeType::EmitSpread; node.params = {{"count", graphNodeA_[i]}, {"speed", graphNodeB_[i]}, {"radius", graphNodeC_[i]}, {"angle", graphNodeD_[i]}}; break;
+                case 2: node.type = PatternGraphNodeType::EmitSpiral; node.params = {{"count", graphNodeA_[i]}, {"speed", graphNodeB_[i]}, {"radius", graphNodeC_[i]}, {"angle", graphNodeD_[i]}}; break;
+                case 3: node.type = PatternGraphNodeType::EmitWave; node.params = {{"count", graphNodeA_[i]}, {"speed", graphNodeB_[i]}, {"radius", graphNodeC_[i]}, {"angle", graphNodeD_[i]}}; break;
+                case 4: node.type = PatternGraphNodeType::EmitAimed; node.params = {{"count", graphNodeA_[i]}, {"speed", graphNodeB_[i]}, {"radius", graphNodeC_[i]}, {"angle", graphNodeD_[i]}}; break;
+                case 5: node.type = PatternGraphNodeType::Wait; node.params = {{"seconds", std::max(0.01F, graphNodeA_[i])}}; break;
+                case 6: node.type = PatternGraphNodeType::Loop; node.params = {{"count", graphNodeA_[i]}}; node.targetNodeId = graphNodeTarget_[i]; break;
+                case 7: node.type = PatternGraphNodeType::ModifierRotate; node.params = {{"deg", graphNodeA_[i]}}; break;
+                case 8: node.type = PatternGraphNodeType::ModifierPhaseOffset; node.params = {{"deg", graphNodeA_[i]}}; break;
+                case 9: node.type = PatternGraphNodeType::RandomRange; node.params = {{"min", graphNodeA_[i]}, {"max", graphNodeB_[i]}, {"stream", std::max(0.0F, graphNodeC_[i])}}; break;
+                default: break;
+            }
+            previewAsset.nodes.push_back(std::move(node));
+        }
+
+        PatternGraphCompiler graphCompiler;
+        CompiledPatternGraph compiled;
+        const bool previewOk = graphCompiler.compile(previewAsset, compiled);
+        ImGui::SeparatorText("Preview Sandbox");
+        ImGui::Text("Compile: %s", previewOk ? "PASS" : "FAIL");
+        ImGui::Text("Ops: %d", static_cast<int>(compiled.ops.size()));
+        ImGui::Text("Estimated spawns/s: %.1f", compiled.staticSpawnRateEstimatePerSecond);
+        for (const PatternGraphDiagnostic& d : compiled.diagnostics) {
+            ImVec4 c = d.warning ? ImVec4(1.0F, 0.8F, 0.2F, 1.0F) : ImVec4(1.0F, 0.3F, 0.3F, 1.0F);
+            ImGui::TextColored(c, "[%s] %s", d.nodeId.c_str(), d.message.c_str());
+        }
+
+        if (ImGui::Button("Save Preview Graph")) {
+            std::filesystem::create_directories("data/generated_graphs");
+            std::string err;
+            if (savePatternGraphsToFile("data/generated_graphs/preview_graph.json", {previewAsset}, &err)) {
+                statusMessage_ = "Saved preview graph";
+            } else {
+                statusMessage_ = "Save failed: " + err;
+            }
+        }
+
         ImGui::End();
     }
 
@@ -370,19 +584,14 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
         ImGui::End();
     }
 
-    if (showProfiler_) {
-        ImGui::Begin("Profiler + Replay Inspector");
-        ImGui::Text("Frame %.2fms (%d FPS)", snapshot.frameTimeMs, snapshot.fps);
-        ImGui::Text("Sim %.2f  Pat %.2f  Bul %.2f  Col %.2f  Ren %.2f", snapshot.simMs, snapshot.patternMs, snapshot.bulletMs, snapshot.collisionMs, snapshot.renderMs);
-        ImGui::Text("DrawCalls %u  Batches %u", snapshot.drawCalls, snapshot.renderBatches);
-        ImGui::Text("GPU Bullets %u  GPU Update %.3fms  GPU Render %.3fms", snapshot.gpuActiveBullets, snapshot.gpuUpdateMs, snapshot.gpuRenderMs);
-        ImGui::Text("Replay Tick %llu", static_cast<unsigned long long>(snapshot.tick));
-        if (snapshot.perfWarnSimulation || snapshot.perfWarnRender || snapshot.perfWarnCollisions) {
-            ImGui::TextColored(ImVec4(1.0F, 0.5F, 0.2F, 1.0F), "Perf warning active");
+
+    for (engine::public_api::IToolPanelPlugin* panel : engine::public_api::toolPanelPlugins()) {
+        if (!panel) continue;
+        if (ImGui::Begin(panel->panelName().c_str())) {
+            panel->drawPanel();
         }
         ImGui::End();
     }
-
     if (showValidator_) {
         ImGui::Begin("Validator");
         if (ImGui::Button("Run Validator Command")) validatorRequested_ = true;
@@ -398,6 +607,7 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
         ImGui::End();
     }
 }
+
 
 const UpgradeDebugOptions& ControlCenterToolSuite::upgradeDebugOptions() const { return upgradeDebug_; }
 

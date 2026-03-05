@@ -65,16 +65,20 @@ int main() {
     char replayRecordVal[] = "session_record.json";
     char replayPlayback[] = "--replay-playback";
     char replayPlaybackVal[] = "session_playback.json";
+    char rendererSmoke[] = "--renderer-smoke-test";
+    char replayVerify[] = "--replay-verify";
+    char replayHashPeriod[] = "--replay-hash-period";
+    char replayHashPeriodVal[] = "120";
 
-    char* argv[] = {appName, headless, ticks, ticksVal, seed, seedVal, dt, dtVal, projectiles, projectilesVal, contentPack, contentPackVal, replayRecord, replayRecordVal, replayPlayback, replayPlaybackVal, stress};
-    engine::applyCommandLineOverrides(config, 17, argv);
+    char* argv[] = {appName, headless, ticks, ticksVal, seed, seedVal, dt, dtVal, projectiles, projectilesVal, contentPack, contentPackVal, replayRecord, replayRecordVal, replayPlayback, replayPlaybackVal, stress, rendererSmoke, replayVerify, replayHashPeriod, replayHashPeriodVal};
+    engine::applyCommandLineOverrides(config, 21, argv);
 
     if (!config.headless || config.targetTicks != 240 || config.simulationSeed != 999) {
         std::cerr << "Core command line override parse failed\n";
         return EXIT_FAILURE;
     }
 
-    if (!config.stress10k || config.projectileCapacity < 10000 || config.projectileSpawnBurst != 10000 || config.contentPackPath != "override.pak"
+    if (!config.stress10k || !config.rendererSmokeTest || !config.replayVerifyMode || config.replayHashPeriodTicks != 120 || config.projectileCapacity < 10000 || config.projectileSpawnBurst != 10000 || config.contentPackPath != "override.pak"
         || config.replayRecordPath != "session_record.json" || config.replayPlaybackPath != "session_playback.json") {
         std::cerr << "Stress/projectile command line override parse failed\n";
         return EXIT_FAILURE;

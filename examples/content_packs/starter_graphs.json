@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 2,
+  "packVersion": 3,
+  "packId": "starter-graphs",
+  "compatibility": {
+    "minRuntimePackVersion": 2,
+    "maxRuntimePackVersion": 3,
+    "notes": "Compiled graph examples"
+  },
+  "graphs": [
+    {
+      "id": "graph-starter-ring",
+      "nodes": [
+        {
+          "id": "010-emit",
+          "type": "emit_ring",
+          "params": {
+            "count": 16,
+            "speed": 150.0,
+            "radius": 2.8,
+            "angle": 0.0
+          }
+        },
+        {
+          "id": "020-wait",
+          "type": "wait",
+          "params": {
+            "seconds": 0.12
+          }
+        },
+        {
+          "id": "030-loop",
+          "type": "loop",
+          "params": {
+            "count": 32
+          },
+          "targetNode": "010-emit"
+        }
+      ]
+    },
+    {
+      "id": "graph-starter-aimed-burst",
+      "nodes": [
+        {
+          "id": "005-random",
+          "type": "random_range",
+          "params": {
+            "min": -8.0,
+            "max": 8.0,
+            "stream": 1
+          }
+        },
+        {
+          "id": "010-emit",
+          "type": "emit_aimed",
+          "params": {
+            "count": 1,
+            "speed": 210.0,
+            "radius": 3.0,
+            "angle": 0.0
+          }
+        },
+        {
+          "id": "020-wait",
+          "type": "wait",
+          "params": {
+            "seconds": 0.08
+          }
+        },
+        {
+          "id": "030-loop",
+          "type": "loop",
+          "params": {
+            "count": 24
+          },
+          "targetNode": "005-random"
+        }
+      ]
+    }
+  ]
+}

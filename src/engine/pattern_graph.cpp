@@ -6,10 +6,13 @@
 #include <cmath>
 #include <fstream>
 #include <numbers>
+#include <unordered_map>
 
 namespace engine {
 
 namespace {
+constexpr std::uint32_t kMaxLoopCount = 64;
+
 PatternGraphNodeType parseNodeType(const std::string& type) {
     if (type == "emit_ring") return PatternGraphNodeType::EmitRing;
     if (type == "emit_spread") return PatternGraphNodeType::EmitSpread;
@@ -31,12 +34,40 @@ PatternGraphNodeType parseNodeType(const std::string& type) {
     return PatternGraphNodeType::Wait;
 }
 
+const char* toJsonNodeType(const PatternGraphNodeType type) {
+    switch (type) {
+        case PatternGraphNodeType::EmitRing: return "emit_ring";
+        case PatternGraphNodeType::EmitSpread: return "emit_spread";
+        case PatternGraphNodeType::EmitSpiral: return "emit_spiral";
+        case PatternGraphNodeType::EmitWave: return "emit_wave";
+        case PatternGraphNodeType::EmitAimed: return "emit_aimed";
+        case PatternGraphNodeType::Wait: return "wait";
+        case PatternGraphNodeType::Loop: return "loop";
+        case PatternGraphNodeType::Branch: return "branch";
+        case PatternGraphNodeType::Subpattern: return "subpattern";
+        case PatternGraphNodeType::ModifierRotate: return "modifier_rotate";
+        case PatternGraphNodeType::ModifierPhaseOffset: return "modifier_phase";
+        case PatternGraphNodeType::ModifierSymmetry: return "modifier_symmetry";
+        case PatternGraphNodeType::ModifierSpeedCurve: return "modifier_speed_curve";
+        case PatternGraphNodeType::ModifierAngleCurve: return "modifier_angle_curve";
+        case PatternGraphNodeType::DifficultyScalar: return "difficulty_scalar";
+        case PatternGraphNodeType::ParameterOverride: return "parameter_override";
+        case PatternGraphNodeType::RandomRange: return "random_range";
+        default: return "wait";
+    }
+}
+
 float degToRad(const float deg) { return deg * std::numbers::pi_v<float> / 180.0F; }
 
 Vec2 velocityFromDeg(const float deg, const float speed) {
     const float rad = degToRad(deg);
     return Vec2 {std::cos(rad) * speed, std::sin(rad) * speed};
 }
+
+void emitWithFn(void* user, const ProjectileSpawn& spawn, const PatternGraphVm::EmitProjectileFn fn) {
+    if (fn) fn(user, spawn);
+}
+
 } // namespace
 
 bool loadPatternGraphsFromFile(const std::string& filePath, std::vector<PatternGraphAsset>& outAssets, std::vector<PatternGraphDiagnostic>& outDiagnostics) {
@@ -62,6 +93,7 @@ bool loadPatternGraphsFromFile(const std::string& filePath, std::vector<PatternG
             PatternGraphNode node;
             node.id = n.value("id", "node");
             node.type = parseNodeType(n.value("type", "wait"));
+            node.targetNodeId = n.value("targetNode", std::string {});
             if (n.contains("params") && n["params"].is_object()) {
                 for (auto it = n["params"].begin(); it != n["params"].end(); ++it) {
                     node.params[it.key()] = it.value().get<float>();
@@ -82,6 +114,46 @@ bool loadPatternGraphsFromFile(const std::string& filePath, std::vector<PatternG
     return true;
 }
 
+bool savePatternGraphsToFile(const std::string& filePath, const std::vector<PatternGraphAsset>& assets, std::string* error) {
+    nlohmann::json root;
+    root["schemaVersion"] = 1;
+    root["graphs"] = nlohmann::json::array();
+    for (const PatternGraphAsset& asset : assets) {
+        nlohmann::json g;
+        g["id"] = asset.id;
+        g["nodes"] = nlohmann::json::array();
+        for (const PatternGraphNode& node : asset.nodes) {
+            nlohmann::json n;
+            n["id"] = node.id;
+            n["type"] = toJsonNodeType(node.type);
+            n["params"] = node.params;
+            if (!node.outputs.empty()) n["outputs"] = node.outputs;
+            if (!node.targetNodeId.empty()) n["targetNode"] = node.targetNodeId;
+            g["nodes"].push_back(std::move(n));
+        }
+        root["graphs"].push_back(std::move(g));
+    }
+
+    std::ofstream out(filePath);
+    if (!out.good()) {
+        if (error) *error = "failed to open output file";
+        return false;
+    }
+    out << root.dump(2);
+    return true;
+}
+
+PatternGraphAsset migrateLegacyPatternToGraph(const std::string& graphId, const float cooldownSeconds, const std::uint32_t bulletCount, const float bulletSpeed) {
+    PatternGraphAsset asset;
+    asset.id = graphId;
+    asset.nodes = {
+        PatternGraphNode {.id = "010-emit", .type = PatternGraphNodeType::EmitRing, .params = {{"count", static_cast<float>(std::max(1U, bulletCount))}, {"speed", bulletSpeed}, {"radius", 3.0F}, {"angle", 0.0F}}},
+        PatternGraphNode {.id = "020-wait", .type = PatternGraphNodeType::Wait, .params = {{"seconds", std::max(0.01F, cooldownSeconds)}}},
+        PatternGraphNode {.id = "030-loop", .type = PatternGraphNodeType::Loop, .params = {{"count", static_cast<float>(kMaxLoopCount)}}, .targetNodeId = "010-emit"},
+    };
+    return asset;
+}
+
 bool PatternGraphCompiler::compile(const PatternGraphAsset& asset, CompiledPatternGraph& out) const {
     out = {};
     out.id = asset.id;
@@ -91,9 +163,18 @@ bool PatternGraphCompiler::compile(const PatternGraphAsset& asset, CompiledPatte
         return false;
     }
 
+    std::unordered_map<std::string, std::size_t> idToOpIndex;
+    std::vector<std::size_t> loopPatchOps;
+    std::vector<std::string> loopTargets;
     std::uint32_t estimatedSpawnPerCycle = 0;
 
     for (const PatternGraphNode& node : asset.nodes) {
+        if (idToOpIndex.contains(node.id)) {
+            out.diagnostics.push_back(PatternGraphDiagnostic {.nodeId = node.id, .message = "duplicate node id", .warning = false});
+            continue;
+        }
+        idToOpIndex[node.id] = out.ops.size();
+
         PatternOp op;
         switch (node.type) {
             case PatternGraphNodeType::EmitRing:
@@ -127,9 +208,18 @@ bool PatternGraphCompiler::compile(const PatternGraphAsset& asset, CompiledPatte
             case PatternGraphNodeType::Loop: {
                 op.code = PatternOpCode::JumpIfLoop;
                 op.u0 = static_cast<std::uint32_t>(node.params.contains("count") ? std::max(0.0F, node.params.at("count")) : 1.0F);
-                op.u1 = static_cast<std::uint32_t>(node.params.contains("target") ? std::max(0.0F, node.params.at("target")) : 0.0F);
-                if (op.u0 > 64U) {
+                if (op.u0 > kMaxLoopCount) {
                     out.diagnostics.push_back(PatternGraphDiagnostic {.nodeId = node.id, .message = "loop count exceeds bound (64)", .warning = false});
+                    op.u0 = kMaxLoopCount;
+                }
+                loopPatchOps.push_back(out.ops.size());
+                if (!node.targetNodeId.empty()) {
+                    loopTargets.push_back(node.targetNodeId);
+                } else if (!node.outputs.empty()) {
+                    loopTargets.push_back(node.outputs.front());
+                } else {
+                    out.diagnostics.push_back(PatternGraphDiagnostic {.nodeId = node.id, .message = "loop missing targetNode/outputs", .warning = false});
+                    loopTargets.push_back(std::string {});
                 }
                 break;
             }
@@ -160,10 +250,19 @@ bool PatternGraphCompiler::compile(const PatternGraphAsset& asset, CompiledPatte
         out.ops.push_back(op);
     }
 
+    for (std::size_t i = 0; i < loopPatchOps.size(); ++i) {
+        if (loopTargets[i].empty()) continue;
+        auto it = idToOpIndex.find(loopTargets[i]);
+        if (it == idToOpIndex.end()) {
+            out.diagnostics.push_back(PatternGraphDiagnostic {.nodeId = asset.id, .message = "loop target not found: " + loopTargets[i], .warning = false});
+            continue;
+        }
+        out.ops[loopPatchOps[i]].u1 = static_cast<std::uint32_t>(it->second);
+    }
+
     out.ops.push_back(PatternOp {.code = PatternOpCode::End});
 
-    const float nominalCycleSeconds = 1.0F;
-    out.staticSpawnRateEstimatePerSecond = static_cast<float>(estimatedSpawnPerCycle) / nominalCycleSeconds;
+    out.staticSpawnRateEstimatePerSecond = static_cast<float>(estimatedSpawnPerCycle);
     if (out.staticSpawnRateEstimatePerSecond > 3000.0F) {
         out.diagnostics.push_back(PatternGraphDiagnostic {.nodeId = asset.id, .message = "spawn rate estimate exceeds 3000/s", .warning = true});
     }
@@ -187,6 +286,24 @@ void PatternGraphVm::execute(
     const Vec2 aimTarget,
     const std::function<void(const ProjectileSpawn&)>& emitProjectile
 ) const {
+    struct FnBridge {
+        const std::function<void(const ProjectileSpawn&)>* fn {nullptr};
+    } bridge {&emitProjectile};
+    execute(graph, state, dt, origin, aimTarget, &bridge, [](void* user, const ProjectileSpawn& spawn) {
+        auto* b = static_cast<FnBridge*>(user);
+        (*b->fn)(spawn);
+    });
+}
+
+void PatternGraphVm::execute(
+    const CompiledPatternGraph& graph,
+    RuntimeState& state,
+    const float dt,
+    const Vec2 origin,
+    const Vec2 aimTarget,
+    void* user,
+    const EmitProjectileFn emitProjectile
+) const {
     if (graph.ops.empty()) return;
 
     if (state.waitTimer > 0.0F) {
@@ -207,17 +324,17 @@ void PatternGraphVm::execute(
                 if (emitType == PatternGraphNodeType::EmitRing && op.u1 + count <= graph.constantAnglesDeg.size()) {
                     for (std::uint32_t i = 0; i < count; ++i) {
                         const float angle = graph.constantAnglesDeg[op.u1 + i] + op.d + state.rotateDeg + state.phaseOffsetDeg;
-                        emitProjectile(ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(angle, speed), .radius = radius});
+                        emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(angle, speed), .radius = radius}, emitProjectile);
                     }
                 } else if (emitType == PatternGraphNodeType::EmitAimed) {
                     const float a = std::atan2(aimTarget.y - origin.y, aimTarget.x - origin.x) * 180.0F / std::numbers::pi_v<float> + op.d + state.rotateDeg;
-                    emitProjectile(ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(a, speed), .radius = radius});
+                    emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(a, speed), .radius = radius}, emitProjectile);
                 } else {
                     for (std::uint32_t i = 0; i < count; ++i) {
                         const float t = count > 1 ? static_cast<float>(i) / static_cast<float>(count - 1U) : 0.5F;
                         const float spread = (t - 0.5F) * 60.0F;
                         const float angle = op.d + spread + state.rotateDeg + state.phaseOffsetDeg;
-                        emitProjectile(ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(angle, speed), .radius = radius});
+                        emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(angle, speed), .radius = radius}, emitProjectile);
                     }
                 }
                 ++state.pc;
@@ -248,7 +365,7 @@ void PatternGraphVm::execute(
             }
             case PatternOpCode::JumpIfLoop: {
                 const std::size_t loopSlot = state.pc % state.loopCounter.size();
-                const std::uint32_t count = std::min<std::uint32_t>(op.u0, 64U);
+                const std::uint32_t count = std::min<std::uint32_t>(op.u0, kMaxLoopCount);
                 if (state.loopCounter[loopSlot] + 1U < count) {
                     ++state.loopCounter[loopSlot];
                     state.pc = std::min<std::size_t>(op.u1, graph.ops.size() - 1U);

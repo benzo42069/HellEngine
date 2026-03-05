@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "packVersion": 3,
+  "projectiles": [
+    {
+      "id": "basic_shot",
+      "name": "Basic Shot",
+      "guid": "projectile-53dd90c5df75122b"
+    },
+    {
+      "id": "heavy_round",
+      "name": "Heavy Round",
+      "guid": "projectile-e752f0f6e5551e8"
+    }
+  ]
+}

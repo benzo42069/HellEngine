@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "packVersion": 3,
+  "traits": [
+    {
+      "name": "Sharpshooter",
+      "guid": "trait-718a17c240b5317b",
+      "rarity": "rare"
+    },
+    {
+      "name": "Bulwark",
+      "guid": "trait-9113f924f1b286a1",
+      "rarity": "common"
+    }
+  ]
+}
