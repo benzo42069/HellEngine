@@ -41,6 +41,7 @@ add_library(imgui_sdl2 STATIC
   ${imgui_SOURCE_DIR}/imgui_draw.cpp
   ${imgui_SOURCE_DIR}/imgui_tables.cpp
   ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+  ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
   ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
   ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer2.cpp
 )
@@ -57,12 +58,18 @@ add_library(engine_core STATIC
   src/engine/archetypes.cpp
   src/engine/config.cpp
   src/engine/deterministic_rng.cpp
+  src/engine/difficulty_scaling.cpp
+  src/engine/encounter_graph.cpp
   src/engine/editor_tools.cpp
   src/engine/entities.cpp
+  src/engine/gpu_bullets.cpp
   src/engine/job_system.cpp
   src/engine/logging.cpp
   src/engine/memory.cpp
   src/engine/meta_progression.cpp
+  src/engine/perf_profiler.cpp
+  src/engine/pattern_generator.cpp
+  src/engine/pattern_graph.cpp
   src/engine/patterns.cpp
   src/engine/projectiles.cpp
   src/engine/replay.cpp
@@ -71,6 +78,7 @@ add_library(engine_core STATIC
   src/engine/runtime.cpp
   src/engine/timing.cpp
   src/engine/traits.cpp
+  src/engine/upgrade_ui_model.cpp
   src/stb_impl.cpp
 )
 
@@ -163,3 +171,35 @@ add_test(NAME editor_tools_tests COMMAND editor_tools_tests)
 add_executable(replay_tests tests/replay_tests.cpp)
 target_link_libraries(replay_tests PRIVATE engine_core)
 add_test(NAME replay_tests COMMAND replay_tests)
+
+add_executable(upgrade_ui_tests tests/upgrade_ui_tests.cpp)
+target_link_libraries(upgrade_ui_tests PRIVATE engine_core)
+add_test(NAME upgrade_ui_tests COMMAND upgrade_ui_tests)
+
+add_executable(upgrade_ui_model_tests tests/upgrade_ui_model_tests.cpp)
+target_link_libraries(upgrade_ui_model_tests PRIVATE engine_core)
+add_test(NAME upgrade_ui_model_tests COMMAND upgrade_ui_model_tests)
+
+add_executable(projectile_behavior_tests tests/projectile_behavior_tests.cpp)
+target_link_libraries(projectile_behavior_tests PRIVATE engine_core)
+add_test(NAME projectile_behavior_tests COMMAND projectile_behavior_tests)
+
+add_executable(pattern_graph_tests tests/pattern_graph_tests.cpp)
+target_link_libraries(pattern_graph_tests PRIVATE engine_core)
+add_test(NAME pattern_graph_tests COMMAND pattern_graph_tests)
+
+add_executable(pattern_generator_tests tests/pattern_generator_tests.cpp)
+target_link_libraries(pattern_generator_tests PRIVATE engine_core)
+add_test(NAME pattern_generator_tests COMMAND pattern_generator_tests)
+
+add_executable(encounter_graph_tests tests/encounter_graph_tests.cpp)
+target_link_libraries(encounter_graph_tests PRIVATE engine_core)
+add_test(NAME encounter_graph_tests COMMAND encounter_graph_tests)
+
+add_executable(difficulty_scaling_tests tests/difficulty_scaling_tests.cpp)
+target_link_libraries(difficulty_scaling_tests PRIVATE engine_core)
+add_test(NAME difficulty_scaling_tests COMMAND difficulty_scaling_tests)
+
+add_executable(gpu_bullets_tests tests/gpu_bullets_tests.cpp)
+target_link_libraries(gpu_bullets_tests PRIVATE engine_core)
+add_test(NAME gpu_bullets_tests COMMAND gpu_bullets_tests)

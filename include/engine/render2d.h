@@ -97,18 +97,26 @@ struct SpriteDrawCmd {
     Color color {};
 };
 
+
+struct RenderBatchStats {
+    std::uint32_t drawCalls {0};
+    std::uint32_t batchFlushes {0};
+};
+
 class SpriteBatch {
   public:
     void reserve(std::size_t spriteCount);
     void begin(const Camera2D& camera);
     void draw(const SpriteDrawCmd& cmd);
     void flush(SDL_Renderer* renderer, const TextureStore& textures);
+    [[nodiscard]] const RenderBatchStats& lastStats() const;
 
   private:
     const Camera2D* camera_ {nullptr};
     std::vector<SpriteDrawCmd> commands_;
     std::vector<SDL_Vertex> vertices_;
     std::vector<int> indices_;
+    RenderBatchStats lastStats_ {};
 };
 
 class DebugDraw {

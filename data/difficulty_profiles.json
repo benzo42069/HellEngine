@@ -1,0 +1,73 @@
+{
+  "profiles": [
+    {
+      "name": "normal",
+      "baseDifficulty": 1.0,
+      "stageRamp": 0.1,
+      "zoneAdd": {"combat": 0.0, "elite": 0.1, "event": -0.05, "boss": 0.25},
+      "performanceEnabled": true,
+      "perfHealthWeight": 0.18,
+      "perfCollisionWeight": 0.03,
+      "perfBossWeight": 0.08,
+      "perfMin": -0.18,
+      "perfMax": 0.18,
+      "difficultyMin": 0.6,
+      "difficultyMax": 4.0,
+      "patternSpeedFactor": 0.3,
+      "spawnRateFactor": 0.4,
+      "enemyHpFactor": 0.55
+    },
+    {
+      "name": "hard",
+      "baseDifficulty": 1.25,
+      "stageRamp": 0.15,
+      "zoneAdd": {"combat": 0.05, "elite": 0.16, "event": -0.02, "boss": 0.3},
+      "performanceEnabled": true,
+      "perfHealthWeight": 0.2,
+      "perfCollisionWeight": 0.03,
+      "perfBossWeight": 0.1,
+      "perfMin": -0.2,
+      "perfMax": 0.25,
+      "difficultyMin": 0.7,
+      "difficultyMax": 4.5,
+      "patternSpeedFactor": 0.34,
+      "spawnRateFactor": 0.45,
+      "enemyHpFactor": 0.6
+    },
+    {
+      "name": "nightmare",
+      "baseDifficulty": 1.55,
+      "stageRamp": 0.22,
+      "zoneAdd": {"combat": 0.12, "elite": 0.22, "event": 0.0, "boss": 0.38},
+      "performanceEnabled": true,
+      "perfHealthWeight": 0.22,
+      "perfCollisionWeight": 0.025,
+      "perfBossWeight": 0.12,
+      "perfMin": -0.22,
+      "perfMax": 0.3,
+      "difficultyMin": 0.9,
+      "difficultyMax": 5.0,
+      "patternSpeedFactor": 0.38,
+      "spawnRateFactor": 0.5,
+      "enemyHpFactor": 0.7
+    },
+    {
+      "name": "endless",
+      "baseDifficulty": 1.35,
+      "stageRamp": 0.2,
+      "zoneAdd": {"combat": 0.1, "elite": 0.2, "event": 0.02, "boss": 0.35},
+      "performanceEnabled": true,
+      "perfHealthWeight": 0.2,
+      "perfCollisionWeight": 0.02,
+      "perfBossWeight": 0.1,
+      "perfMin": -0.2,
+      "perfMax": 0.35,
+      "endlessGrowthPerMinute": 0.08,
+      "difficultyMin": 1.0,
+      "difficultyMax": 8.0,
+      "patternSpeedFactor": 0.42,
+      "spawnRateFactor": 0.56,
+      "enemyHpFactor": 0.8
+    }
+  ]
+}

@@ -171,11 +171,15 @@ void SpriteBatch::draw(const SpriteDrawCmd& cmd) { commands_.push_back(cmd); }
 void SpriteBatch::flush(SDL_Renderer* renderer, const TextureStore& textures) {
     if (!camera_) return;
 
+    lastStats_ = {};
+    lastStats_.drawCalls = static_cast<std::uint32_t>(commands_.size());
+
     std::string currentTextureId;
 
     auto flushGroup = [&](const TextureResource* texture) {
         if (!texture || vertices_.empty()) return;
         SDL_RenderGeometry(renderer, texture->texture, vertices_.data(), static_cast<int>(vertices_.size()), indices_.data(), static_cast<int>(indices_.size()));
+        ++lastStats_.batchFlushes;
         vertices_.clear();
         indices_.clear();
     };
@@ -403,5 +407,7 @@ void DebugText::drawText(SpriteBatch& batch, const std::string& text, Vec2 scree
         penX += g.advance * scale;
     }
 }
+
+const RenderBatchStats& SpriteBatch::lastStats() const { return lastStats_; }
 
 } // namespace engine

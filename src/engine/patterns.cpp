@@ -41,6 +41,23 @@ PatternLayer parseLayer(const nlohmann::json& item) {
     layer.waveFrequencyHz = item.value("waveFrequencyHz", 1.5F);
     layer.aimJitterDeg = item.value("aimJitterDeg", 0.0F);
 
+
+    if (item.contains("behavior") && item["behavior"].is_object()) {
+        const auto& b = item["behavior"];
+        layer.projectileBehavior.homingTurnRateDegPerSec = b.value("homingTurnRateDegPerSec", 0.0F);
+        layer.projectileBehavior.homingMaxAngleStepDeg = b.value("homingMaxAngleStepDeg", 0.0F);
+        layer.projectileBehavior.curvedAngularVelocityDegPerSec = b.value("curvedAngularVelocityDegPerSec", 0.0F);
+        layer.projectileBehavior.accelerationPerSec = b.value("accelerationPerSec", 0.0F);
+        layer.projectileBehavior.dragPerSec = b.value("dragPerSec", 0.0F);
+        layer.projectileBehavior.maxBounces = b.value("maxBounces", 0U);
+        layer.projectileBehavior.splitCount = b.value("splitCount", 0U);
+        layer.projectileBehavior.splitAngleSpreadDeg = b.value("splitAngleSpreadDeg", 0.0F);
+        layer.projectileBehavior.splitDelaySeconds = b.value("splitDelaySeconds", 0.0F);
+        layer.projectileBehavior.explodeRadius = b.value("explodeRadius", 0.0F);
+        layer.projectileBehavior.explodeShards = b.value("explodeShards", 0U);
+        layer.projectileBehavior.beamSegmentSamples = b.value("beamSegmentSamples", 0U);
+        layer.projectileBehavior.beamDurationSeconds = b.value("beamDurationSeconds", 0.0F);
+    }
     if (item.contains("modifiers")) {
         const auto& m = item["modifiers"];
         layer.modifiers.rotationDeg = m.value("rotationDeg", 0.0F);
@@ -142,6 +159,8 @@ bool PatternBank::loadFromFile(const std::string& filePath) {
 
 void PatternBank::loadFallbackDefaults() {
     patterns_.clear();
+    compiledGraphs_.clear();
+    graphDiagnostics_.clear();
 
     PatternDefinition basic;
     basic.name = "Fallback Composite";
@@ -158,6 +177,10 @@ void PatternBank::loadFallbackDefaults() {
 }
 
 const std::vector<PatternDefinition>& PatternBank::patterns() const { return patterns_; }
+
+const std::vector<CompiledPatternGraph>& PatternBank::compiledGraphs() const { return compiledGraphs_; }
+
+const std::vector<PatternGraphDiagnostic>& PatternBank::graphDiagnostics() const { return graphDiagnostics_; }
 
 void PatternPlayer::setBank(const PatternBank* bank) {
     bank_ = bank;
@@ -327,6 +350,7 @@ void PatternPlayer::emitLayer(
             .pos = origin,
             .vel = velocityFromDeg(jitteredAngle(angleDeg), layer.bulletSpeed * speedScale * speedMultiplier),
             .radius = layer.projectileRadius,
+            .behavior = layer.projectileBehavior,
         });
     };
 

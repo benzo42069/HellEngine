@@ -167,19 +167,19 @@ void EntitySystem::reset() {
     for (std::size_t i = 0; i < templates_->size(); ++i) {
         const EntityTemplate& t = (*templates_)[i];
         if (!t.spawnRule.enabled) {
-            spawnEntity(i);
+            spawnEntity(i, 1.0F);
         }
     }
 }
 
-void EntitySystem::spawnEntity(const std::size_t templateIndex) {
+void EntitySystem::spawnEntity(const std::size_t templateIndex, const float enemyHealthScale) {
     if (!templates_ || templateIndex >= templates_->size()) return;
     const EntityTemplate& t = (*templates_)[templateIndex];
 
     EntityInstance e;
     e.templateIndex = templateIndex;
     e.position = t.spawnPosition;
-    e.health = t.maxHealth;
+    e.health = t.maxHealth * std::max(0.1F, enemyHealthScale);
     e.fireCooldown = t.attackIntervalSeconds;
     e.introPlaying = t.type == EntityType::Boss && t.boss.enabled;
     if (e.introPlaying) {
@@ -275,7 +275,7 @@ void EntitySystem::update(const float dt, ProjectileSystem& projectiles, const V
 
         s.timer -= dt;
         while (s.timer <= 0.0F && aliveCount < t.spawnRule.maxAlive) {
-            spawnEntity(i);
+            spawnEntity(i, runtimeMods.enemyHealthScale);
             ++aliveCount;
             s.timer += std::max(t.spawnRule.intervalSeconds, 0.01F);
         }
