@@ -7,6 +7,11 @@
 
 namespace engine {
 
+enum class ProjectileAllegiance : std::uint8_t {
+    Enemy = 0,
+    Player = 1,
+};
+
 struct ProjectileBehavior {
     float homingTurnRateDegPerSec {0.0F};
     float homingMaxAngleStepDeg {0.0F};
@@ -34,6 +39,7 @@ struct ProjectileSpawn {
     Vec2 vel;
     float radius {4.0F};
     ProjectileBehavior behavior {};
+    ProjectileAllegiance allegiance {ProjectileAllegiance::Enemy};
 };
 
 struct ProjectileStats {
@@ -54,7 +60,7 @@ class ProjectileSystem {
     void spawnRadialBurst(std::uint32_t count, float speed, float radius, std::uint64_t seedOffset = 0);
 
     void beginTick();
-    void update(float dt, Vec2 playerPos, float playerRadius);
+    void update(float dt, Vec2 playerPos, float playerRadius, float enemyTimeScale = 1.0F, float playerTimeScale = 1.0F);
 
     void debugDraw(DebugDraw& draw, bool drawHitboxes, bool drawGrid) const;
     void render(SpriteBatch& batch, const std::string& textureId) const;
@@ -62,6 +68,7 @@ class ProjectileSystem {
     [[nodiscard]] const ProjectileStats& stats() const;
     [[nodiscard]] std::uint32_t capacity() const;
     [[nodiscard]] std::uint64_t debugStateHash() const;
+    [[nodiscard]] std::uint32_t collectGrazePoints(Vec2 playerPos, float playerRadius, float innerPad, float outerPad, std::uint64_t tick, std::uint64_t cooldownTicks);
 
   private:
     std::uint32_t gridIndexFor(float x, float y) const;
@@ -82,6 +89,8 @@ class ProjectileSystem {
     std::vector<float> life_;
     std::vector<std::uint8_t> bounceCount_;
     std::vector<std::uint8_t> splitDone_;
+    std::vector<std::uint8_t> allegiance_;
+    std::vector<std::uint64_t> grazeAwardTick_;
 
     std::vector<ProjectileSpawn> pendingSpawns_;
 

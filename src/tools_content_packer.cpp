@@ -1,4 +1,5 @@
 #include <engine/content_pipeline.h>
+#include <engine/palette_fx_templates.h>
 
 #include <nlohmann/json.hpp>
 
@@ -144,6 +145,9 @@ int main(int argc, char** argv) {
     nlohmann::json mergedTraits = nlohmann::json::array();
     nlohmann::json mergedArchetypes = nlohmann::json::array();
     nlohmann::json mergedEncounters = nlohmann::json::array();
+    nlohmann::json mergedPaletteTemplates = nlohmann::json::array();
+    nlohmann::json mergedGradients = nlohmann::json::array();
+    nlohmann::json mergedFxPresets = nlohmann::json::array();
     std::vector<std::string> conflicts;
 
     for (const auto& entry : fs::recursive_directory_iterator(inputDir)) {
@@ -190,6 +194,18 @@ int main(int argc, char** argv) {
             ensureGuids(doc["encounters"], "encounter", "encounter");
             mergeByGuid(doc["encounters"], mergedEncounters, conflicts);
         }
+        if (doc.contains("paletteTemplates") && doc["paletteTemplates"].is_array()) {
+            ensureGuids(doc["paletteTemplates"], "palette-template", "palette-template");
+            mergeByGuid(doc["paletteTemplates"], mergedPaletteTemplates, conflicts);
+        }
+        if (doc.contains("gradients") && doc["gradients"].is_array()) {
+            ensureGuids(doc["gradients"], "gradient", "gradient");
+            mergeByGuid(doc["gradients"], mergedGradients, conflicts);
+        }
+        if (doc.contains("fxPresets") && doc["fxPresets"].is_array()) {
+            ensureGuids(doc["fxPresets"], "fx-preset", "fx-preset");
+            mergeByGuid(doc["fxPresets"], mergedFxPresets, conflicts);
+        }
     }
 
     if (!errors.empty()) {
@@ -215,12 +231,40 @@ int main(int argc, char** argv) {
     pack["traits"] = mergedTraits;
     pack["archetypes"] = mergedArchetypes;
     pack["encounters"] = mergedEncounters;
+    pack["paletteTemplates"] = mergedPaletteTemplates;
+    pack["gradients"] = mergedGradients;
+    pack["fxPresets"] = mergedFxPresets;
     pack["assetRegistry"] = nlohmann::json::array();
     appendAssetRegistry(pack, mergedPatterns, "pattern");
     appendAssetRegistry(pack, mergedEntities, "enemy");
     appendAssetRegistry(pack, mergedTraits, "trait");
     appendAssetRegistry(pack, mergedArchetypes, "archetype");
     appendAssetRegistry(pack, mergedEncounters, "encounter");
+    appendAssetRegistry(pack, mergedPaletteTemplates, "palette-template");
+    appendAssetRegistry(pack, mergedGradients, "gradient");
+    appendAssetRegistry(pack, mergedFxPresets, "fx-preset");
+
+    pack["gradientLuts"] = nlohmann::json::array();
+    for (const auto& g : mergedGradients) {
+        engine::GradientDefinition gd;
+        gd.name = g.value("name", "");
+        if (g.contains("stops") && g["stops"].is_array()) {
+            for (const auto& st : g["stops"]) {
+                engine::GradientStop stop;
+                stop.position = st.value("position", 0.0F);
+                std::string error;
+                engine::parseHexColor(st.value("color", "#FFFFFF"), stop.color, &error);
+                gd.stops.push_back(stop);
+            }
+        }
+        auto lut = engine::generateGradientLut(gd, 256);
+        nlohmann::json lutRec;
+        lutRec["name"] = gd.name;
+        lutRec["width"] = lut.size();
+        lutRec["pixels"] = nlohmann::json::array();
+        for (const auto& c : lut) lutRec["pixels"].push_back(engine::toHexColor(c));
+        pack["gradientLuts"].push_back(lutRec);
+    }
 
     const std::string payloadNoHash = pack.dump();
     pack["contentHash"] = engine::fnv1a64Hex(payloadNoHash);
@@ -244,6 +288,8 @@ int main(int argc, char** argv) {
     out.write(payload.data(), static_cast<std::streamsize>(payload.size()));
 
     std::cout << "Packed patterns=" << mergedPatterns.size() << " entities=" << mergedEntities.size() << " traits=" << mergedTraits.size()
-              << " archetypes=" << mergedArchetypes.size() << " encounters=" << mergedEncounters.size() << " -> " << outputPak << "\n";
+              << " archetypes=" << mergedArchetypes.size() << " encounters=" << mergedEncounters.size()
+              << " palettes=" << mergedPaletteTemplates.size() << " gradients=" << mergedGradients.size() << " fxPresets=" << mergedFxPresets.size()
+              << " -> " << outputPak << "\n";
     return 0;
 }

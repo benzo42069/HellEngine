@@ -7,5 +7,9 @@
   "simulationSeed": 1337,
   "projectileCapacity": 12000,
   "projectileSpawnBurst": 128,
-  "contentPackPath": "content.pak"
+  "contentPackPath": "content.pak",
+  "enableModernRenderer": false,
+  "defensiveSpecialPreset": "standard",
+  "defensiveDurationSeconds": 2.25,
+  "defensiveCooldownSeconds": 12.0
 }

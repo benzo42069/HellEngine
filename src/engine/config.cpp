@@ -25,6 +25,7 @@ EngineConfig loadConfigFromFile(const std::string& filePath) {
     if (json.contains("windowHeight")) config.windowHeight = json["windowHeight"].get<int>();
     if (json.contains("windowTitle")) config.windowTitle = json["windowTitle"].get<std::string>();
     if (json.contains("fixedDeltaSeconds")) config.fixedDeltaSeconds = json["fixedDeltaSeconds"].get<double>();
+    if (json.contains("enableModernRenderer")) config.enableModernRenderer = json["enableModernRenderer"].get<bool>();
     if (json.contains("maxFrameSteps")) config.maxFrameSteps = json["maxFrameSteps"].get<std::uint32_t>();
     if (json.contains("simulationSeed")) config.simulationSeed = json["simulationSeed"].get<std::uint64_t>();
     if (json.contains("projectileCapacity")) config.projectileCapacity = json["projectileCapacity"].get<std::uint32_t>();
@@ -35,6 +36,18 @@ EngineConfig loadConfigFromFile(const std::string& filePath) {
     if (json.contains("replayVerifyMode")) config.replayVerifyMode = json["replayVerifyMode"].get<bool>();
     if (json.contains("replayHashPeriodTicks")) config.replayHashPeriodTicks = json["replayHashPeriodTicks"].get<std::uint32_t>();
     if (json.contains("difficultyProfile")) config.difficultyProfile = json["difficultyProfile"].get<std::string>();
+    if (json.contains("defensiveDurationSeconds")) config.defensiveDurationSeconds = json["defensiveDurationSeconds"].get<float>();
+    if (json.contains("defensiveCooldownSeconds")) config.defensiveCooldownSeconds = json["defensiveCooldownSeconds"].get<float>();
+    if (json.contains("defensiveSpecialPreset")) config.defensiveSpecialPreset = json["defensiveSpecialPreset"].get<std::string>();
+    if (json.contains("defensiveEnemyScaleOverride")) config.defensiveEnemyScaleOverride = json["defensiveEnemyScaleOverride"].get<float>();
+    if (json.contains("defensivePlayerProjectileScaleOverride")) config.defensivePlayerProjectileScaleOverride = json["defensivePlayerProjectileScaleOverride"].get<float>();
+    if (json.contains("standards") && json["standards"].is_object()) {
+        const auto& st = json["standards"];
+        if (st.contains("playfield_width")) config.standardsPlayfieldWidth = st["playfield_width"].get<int>();
+        if (st.contains("playfield_height")) config.standardsPlayfieldHeight = st["playfield_height"].get<int>();
+        if (st.contains("render_target_width")) config.standardsRenderTargetWidth = st["render_target_width"].get<int>();
+        if (st.contains("render_target_height")) config.standardsRenderTargetHeight = st["render_target_height"].get<int>();
+    }
 
     return config;
 }
@@ -50,6 +63,16 @@ void applyCommandLineOverrides(EngineConfig& config, const int argc, char** argv
 
         if (arg == "--renderer-smoke-test") {
             config.rendererSmokeTest = true;
+            continue;
+        }
+
+        if (arg == "--modern-renderer") {
+            config.enableModernRenderer = true;
+            continue;
+        }
+
+        if (arg == "--legacy-renderer") {
+            config.enableModernRenderer = false;
             continue;
         }
 
@@ -105,6 +128,27 @@ void applyCommandLineOverrides(EngineConfig& config, const int argc, char** argv
 
         if (arg == "--difficulty" && i + 1 < argc) {
             config.difficultyProfile = argv[++i];
+            continue;
+        }
+
+        if (arg == "--defensive-preset" && i + 1 < argc) {
+            config.defensiveSpecialPreset = argv[++i];
+            continue;
+        }
+        if (arg == "--playfield-width" && i + 1 < argc) {
+            config.standardsPlayfieldWidth = std::stoi(argv[++i]);
+            continue;
+        }
+        if (arg == "--playfield-height" && i + 1 < argc) {
+            config.standardsPlayfieldHeight = std::stoi(argv[++i]);
+            continue;
+        }
+        if (arg == "--render-target-width" && i + 1 < argc) {
+            config.standardsRenderTargetWidth = std::stoi(argv[++i]);
+            continue;
+        }
+        if (arg == "--render-target-height" && i + 1 < argc) {
+            config.standardsRenderTargetHeight = std::stoi(argv[++i]);
             continue;
         }
 

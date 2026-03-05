@@ -28,6 +28,10 @@ struct TraitModifiers {
 
     float enemyFireRateScale {1.0F};
     float enemyProjectileSpeedScale {1.0F};
+
+    float defensiveSpecialCooldownReduction {0.0F};
+    int defensiveSpecialCapacityAdd {0};
+    float offensiveSpecialPowerMul {1.0F};
 };
 
 struct Trait {

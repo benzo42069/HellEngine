@@ -3,6 +3,7 @@
 #include <engine/logging.h>
 #include <engine/timing.h>
 #include <engine/public/plugins.h>
+#include <engine/standards.h>
 
 #include <imgui.h>
 
@@ -62,6 +63,36 @@ bool Runtime::initializeRenderContext() {
         textures_->createSolidTexture("projectile", 8, 8, Color {250, 200, 120, 255});
     }
 
+#if HELLEngine_ENABLE_MODERN_RENDERER
+    useModernRenderer_ = config_.enableModernRenderer;
+    if (useModernRenderer_) {
+        int dw = 1;
+        int dh = 1;
+        SDL_GetRendererOutputSize(renderer_, &dw, &dh);
+        std::string modernError;
+        if (!modernRenderer_.initialize(renderer_, dw, dh, &modernError)) {
+            useModernRenderer_ = false;
+            logWarn("Modern renderer disabled; initialization failed: " + modernError);
+        } else {
+            PostFxSettings fx;
+            fx.enabled = true;
+            fx.bloomEnabled = true;
+            fx.vignetteEnabled = true;
+            fx.colorGradingEnabled = true;
+            fx.bloomIntensity = 0.35F;
+            fx.bloomRadius = 0.45F;
+            fx.vignetteIntensity = 0.22F;
+            fx.exposure = 1.02F;
+            fx.contrast = 1.03F;
+            fx.saturation = 1.08F;
+            modernRenderer_.setPostFx(fx);
+            logInfo("Modern renderer initialized (opt-in)");
+        }
+    }
+#else
+    useModernRenderer_ = false;
+#endif
+
     toolSuite_.initialize(window_, renderer_);
 
     if (!debugText_.init(renderer_)) {
@@ -87,6 +118,7 @@ void Runtime::destroyRenderContext() {
     }
 
     toolSuite_.shutdown();
+    modernRenderer_.shutdown();
     textures_.reset();
 
     if (renderer_) {
@@ -232,6 +264,19 @@ int Runtime::run() {
     difficultyModel_.initializeDefaults();
     (void)difficultyModel_.loadProfilesFromFile("data/difficulty_profiles.json");
     difficultyModel_.setProfile(difficultyProfileFromString(config_.difficultyProfile));
+    DefensiveSpecialConfig defensiveCfg;
+    defensiveCfg.durationSeconds = config_.defensiveDurationSeconds;
+    defensiveCfg.cooldownPerChargeSeconds = config_.defensiveCooldownSeconds;
+    TimeDilationPreset preset = presetFromLabel(config_.defensiveSpecialPreset.c_str());
+    if (config_.defensiveEnemyScaleOverride > 0.0F) preset.enemyScale = config_.defensiveEnemyScaleOverride;
+    if (config_.defensivePlayerProjectileScaleOverride > 0.0F) preset.playerProjectileScale = config_.defensivePlayerProjectileScaleOverride;
+    defensiveSpecial_.initialize(defensiveCfg, preset);
+    EngineStandards& stds = mutableEngineStandards();
+    stds.playfieldWidth = config_.standardsPlayfieldWidth;
+    stds.playfieldHeight = config_.standardsPlayfieldHeight;
+    stds.renderTargetWidth = config_.standardsRenderTargetWidth;
+    stds.renderTargetHeight = config_.standardsRenderTargetHeight;
+    clampStandards(stds);
     playerHealth_ = 100.0F;
     prevTotalCollisions_ = 0;
     prevHealthRecoveryAccum_ = 0.0F;
@@ -250,6 +295,7 @@ int Runtime::run() {
 
     (void)traitSystem_.rollChoices();
     upgradeScreenOpen_ = true;
+    playerPos_ = {engineStandards().playfieldWidth * 0.5F, engineStandards().playfieldHeight * 0.33F};
 
     if (config_.stress10k) {
         projectiles_.spawnRadialBurst(10000, 80.0F, 3.0F, config_.simulationSeed);
@@ -362,6 +408,9 @@ int Runtime::run() {
                 if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_TAB) {
                     patternPlayer_.cyclePattern(1);
                 }
+                if (event.type == SDL_CONTROLLERBUTTONDOWN && event.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER) {
+                    currentInputMask_ |= InputDefensiveSpecial;
+                }
                 handleUpgradeNavigation(event);
                 if (event.type == SDL_KEYDOWN && archetypeSelectionOpen_ && event.key.keysym.sym >= SDLK_1 && event.key.keysym.sym <= SDLK_8) {
                     const std::size_t idx = static_cast<std::size_t>(event.key.keysym.sym - SDLK_1);
@@ -392,9 +441,11 @@ int Runtime::run() {
                 if (keyboard[SDL_SCANCODE_D] || keyboard[SDL_SCANCODE_RIGHT]) currentInputMask_ |= InputMoveRight;
                 if (keyboard[SDL_SCANCODE_W] || keyboard[SDL_SCANCODE_UP]) currentInputMask_ |= InputMoveUp;
                 if (keyboard[SDL_SCANCODE_S] || keyboard[SDL_SCANCODE_DOWN]) currentInputMask_ |= InputMoveDown;
+                if (keyboard[SDL_SCANCODE_LSHIFT] || keyboard[SDL_SCANCODE_RSHIFT]) currentInputMask_ |= InputDefensiveSpecial;
             }
 
-            const float cameraSpeed = 220.0F * static_cast<float>(frameDelta) / camera_.zoom();
+            const float cameraScale = defensiveSpecial_.dilationScales().cameraScroll;
+            const float cameraSpeed = engineStandards().cameraMaxScrollUnitsPerSec * static_cast<float>(frameDelta) * cameraScale / camera_.zoom();
             if (keyboard[SDL_SCANCODE_A] || keyboard[SDL_SCANCODE_LEFT]) camera_.pan({-cameraSpeed, 0.0F});
             if (keyboard[SDL_SCANCODE_D] || keyboard[SDL_SCANCODE_RIGHT]) camera_.pan({cameraSpeed, 0.0F});
             if (keyboard[SDL_SCANCODE_W] || keyboard[SDL_SCANCODE_UP]) camera_.pan({0.0F, -cameraSpeed});
@@ -457,13 +508,24 @@ void Runtime::simTick(const double dt) {
         replayRecorder_.recordTickInput(inputMask);
     }
 
+    if ((inputMask & InputDefensiveSpecial) != 0U) {
+        (void)defensiveSpecial_.tryActivate();
+    }
+
+    const TraitModifiers& traitModsForSpecial = traitSystem_.modifiers();
+    defensiveSpecial_.update(static_cast<float>(dt), traitModsForSpecial);
+    const TimeDilationScales dilation = defensiveSpecial_.dilationScales();
+
+    const std::uint32_t grazePoints = projectiles_.collectGrazePoints(playerPos_, playerRadius_, defensiveSpecial_.config().grazeBandInnerPadding, defensiveSpecial_.config().grazeBandOuterPadding, tickIndex_, defensiveSpecial_.config().grazeCooldownTicks);
+    if (grazePoints > 0) defensiveSpecial_.addGrazePoints(grazePoints);
+
     const float moveStep = static_cast<float>(dt) * 120.0F;
     if ((inputMask & InputMoveLeft) != 0U) playerPos_.x -= moveStep;
     if ((inputMask & InputMoveRight) != 0U) playerPos_.x += moveStep;
     if ((inputMask & InputMoveUp) != 0U) playerPos_.y -= moveStep;
     if ((inputMask & InputMoveDown) != 0U) playerPos_.y += moveStep;
-    playerPos_.x = std::clamp(playerPos_.x, -320.0F, 320.0F);
-    playerPos_.y = std::clamp(playerPos_.y, -180.0F, 180.0F);
+    playerPos_.x = std::clamp(playerPos_.x, 0.0F, static_cast<float>(engineStandards().playfieldWidth));
+    playerPos_.y = std::clamp(playerPos_.y, 0.0F, static_cast<float>(engineStandards().playfieldHeight));
 
     const auto patternStart = Clock::now();
     if (!config_.stress10k) {
@@ -574,9 +636,10 @@ void Runtime::simTick(const double dt) {
 
         auto emitWithRuntimeMods = [this, &tm, &archetype, &mb, &diffScalars](const ProjectileSpawn& spawn) {
             ProjectileSpawn mod = spawn;
+            mod.allegiance = ProjectileAllegiance::Player;
             const float powerScale = 0.85F + (archetype.stats.power + mb.powerBonus) * 0.03F;
-            mod.vel.x *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed;
-            mod.vel.y *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed;
+            mod.vel.x *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul * defensiveSpecial_.playerDamageMultiplier();
+            mod.vel.y *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul * defensiveSpecial_.playerDamageMultiplier();
             mod.radius = std::max(0.5F, spawn.radius + tm.projectileRadiusAdd);
             projectiles_.spawn(mod);
         };
@@ -601,9 +664,10 @@ void Runtime::simTick(const double dt) {
                 [](void* user, const ProjectileSpawn& spawn) {
                     auto* c = static_cast<GraphEmitContext*>(user);
                     ProjectileSpawn mod = spawn;
+                    mod.allegiance = ProjectileAllegiance::Player;
                     const float powerScale = 0.85F + (c->archetype->stats.power + c->mb->powerBonus) * 0.03F;
-                    mod.vel.x *= c->tm->projectileSpeedMul * powerScale * c->diff->patternSpeed;
-                    mod.vel.y *= c->tm->projectileSpeedMul * powerScale * c->diff->patternSpeed;
+                    mod.vel.x *= c->tm->projectileSpeedMul * powerScale * c->diff->patternSpeed * c->tm->offensiveSpecialPowerMul;
+                    mod.vel.y *= c->tm->projectileSpeedMul * powerScale * c->diff->patternSpeed * c->tm->offensiveSpecialPowerMul;
                     mod.radius = std::max(0.5F, spawn.radius + c->tm->projectileRadiusAdd);
                     c->self->projectiles_.spawn(mod);
                 }
@@ -638,13 +702,13 @@ void Runtime::simTick(const double dt) {
         profiler_.addZoneTime(PerfZone::Patterns, std::chrono::duration<double, std::milli>(Clock::now() - patternStart).count());
 
         const auto bulletStart = Clock::now();
-        entitySystem_.update(static_cast<float>(dt), projectiles_, playerPos_, em);
+        entitySystem_.update(static_cast<float>(dt) * dilation.enemyMovement, projectiles_, playerPos_, em);
         profiler_.addZoneTime(PerfZone::Bullets, std::chrono::duration<double, std::milli>(Clock::now() - bulletStart).count());
     }
 
     const auto collisionStart = Clock::now();
     if (bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
-        projectiles_.update(static_cast<float>(dt), playerPos_, playerRadius_);
+        projectiles_.update(static_cast<float>(dt), playerPos_, playerRadius_, dilation.enemyProjectiles, dilation.playerProjectiles);
     } else {
         DeterministicRng& g = rngStreams_.stream("gpu-bullets");
         const std::uint32_t target = 150000U;
@@ -716,7 +780,7 @@ void Runtime::simTick(const double dt) {
             tickIndex_,
             static_cast<std::uint64_t>(runStructure_.stageIndex()),
             static_cast<std::uint64_t>(runStructure_.zoneIndex()),
-            static_cast<std::uint64_t>(runStructure_.state()) ^ static_cast<std::uint64_t>(std::llround(playerHealth_ * 100.0F))
+            static_cast<std::uint64_t>(runStructure_.state()) ^ static_cast<std::uint64_t>(std::llround(playerHealth_ * 100.0F)) ^ defensiveSpecial_.deterministicHash()
         );
         ReplayStateSample sample;
         sample.tick = tickIndex_;
@@ -847,6 +911,9 @@ void Runtime::buildSceneOverlay(const double frameDelta) {
             << "  ActiveLayers " << patternPlayer_.activeLayerCountForStep()
             << "  Speed " << patternPlayer_.playbackSpeed()
             << "  Paused " << (patternPlayer_.paused() ? "yes" : "no")
+            << "\nStandards PF " << engineStandards().playfieldWidth << "x" << engineStandards().playfieldHeight
+            << " RT " << engineStandards().renderTargetWidth << "x" << engineStandards().renderTargetHeight
+            << " Density N/B/X " << engineStandards().densityNormal << "/" << engineStandards().densityBoss << "/" << engineStandards().densityExtreme
             << "\n[F1] archetypes  [F2-F9] buy meta node  [U] upgrades  [Arrows/Pad] navigate upgrades  [Enter/A] confirm  [X/R] reroll  [1-9/TAB] pattern  [SPACE] pause  [R] reset  [,/.] speed  [H] hitboxes  [G] grid  [`] debug HUD  [F10] perf HUD  [F11] graph VM  [F12] bullet mode";
 
     if (archetypeSelectionOpen_) {
@@ -890,11 +957,12 @@ void Runtime::buildSceneOverlay(const double frameDelta) {
                 << "  Spawn/s " << static_cast<int>(perf.counters.bulletSpawnsPerSecond)
                 << "  BP " << perf.counters.broadphaseChecks
                 << "  NP " << perf.counters.narrowphaseChecks;
-        if (perf.warningSimulationBudget || perf.warningRenderBudget || perf.warningCollisionBudget) {
+        if (perf.warningSimulationBudget || perf.warningRenderBudget || perf.warningCollisionBudget || perf.counters.activeBullets > static_cast<std::uint32_t>(engineStandards().densityBoss)) {
             perfHud << "\nWARNING:";
             if (perf.warningSimulationBudget) perfHud << " Sim > 8ms";
             if (perf.warningRenderBudget) perfHud << " Render > 4ms";
             if (perf.warningCollisionBudget) perfHud << " Collisions > 2ms";
+            if (perf.counters.activeBullets > static_cast<std::uint32_t>(engineStandards().densityBoss)) perfHud << " Density>BossTarget";
         }
         debugText_.drawText(spriteBatch_, perfHud.str(), Vec2 {320.0F, -330.0F}, 0.9F * uiTextScale_, Color {255, 240, 180, 255});
     }
@@ -1051,6 +1119,7 @@ void Runtime::drawUpgradeSelectionUi(const double frameDelta) {
     }
 
     ImGui::End();
+
 }
 
 void Runtime::renderFrame(const double frameDelta) {
@@ -1064,8 +1133,25 @@ void Runtime::renderFrame(const double frameDelta) {
     const auto renderStart = Clock::now();
 
     constexpr std::array<Uint8, 4> clearColor {20, 28, 40, 255};
-    SDL_SetRenderDrawColor(renderer_, clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
-    SDL_RenderClear(renderer_);
+    if (useModernRenderer_) {
+#if HELLEngine_ENABLE_MODERN_RENDERER
+        int dw = 1;
+        int dh = 1;
+        SDL_GetRendererOutputSize(renderer_, &dw, &dh);
+        std::string resizeError;
+        if (!modernRenderer_.resize(dw, dh, &resizeError)) {
+            useModernRenderer_ = false;
+            logWarn("Modern renderer resize failed; falling back to legacy: " + resizeError);
+        }
+#endif
+    }
+
+    if (useModernRenderer_) {
+        (void)modernRenderer_.beginScene(Color {clearColor[0], clearColor[1], clearColor[2], clearColor[3]});
+    } else {
+        SDL_SetRenderDrawColor(renderer_, clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+        SDL_RenderClear(renderer_);
+    }
 
     spriteBatch_.begin(camera_);
     buildSceneOverlay(frameDelta);
@@ -1076,6 +1162,12 @@ void Runtime::renderFrame(const double frameDelta) {
         gpuRenderMsFrame_ = static_cast<float>(std::chrono::duration<double, std::milli>(Clock::now() - gpuRenderStart).count());
     }
     debugDraw_.flush(renderer_, camera_);
+    if (defensiveSpecial_.active()) {
+        SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(renderer_, 80, 180, 255, 36);
+        SDL_Rect overlay {0, 0, std::max(1, static_cast<int>(config_.windowWidth * dpiScaleX_)), std::max(1, static_cast<int>(config_.windowHeight * dpiScaleY_))};
+        SDL_RenderFillRect(renderer_, &overlay);
+    }
 
     profiler_.addZoneTime(PerfZone::Render, std::chrono::duration<double, std::milli>(Clock::now() - renderStart).count());
     profiler_.endFrame();
@@ -1116,9 +1208,25 @@ void Runtime::renderFrame(const double frameDelta) {
     snapshot.difficultySpawnRate = difficultyModel_.scalars().spawnRate;
     snapshot.difficultyEnemyHp = difficultyModel_.scalars().enemyHp;
     toolSuite_.beginFrame();
+    ImGui::SetNextWindowBgAlpha(0.30F);
+    if (ImGui::Begin("DefensiveSpecial HUD", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav)) {
+        ImGui::Text("DefensiveSpecial [Shift / Gamepad RB]");
+        ImGui::Text("Active: %s  Remaining %.2fs", defensiveSpecial_.active() ? "yes" : "no", defensiveSpecial_.activeTimeRemaining());
+        ImGui::Text("Charges: %d / %d", defensiveSpecial_.currentCharges(), defensiveSpecial_.capacity());
+        for (int i = 0; i < defensiveSpecial_.capacity(); ++i) {
+            ImGui::SameLine();
+            ImGui::ProgressBar(defensiveSpecial_.cooldownProgressForCharge(i), ImVec2(52.0F, 8.0F), "");
+        }
+    }
+    ImGui::End();
     drawUpgradeSelectionUi(frameDelta);
     toolSuite_.drawControlCenter(snapshot);
     toolSuite_.endFrame();
+
+    if (useModernRenderer_) {
+        modernRenderer_.endScene();
+        modernRenderer_.present();
+    }
 
     SDL_RenderPresent(renderer_);
 }

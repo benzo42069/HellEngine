@@ -290,7 +290,7 @@ void EntitySystem::emitPatternFromTemplate(
             const std::uint32_t bullets = std::max(1U, static_cast<std::uint32_t>(std::round(static_cast<float>(layer.bulletCount) * std::max(0.5F, difficultyScale))));
             for (std::uint32_t i = 0; i < bullets; ++i) {
                 const float a = 360.0F * static_cast<float>(i) / static_cast<float>(bullets);
-                projectiles.spawn({origin, velocityFromDeg(a, speed), layer.projectileRadius});
+                projectiles.spawn({origin, velocityFromDeg(a, speed), layer.projectileRadius, ProjectileBehavior {}, ProjectileAllegiance::Enemy});
             }
             break;
         }
@@ -303,7 +303,7 @@ void EntitySystem::emitPatternFromTemplate(
                 const float t01 = bullets > 1 ? static_cast<float>(i) / static_cast<float>(bullets - 1) : 0.5F;
                 const float jitter = (rng_.nextFloat01() * 2.0F - 1.0F) * layer.modifiers.deterministicJitterDeg;
                 const float a = base - spread * 0.5F + spread * t01 + jitter;
-                projectiles.spawn({origin, velocityFromDeg(a, speed), layer.projectileRadius});
+                projectiles.spawn({origin, velocityFromDeg(a, speed), layer.projectileRadius, ProjectileBehavior {}, ProjectileAllegiance::Enemy});
             }
             break;
         }

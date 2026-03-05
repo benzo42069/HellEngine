@@ -31,6 +31,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(ENGINE_DETERMINISTIC_BUILD "Enable deterministic/reproducible compiler and linker flags" OFF)
+option(HELLEngine_ENABLE_MODERN_RENDERER "Build experimental modern material/post renderer path" OFF)
 if(ENGINE_DETERMINISTIC_BUILD)
   if(MSVC)
     add_compile_options(/Brepro)
@@ -96,6 +97,7 @@ add_library(engine_core STATIC
   src/engine/diagnostics.cpp
   src/engine/content_pipeline.cpp
   src/engine/deterministic_rng.cpp
+  src/engine/defensive_special.cpp
   src/engine/difficulty_scaling.cpp
   src/engine/encounter_graph.cpp
   src/engine/editor_tools.cpp
@@ -105,17 +107,20 @@ add_library(engine_core STATIC
   src/engine/logging.cpp
   src/engine/memory.cpp
   src/engine/meta_progression.cpp
+  src/engine/modern_renderer.cpp
   src/engine/perf_profiler.cpp
   src/engine/public_api.cpp
   src/engine/plugin_registry.cpp
   src/engine/pattern_generator.cpp
   src/engine/pattern_graph.cpp
   src/engine/patterns.cpp
+  src/engine/palette_fx_templates.cpp
   src/engine/projectiles.cpp
   src/engine/replay.cpp
   src/engine/render2d.cpp
   src/engine/run_structure.cpp
   src/engine/runtime.cpp
+  src/engine/standards.cpp
   src/engine/timing.cpp
   src/engine/traits.cpp
   src/engine/upgrade_ui_model.cpp
@@ -136,10 +141,13 @@ target_link_libraries(engine_core
     nlohmann_json::nlohmann_json
 )
 
+target_compile_definitions(engine_core PUBLIC HELLEngine_ENABLE_MODERN_RENDERER=$<BOOL:${HELLEngine_ENABLE_MODERN_RENDERER}>)
+
 
 add_executable(ContentPacker
   src/tools_content_packer.cpp
   src/engine/content_pipeline.cpp
+  src/engine/palette_fx_templates.cpp
 )
 
 target_include_directories(ContentPacker PRIVATE include)
@@ -274,3 +282,19 @@ add_test(NAME public_api_tests COMMAND public_api_tests)
 add_executable(renderer_smoke_tests tests/renderer_smoke_tests.cpp)
 target_link_libraries(renderer_smoke_tests PRIVATE engine_core)
 add_test(NAME renderer_smoke_tests COMMAND renderer_smoke_tests)
+
+add_executable(palette_fx_templates_tests tests/palette_fx_templates_tests.cpp)
+target_link_libraries(palette_fx_templates_tests PRIVATE engine_core)
+add_test(NAME palette_fx_templates_tests COMMAND palette_fx_templates_tests)
+
+add_executable(modern_renderer_tests tests/modern_renderer_tests.cpp)
+target_link_libraries(modern_renderer_tests PRIVATE engine_core)
+add_test(NAME modern_renderer_tests COMMAND modern_renderer_tests)
+
+add_executable(defensive_special_tests tests/defensive_special_tests.cpp)
+target_link_libraries(defensive_special_tests PRIVATE engine_core)
+add_test(NAME defensive_special_tests COMMAND defensive_special_tests)
+
+add_executable(standards_tests tests/standards_tests.cpp)
+target_link_libraries(standards_tests PRIVATE engine_core)
+add_test(NAME standards_tests COMMAND standards_tests)
