@@ -1,0 +1,2893 @@
+{
+  "schemaVersion": 1,
+  "paletteTemplates": [
+    {
+      "category": "Player",
+      "name": "Cyan Strike",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#00E5FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#7FF9FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#B8FFFF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Player",
+      "name": "Electric Blue",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#2E7BFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#7FB4FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#BFD7FF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Player",
+      "name": "Emerald Burst",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#00C896"
+        },
+        {
+          "name": "Highlight",
+          "color": "#5BFFCC"
+        },
+        {
+          "name": "Glow",
+          "color": "#A8FFE5"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Player",
+      "name": "Neon Green",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#39FF14"
+        },
+        {
+          "name": "Highlight",
+          "color": "#9CFF6B"
+        },
+        {
+          "name": "Glow",
+          "color": "#D7FFB8"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Player",
+      "name": "Ice Beam",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#7FE7FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#C6F6FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#E8FDFF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Player",
+      "name": "Aqua Lance",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#00FFC6"
+        },
+        {
+          "name": "Highlight",
+          "color": "#74FFE2"
+        },
+        {
+          "name": "Glow",
+          "color": "#C2FFF3"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Player",
+      "name": "Teal Pulse",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#009E9E"
+        },
+        {
+          "name": "Highlight",
+          "color": "#4FD6D6"
+        },
+        {
+          "name": "Glow",
+          "color": "#A6F2F2"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Player",
+      "name": "Plasma Violet",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#7A5CFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#B29BFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#DDD6FF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Player",
+      "name": "Silver Photon",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#E6F1FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#F5F9FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFFFFF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Player",
+      "name": "Sky Nova",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#3ED8FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#8EF0FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#CFFAFF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "HueShift",
+        "speed": 0.25,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.05
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Crimson Burst",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FF1E3C"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF6B7A"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFB3BD"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Scarlet Wave",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FF3B00"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF865C"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFC7B5"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Lava Spear",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FF5A00"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFA066"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFD6B8"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Amber Ring",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FF8C00"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFB347"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFD8A8"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Golden Flare",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFC400"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFE066"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFF2B0"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Magenta Curse",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FF2ED6"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF7AE6"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFC1F2"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Blood Nova",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#B3001B"
+        },
+        {
+          "name": "Highlight",
+          "color": "#E64A5E"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF9DA8"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Toxic Purple",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#A000FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#C86CFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#E6C9FF"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Void Orb",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#8B008B"
+        },
+        {
+          "name": "Highlight",
+          "color": "#C24FC2"
+        },
+        {
+          "name": "Glow",
+          "color": "#E8A6E8"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Enemy Projectiles",
+      "name": "Plasma Red",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FF0044"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF5C86"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFB3C6"
+        }
+      ],
+      "gradient": "Firestorm Gradient",
+      "autoFxPreset": "Danger Contrast",
+      "animation": {
+        "mode": "PulseBrightness",
+        "speed": 0.6,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.08
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Solar Emperor",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFB800"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFE46B"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFF5B8"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Infernal Crown",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FF3300"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF7A4A"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFB9A0"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Cosmic Tyrant",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#5A2EFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#9B7BFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#D2C4FF"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Arcane Oracle",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#A020F0"
+        },
+        {
+          "name": "Highlight",
+          "color": "#D080FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#F2C6FF"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Celestial Nova",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#00A8FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#7ED3FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#CBEAFF"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Thunder God",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#00FFD5"
+        },
+        {
+          "name": "Highlight",
+          "color": "#6DFFF0"
+        },
+        {
+          "name": "Glow",
+          "color": "#C2FFF8"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Eclipse Lord",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#6B00FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#A46CFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#D7C9FF"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Toxic Hydra",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#3FFF00"
+        },
+        {
+          "name": "Highlight",
+          "color": "#94FF6A"
+        },
+        {
+          "name": "Glow",
+          "color": "#CFFFBA"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Radiant Monarch",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFD700"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFF089"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFF7C8"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Boss",
+      "name": "Abyss Phantom",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#2B0B3F"
+        },
+        {
+          "name": "Highlight",
+          "color": "#6E3FA8"
+        },
+        {
+          "name": "Glow",
+          "color": "#B39BDA"
+        }
+      ],
+      "gradient": "Cosmic Energy Gradient",
+      "autoFxPreset": "Boss Cataclysm",
+      "animation": {
+        "mode": "GradientCycle",
+        "speed": 0.45,
+        "phaseOffset": 0.1,
+        "perInstanceOffset": 0.03
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Deep Space",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#0A0F1F"
+        },
+        {
+          "name": "Mid",
+          "color": "#141B33"
+        },
+        {
+          "name": "Accent",
+          "color": "#1F2A4D"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Twilight Sky",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#1A102B"
+        },
+        {
+          "name": "Mid",
+          "color": "#2B1C44"
+        },
+        {
+          "name": "Accent",
+          "color": "#3E2F66"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Dark Forest",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#0E1A14"
+        },
+        {
+          "name": "Mid",
+          "color": "#1B2E26"
+        },
+        {
+          "name": "Accent",
+          "color": "#2D4A3E"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Abyss Ocean",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#071821"
+        },
+        {
+          "name": "Mid",
+          "color": "#0F2C3A"
+        },
+        {
+          "name": "Accent",
+          "color": "#1A4356"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Ruined City",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#1B1B1B"
+        },
+        {
+          "name": "Mid",
+          "color": "#2C2C2C"
+        },
+        {
+          "name": "Accent",
+          "color": "#3F3F3F"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Crimson Night",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#1F0A0A"
+        },
+        {
+          "name": "Mid",
+          "color": "#3B1414"
+        },
+        {
+          "name": "Accent",
+          "color": "#5A1F1F"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Alien Planet",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#0F1226"
+        },
+        {
+          "name": "Mid",
+          "color": "#232854"
+        },
+        {
+          "name": "Accent",
+          "color": "#39419C"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Crystal Cavern",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#0E1521"
+        },
+        {
+          "name": "Mid",
+          "color": "#1E2B40"
+        },
+        {
+          "name": "Accent",
+          "color": "#334C6A"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Desert Night",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#1A1408"
+        },
+        {
+          "name": "Mid",
+          "color": "#332712"
+        },
+        {
+          "name": "Accent",
+          "color": "#4D3C1F"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Background",
+      "name": "Frozen Wasteland",
+      "layers": [
+        {
+          "name": "Base",
+          "color": "#0F1C2E"
+        },
+        {
+          "name": "Mid",
+          "color": "#20344F"
+        },
+        {
+          "name": "Accent",
+          "color": "#3D5675"
+        }
+      ],
+      "gradient": "Rainbow Spiral Gradient",
+      "autoFxPreset": "Subtle Atmosphere",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.08,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.02
+      }
+    },
+    {
+      "category": "Player Beam",
+      "name": "Photon Lance",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "Inner",
+          "color": "#B8FFFF"
+        },
+        {
+          "name": "Outer",
+          "color": "#6EE7FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#00E5FF"
+        }
+      ],
+      "gradient": "Photon Lance Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Player Beam",
+      "name": "Ion Stream",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#D7F0FF"
+        },
+        {
+          "name": "Inner",
+          "color": "#9BD4FF"
+        },
+        {
+          "name": "Outer",
+          "color": "#5CAEFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#2E7BFF"
+        }
+      ],
+      "gradient": "Ion Stream Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Player Beam",
+      "name": "Cryo Beam",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#E8FDFF"
+        },
+        {
+          "name": "Inner",
+          "color": "#C6F6FF"
+        },
+        {
+          "name": "Outer",
+          "color": "#7FE7FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#3ED8FF"
+        }
+      ],
+      "gradient": "Cryo Beam Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Player Beam",
+      "name": "Plasma Cutter",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#F0F0FF"
+        },
+        {
+          "name": "Inner",
+          "color": "#C5B9FF"
+        },
+        {
+          "name": "Outer",
+          "color": "#9B7BFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#7A5CFF"
+        }
+      ],
+      "gradient": "Plasma Cutter Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Player Beam",
+      "name": "Emerald Ray",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#D7FFE9"
+        },
+        {
+          "name": "Inner",
+          "color": "#A8FFE5"
+        },
+        {
+          "name": "Outer",
+          "color": "#5BFFCC"
+        },
+        {
+          "name": "Glow",
+          "color": "#00C896"
+        }
+      ],
+      "gradient": "Emerald Ray Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Enemy Beam",
+      "name": "Inferno Beam",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFF5A0"
+        },
+        {
+          "name": "Inner",
+          "color": "#FFC400"
+        },
+        {
+          "name": "Outer",
+          "color": "#FF7A00"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF3300"
+        }
+      ],
+      "gradient": "Inferno Beam Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Enemy Beam",
+      "name": "Blood Lance",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFB3BD"
+        },
+        {
+          "name": "Inner",
+          "color": "#FF6B7A"
+        },
+        {
+          "name": "Outer",
+          "color": "#FF1E3C"
+        },
+        {
+          "name": "Glow",
+          "color": "#B3001B"
+        }
+      ],
+      "gradient": "Blood Lance Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Enemy Beam",
+      "name": "Magma Column",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFD6B8"
+        },
+        {
+          "name": "Inner",
+          "color": "#FFA066"
+        },
+        {
+          "name": "Outer",
+          "color": "#FF5A00"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF3B00"
+        }
+      ],
+      "gradient": "Magma Column Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Enemy Beam",
+      "name": "Chaos Ray",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFC1F2"
+        },
+        {
+          "name": "Inner",
+          "color": "#FF7AE6"
+        },
+        {
+          "name": "Outer",
+          "color": "#FF2ED6"
+        },
+        {
+          "name": "Glow",
+          "color": "#A000FF"
+        }
+      ],
+      "gradient": "Chaos Ray Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Enemy Beam",
+      "name": "Solar Strike",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFF2B0"
+        },
+        {
+          "name": "Inner",
+          "color": "#FFE066"
+        },
+        {
+          "name": "Outer",
+          "color": "#FFC400"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF8C00"
+        }
+      ],
+      "gradient": "Solar Strike Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Boss Beam",
+      "name": "Celestial Judgement",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "Inner",
+          "color": "#FFE46B"
+        },
+        {
+          "name": "Outer",
+          "color": "#FFD700"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFB800"
+        }
+      ],
+      "gradient": "Celestial Judgement Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Boss Beam",
+      "name": "Void Annihilator",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#E8A6E8"
+        },
+        {
+          "name": "Inner",
+          "color": "#C24FC2"
+        },
+        {
+          "name": "Outer",
+          "color": "#8B008B"
+        },
+        {
+          "name": "Glow",
+          "color": "#2B0B3F"
+        }
+      ],
+      "gradient": "Void Annihilator Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Boss Beam",
+      "name": "Cosmic Rift",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#D2C4FF"
+        },
+        {
+          "name": "Inner",
+          "color": "#9B7BFF"
+        },
+        {
+          "name": "Outer",
+          "color": "#5A2EFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#3A00FF"
+        }
+      ],
+      "gradient": "Cosmic Rift Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Boss Beam",
+      "name": "Thunder Pillar",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#C2FFF8"
+        },
+        {
+          "name": "Inner",
+          "color": "#6DFFF0"
+        },
+        {
+          "name": "Outer",
+          "color": "#00FFD5"
+        },
+        {
+          "name": "Glow",
+          "color": "#00A8FF"
+        }
+      ],
+      "gradient": "Thunder Pillar Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "Boss Beam",
+      "name": "Toxic Cataclysm",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#CFFFBA"
+        },
+        {
+          "name": "Inner",
+          "color": "#94FF6A"
+        },
+        {
+          "name": "Outer",
+          "color": "#3FFF00"
+        },
+        {
+          "name": "Glow",
+          "color": "#0AFF00"
+        }
+      ],
+      "gradient": "Toxic Cataclysm Gradient",
+      "autoFxPreset": "Beam Focus",
+      "animation": {
+        "mode": "PhaseScroll",
+        "speed": 0.9,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0.2
+      }
+    },
+    {
+      "category": "UI",
+      "name": "HUD Neutral",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#DDE1E8"
+        },
+        {
+          "name": "Highlight",
+          "color": "#8FA0B8"
+        },
+        {
+          "name": "Glow",
+          "color": "#4B5D78"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "UI",
+      "name": "UI Success",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#A6FFCC"
+        },
+        {
+          "name": "Highlight",
+          "color": "#49D18A"
+        },
+        {
+          "name": "Glow",
+          "color": "#1A7D4F"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "UI",
+      "name": "UI Warning",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFF2B0"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFB347"
+        },
+        {
+          "name": "Glow",
+          "color": "#A86500"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "UI",
+      "name": "UI Error",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFC1C1"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF6B7A"
+        },
+        {
+          "name": "Glow",
+          "color": "#8A1F2A"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "UI",
+      "name": "UI Accent",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#C6F6FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#7ED3FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#2E7BFF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Powerups",
+      "name": "Quantum Mint",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#8EFFF0"
+        },
+        {
+          "name": "Highlight",
+          "color": "#34E3C9"
+        },
+        {
+          "name": "Glow",
+          "color": "#00A68F"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Powerups",
+      "name": "Nova Violet",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#D7B3FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#A46CFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#5A2EFF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Powerups",
+      "name": "Pulse Gold",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFF2B0"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFD24D"
+        },
+        {
+          "name": "Glow",
+          "color": "#B88900"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Powerups",
+      "name": "Hyper Cyan",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#B8FFFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#5CEBFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#00A8C8"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Powerups",
+      "name": "Toxic Lime",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#D7FF9C"
+        },
+        {
+          "name": "Highlight",
+          "color": "#94FF6A"
+        },
+        {
+          "name": "Glow",
+          "color": "#3FAF00"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Explosions",
+      "name": "White Core Blast",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFD8A8"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF5A00"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Explosions",
+      "name": "Thermal Bloom",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFF5B8"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFB347"
+        },
+        {
+          "name": "Glow",
+          "color": "#B3001B"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Explosions",
+      "name": "Ash Nova",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#F0F0F0"
+        },
+        {
+          "name": "Highlight",
+          "color": "#9A9A9A"
+        },
+        {
+          "name": "Glow",
+          "color": "#4A4A4A"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Explosions",
+      "name": "Solar Detonation",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFE46B"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF8C00"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Explosions",
+      "name": "Plasma Det",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#E6C9FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF7AE6"
+        },
+        {
+          "name": "Glow",
+          "color": "#A000FF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Hit Effects",
+      "name": "Player Hit Flash",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#7ED3FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#2E7BFF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Hit Effects",
+      "name": "Enemy Hit Flash",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF6B7A"
+        },
+        {
+          "name": "Glow",
+          "color": "#B3001B"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Hit Effects",
+      "name": "Boss Hit Flash",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFE46B"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFB800"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Hit Effects",
+      "name": "Crit Spark",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#C2FFF8"
+        },
+        {
+          "name": "Glow",
+          "color": "#00FFD5"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Hit Effects",
+      "name": "Armor Chip",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#D9D9D9"
+        },
+        {
+          "name": "Glow",
+          "color": "#808080"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Warning Indicators",
+      "name": "Amber Alert",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFF2B0"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFC400"
+        },
+        {
+          "name": "Glow",
+          "color": "#A86500"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Warning Indicators",
+      "name": "Red Alarm",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFD0A8"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF5A00"
+        },
+        {
+          "name": "Glow",
+          "color": "#B3001B"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Warning Indicators",
+      "name": "Danger Stripe",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFF089"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF8C00"
+        },
+        {
+          "name": "Glow",
+          "color": "#7A1A00"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Warning Indicators",
+      "name": "Critical Lock",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFE066"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF3300"
+        },
+        {
+          "name": "Glow",
+          "color": "#6A0000"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Warning Indicators",
+      "name": "Evac Beacon",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFF7C8"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFB347"
+        },
+        {
+          "name": "Glow",
+          "color": "#8A3A00"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Player Projectiles",
+      "name": "Nova Bolt",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#CFFAFF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#8EF0FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#3ED8FF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Player Projectiles",
+      "name": "Sapphire Dot",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#BFD7FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#7FB4FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#2E7BFF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Player Projectiles",
+      "name": "Mint Needle",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#C2FFF3"
+        },
+        {
+          "name": "Highlight",
+          "color": "#74FFE2"
+        },
+        {
+          "name": "Glow",
+          "color": "#00FFC6"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Player Projectiles",
+      "name": "Volt Shot",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#D7FFB8"
+        },
+        {
+          "name": "Highlight",
+          "color": "#9CFF6B"
+        },
+        {
+          "name": "Glow",
+          "color": "#39FF14"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Player Projectiles",
+      "name": "Prism Dart",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#DDD6FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#B29BFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#7A5CFF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Enemy",
+      "name": "Raider Red",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFB3BD"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF6B7A"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF1E3C"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Enemy",
+      "name": "Harrier Orange",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFD6B8"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFA066"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF5A00"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Enemy",
+      "name": "Witch Magenta",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFC1F2"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF7AE6"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF2ED6"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Enemy",
+      "name": "Toxic Drone",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#E6C9FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#C86CFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#A000FF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Enemy",
+      "name": "Abyss Scout",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#E8A6E8"
+        },
+        {
+          "name": "Highlight",
+          "color": "#C24FC2"
+        },
+        {
+          "name": "Glow",
+          "color": "#8B008B"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Boss Projectiles",
+      "name": "Regal Gold",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFF7C8"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FFF089"
+        },
+        {
+          "name": "Glow",
+          "color": "#FFD700"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Boss Projectiles",
+      "name": "Doom Ember",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#FFB9A0"
+        },
+        {
+          "name": "Highlight",
+          "color": "#FF7A4A"
+        },
+        {
+          "name": "Glow",
+          "color": "#FF3300"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Boss Projectiles",
+      "name": "Mythic Arcane",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#F2C6FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#D080FF"
+        },
+        {
+          "name": "Glow",
+          "color": "#A020F0"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Boss Projectiles",
+      "name": "Storm Pulse",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#C2FFF8"
+        },
+        {
+          "name": "Highlight",
+          "color": "#6DFFF0"
+        },
+        {
+          "name": "Glow",
+          "color": "#00FFD5"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    },
+    {
+      "category": "Boss Projectiles",
+      "name": "Nightfall Orb",
+      "layers": [
+        {
+          "name": "Core",
+          "color": "#D7C9FF"
+        },
+        {
+          "name": "Highlight",
+          "color": "#A46CFF"
+        },
+        {
+          "name": "Glow",
+          "color": "#6B00FF"
+        }
+      ],
+      "gradient": "Plasma Energy Gradient",
+      "autoFxPreset": "Arcade Glow",
+      "animation": {
+        "mode": "None",
+        "speed": 0,
+        "phaseOffset": 0,
+        "perInstanceOffset": 0
+      }
+    }
+  ],
+  "gradients": [
+    {
+      "name": "Rainbow Spiral Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#FF0000"
+        },
+        {
+          "position": 0.2,
+          "color": "#FFFF00"
+        },
+        {
+          "position": 0.4,
+          "color": "#00FF00"
+        },
+        {
+          "position": 0.6,
+          "color": "#00FFFF"
+        },
+        {
+          "position": 0.8,
+          "color": "#0000FF"
+        },
+        {
+          "position": 1,
+          "color": "#FF00FF"
+        }
+      ]
+    },
+    {
+      "name": "Plasma Energy Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#FF0000"
+        },
+        {
+          "position": 0.2,
+          "color": "#FFFF00"
+        },
+        {
+          "position": 0.4,
+          "color": "#00FF00"
+        },
+        {
+          "position": 0.6,
+          "color": "#00FFFF"
+        },
+        {
+          "position": 0.8,
+          "color": "#0000FF"
+        },
+        {
+          "position": 1,
+          "color": "#FF00FF"
+        }
+      ]
+    },
+    {
+      "name": "Firestorm Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#2B0B3F"
+        },
+        {
+          "position": 0.35,
+          "color": "#FF3300"
+        },
+        {
+          "position": 0.7,
+          "color": "#FFC400"
+        },
+        {
+          "position": 1,
+          "color": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "name": "Toxic Radiation Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#0A2D00"
+        },
+        {
+          "position": 0.4,
+          "color": "#3FFF00"
+        },
+        {
+          "position": 0.75,
+          "color": "#94FF6A"
+        },
+        {
+          "position": 1,
+          "color": "#E7FFD1"
+        }
+      ]
+    },
+    {
+      "name": "Cosmic Energy Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#FF0000"
+        },
+        {
+          "position": 0.2,
+          "color": "#FFFF00"
+        },
+        {
+          "position": 0.4,
+          "color": "#00FF00"
+        },
+        {
+          "position": 0.6,
+          "color": "#00FFFF"
+        },
+        {
+          "position": 0.8,
+          "color": "#0000FF"
+        },
+        {
+          "position": 1,
+          "color": "#FF00FF"
+        }
+      ]
+    },
+    {
+      "name": "Ice Magic Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#0E1521"
+        },
+        {
+          "position": 0.4,
+          "color": "#3ED8FF"
+        },
+        {
+          "position": 0.8,
+          "color": "#C6F6FF"
+        },
+        {
+          "position": 1,
+          "color": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "name": "Ion Beam Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#FF0000"
+        },
+        {
+          "position": 0.2,
+          "color": "#FFFF00"
+        },
+        {
+          "position": 0.4,
+          "color": "#00FF00"
+        },
+        {
+          "position": 0.6,
+          "color": "#00FFFF"
+        },
+        {
+          "position": 0.8,
+          "color": "#0000FF"
+        },
+        {
+          "position": 1,
+          "color": "#FF00FF"
+        }
+      ]
+    },
+    {
+      "name": "Solar Laser Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#FF0000"
+        },
+        {
+          "position": 0.2,
+          "color": "#FFFF00"
+        },
+        {
+          "position": 0.4,
+          "color": "#00FF00"
+        },
+        {
+          "position": 0.6,
+          "color": "#00FFFF"
+        },
+        {
+          "position": 0.8,
+          "color": "#0000FF"
+        },
+        {
+          "position": 1,
+          "color": "#FF00FF"
+        }
+      ]
+    },
+    {
+      "name": "Void Laser Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#2B0B3F"
+        },
+        {
+          "position": 0.4,
+          "color": "#5A2EFF"
+        },
+        {
+          "position": 0.8,
+          "color": "#9B7BFF"
+        },
+        {
+          "position": 1,
+          "color": "#E8A6E8"
+        }
+      ]
+    },
+    {
+      "name": "Plasma Beam Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#FF0000"
+        },
+        {
+          "position": 0.2,
+          "color": "#FFFF00"
+        },
+        {
+          "position": 0.4,
+          "color": "#00FF00"
+        },
+        {
+          "position": 0.6,
+          "color": "#00FFFF"
+        },
+        {
+          "position": 0.8,
+          "color": "#0000FF"
+        },
+        {
+          "position": 1,
+          "color": "#FF00FF"
+        }
+      ]
+    },
+    {
+      "name": "Toxic Energy Gradient",
+      "stops": [
+        {
+          "position": 0,
+          "color": "#0A2D00"
+        },
+        {
+          "position": 0.4,
+          "color": "#3FFF00"
+        },
+        {
+          "position": 0.75,
+          "color": "#94FF6A"
+        },
+        {
+          "position": 1,
+          "color": "#E7FFD1"
+        }
+      ]
+    }
+  ],
+  "fxPresets": [
+    {
+      "name": "Arcade Glow",
+      "bloomThreshold": 0.8,
+      "bloomIntensity": 1.4,
+      "bloomRadius": 0.55,
+      "vignetteIntensity": 0.25,
+      "vignetteRoundness": 0.9,
+      "exposure": 1.05,
+      "contrast": 1.08,
+      "saturation": 1.2,
+      "gamma": 1.0,
+      "chromaticAberration": 0.05,
+      "filmGrain": 0.02,
+      "scanlineIntensity": 0.05
+    },
+    {
+      "name": "Danger Contrast",
+      "bloomThreshold": 0.9,
+      "bloomIntensity": 1.0,
+      "bloomRadius": 0.4,
+      "vignetteIntensity": 0.35,
+      "vignetteRoundness": 0.8,
+      "exposure": 1.0,
+      "contrast": 1.2,
+      "saturation": 1.1,
+      "gamma": 1.0,
+      "chromaticAberration": 0.08,
+      "filmGrain": 0.03,
+      "scanlineIntensity": 0.08
+    },
+    {
+      "name": "Boss Cataclysm",
+      "bloomThreshold": 0.75,
+      "bloomIntensity": 1.8,
+      "bloomRadius": 0.7,
+      "vignetteIntensity": 0.45,
+      "vignetteRoundness": 0.7,
+      "exposure": 1.1,
+      "contrast": 1.25,
+      "saturation": 1.25,
+      "gamma": 0.95,
+      "chromaticAberration": 0.1,
+      "filmGrain": 0.05,
+      "scanlineIntensity": 0.1
+    },
+    {
+      "name": "Beam Focus",
+      "bloomThreshold": 0.7,
+      "bloomIntensity": 2.0,
+      "bloomRadius": 0.65,
+      "vignetteIntensity": 0.2,
+      "vignetteRoundness": 0.95,
+      "exposure": 1.08,
+      "contrast": 1.15,
+      "saturation": 1.25,
+      "gamma": 1.0,
+      "chromaticAberration": 0.04,
+      "filmGrain": 0.01,
+      "scanlineIntensity": 0.0
+    },
+    {
+      "name": "Subtle Atmosphere",
+      "bloomThreshold": 1.0,
+      "bloomIntensity": 0.35,
+      "bloomRadius": 0.2,
+      "vignetteIntensity": 0.3,
+      "vignetteRoundness": 1.0,
+      "exposure": 0.95,
+      "contrast": 1.0,
+      "saturation": 0.95,
+      "gamma": 1.02,
+      "chromaticAberration": 0.0,
+      "filmGrain": 0.02,
+      "scanlineIntensity": 0.02
+    }
+  ]
+}

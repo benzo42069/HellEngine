@@ -11,6 +11,7 @@ enum ReplayInputBits : std::uint32_t {
     InputMoveRight = 1U << 1,
     InputMoveUp = 1U << 2,
     InputMoveDown = 1U << 3,
+    InputDefensiveSpecial = 1U << 4,
 };
 
 enum class ReplaySubsystem {

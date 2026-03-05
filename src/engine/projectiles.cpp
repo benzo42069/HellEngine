@@ -42,6 +42,8 @@ void ProjectileSystem::initialize(const std::uint32_t capacity, const float worl
     life_.assign(capacity_, 0.0F);
     bounceCount_.assign(capacity_, 0);
     splitDone_.assign(capacity_, 0);
+    allegiance_.assign(capacity_, static_cast<std::uint8_t>(ProjectileAllegiance::Enemy));
+    grazeAwardTick_.assign(capacity_, 0ULL);
 
     freeList_.clear();
     freeList_.reserve(capacity_);
@@ -83,6 +85,8 @@ bool ProjectileSystem::spawn(const ProjectileSpawn& spawnData) {
     life_[slot] = 0.0F;
     bounceCount_[slot] = 0;
     splitDone_[slot] = 0;
+    allegiance_[slot] = static_cast<std::uint8_t>(spawnData.allegiance);
+    grazeAwardTick_[slot] = 0ULL;
     active_[slot] = 1;
     ++stats_.activeCount;
     ++stats_.spawnedThisTick;
@@ -122,7 +126,7 @@ void ProjectileSystem::beginTick() {
     stats_.narrowphaseChecksThisTick = 0;
 }
 
-void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float playerRadius) {
+void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float playerRadius, const float enemyTimeScale, const float playerTimeScale) {
     std::fill(gridHead_.begin(), gridHead_.end(), -1);
     pendingSpawns_.clear();
 
@@ -131,13 +135,14 @@ void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float 
         ++stats_.broadphaseChecksThisTick;
 
         ProjectileBehavior& b = behavior_[i];
-        life_[i] += dt;
+        const float localDt = dt * (allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? std::clamp(enemyTimeScale, 0.0F, 1.0F) : std::clamp(playerTimeScale, 0.0F, 1.0F));
+        life_[i] += localDt;
 
         // 1) acceleration/drag
         const float speed = std::sqrt(velX_[i] * velX_[i] + velY_[i] * velY_[i]);
         if (speed > 0.001F) {
-            float adjustedSpeed = speed + b.accelerationPerSec * dt;
-            adjustedSpeed = std::max(0.0F, adjustedSpeed * std::max(0.0F, 1.0F - b.dragPerSec * dt));
+            float adjustedSpeed = speed + b.accelerationPerSec * localDt;
+            adjustedSpeed = std::max(0.0F, adjustedSpeed * std::max(0.0F, 1.0F - b.dragPerSec * localDt));
             const float scale = adjustedSpeed / speed;
             velX_[i] *= scale;
             velY_[i] *= scale;
@@ -145,7 +150,7 @@ void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float 
 
         // 2) curved motion
         if (std::fabs(b.curvedAngularVelocityDegPerSec) > 0.001F) {
-            rotateVec(velX_[i], velY_[i], degToRad(b.curvedAngularVelocityDegPerSec * dt));
+            rotateVec(velX_[i], velY_[i], degToRad(b.curvedAngularVelocityDegPerSec * localDt));
         }
 
         // 3) homing
@@ -155,7 +160,7 @@ void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float 
             const float targetAng = std::atan2(targetDy, targetDx) * 180.0F / std::numbers::pi_v<float>;
             const float curAng = std::atan2(velY_[i], velX_[i]) * 180.0F / std::numbers::pi_v<float>;
             const float delta = wrapDegrees(targetAng - curAng);
-            const float maxStep = std::min(b.homingTurnRateDegPerSec * dt, b.homingMaxAngleStepDeg);
+            const float maxStep = std::min(b.homingTurnRateDegPerSec * localDt, b.homingMaxAngleStepDeg);
             const float step = std::clamp(delta, -maxStep, maxStep);
             rotateVec(velX_[i], velY_[i], degToRad(step));
         }
@@ -175,6 +180,7 @@ void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float 
                     .vel = {std::cos(a) * speedNow, std::sin(a) * speedNow},
                     .radius = radius_[i] * 0.9F,
                     .behavior = ProjectileBehavior {},
+                    .allegiance = static_cast<ProjectileAllegiance>(allegiance_[i]),
                 });
             }
             splitDone_[i] = 1;
@@ -185,8 +191,8 @@ void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float 
         }
 
         // 5) move
-        posX_[i] += velX_[i] * dt;
-        posY_[i] += velY_[i] * dt;
+        posX_[i] += velX_[i] * localDt;
+        posY_[i] += velY_[i] * localDt;
 
         bool deactivate = false;
 
@@ -253,6 +259,7 @@ void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float 
                         .vel = {std::cos(a) * shardSpeed, std::sin(a) * shardSpeed},
                         .radius = std::max(1.0F, radius_[i] * 0.55F),
                         .behavior = ProjectileBehavior {},
+                        .allegiance = static_cast<ProjectileAllegiance>(allegiance_[i]),
                     });
                 }
             }
@@ -305,12 +312,35 @@ void ProjectileSystem::render(SpriteBatch& batch, const std::string& textureId) 
             .dest = SDL_FRect {posX_[i] - radius_[i], posY_[i] - radius_[i], d, d},
             .src = std::nullopt,
             .rotationDeg = 0.0F,
-            .color = Color {255, 220, 120, 220},
+            .color = allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220},
         });
     }
 }
 
 const ProjectileStats& ProjectileSystem::stats() const { return stats_; }
+
+
+std::uint32_t ProjectileSystem::collectGrazePoints(const Vec2 playerPos, const float playerRadius, const float innerPad, const float outerPad, const std::uint64_t tick, const std::uint64_t cooldownTicks) {
+    const float inner = std::max(0.0F, playerRadius + innerPad);
+    const float outer = std::max(inner, playerRadius + outerPad);
+    const float inner2 = inner * inner;
+    const float outer2 = outer * outer;
+    std::uint32_t points = 0;
+
+    for (std::uint32_t i = 0; i < capacity_; ++i) {
+        if (!active_[i]) continue;
+        if (allegiance_[i] != static_cast<std::uint8_t>(ProjectileAllegiance::Enemy)) continue;
+        const float dx = posX_[i] - playerPos.x;
+        const float dy = posY_[i] - playerPos.y;
+        const float d2 = dx * dx + dy * dy;
+        if (d2 < inner2 || d2 > outer2) continue;
+        if (tick < grazeAwardTick_[i] + cooldownTicks) continue;
+        grazeAwardTick_[i] = tick;
+        ++points;
+    }
+    return points;
+}
+
 
 std::uint32_t ProjectileSystem::capacity() const { return capacity_; }
 
@@ -327,7 +357,7 @@ std::uint64_t ProjectileSystem::debugStateHash() const {
         const std::uint64_t vx = static_cast<std::uint64_t>(std::llround(velX_[i] * 1000.0F));
         const std::uint64_t vy = static_cast<std::uint64_t>(std::llround(velY_[i] * 1000.0F));
         mix((static_cast<std::uint64_t>(i) << 1U) ^ px ^ (py << 8U) ^ (vx << 16U) ^ (vy << 24U));
-        mix(static_cast<std::uint64_t>(bounceCount_[i]) | (static_cast<std::uint64_t>(splitDone_[i]) << 8U));
+        mix(static_cast<std::uint64_t>(bounceCount_[i]) | (static_cast<std::uint64_t>(splitDone_[i]) << 8U) | (static_cast<std::uint64_t>(allegiance_[i]) << 16U));
     }
     mix(stats_.activeCount);
     mix(stats_.totalCollisions);

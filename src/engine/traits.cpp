@@ -95,6 +95,18 @@ void TraitSystem::initialize(const std::uint64_t seed) {
         auto m = mods(); m.enemyProjectileSpeedScale = 1.12F; m.projectileSpeedMul = 1.05F;
         catalog_.push_back(makeTrait("predator-mark", "Predator Mark", "Boost offense by forcing faster enemy bullet lanes.", "ico_predator", TraitRarity::Rare, m, {"precision", "risk"}));
     }
+    {
+        auto m = mods(); m.defensiveSpecialCooldownReduction = 0.10F;
+        catalog_.push_back(makeTrait("defensive-recycle", "Defensive Recycle", "Reduces DefensiveSpecial charge cooldown.", "ico_def_cooldown", TraitRarity::Common, m, {"specials", "defense"}));
+    }
+    {
+        auto m = mods(); m.defensiveSpecialCapacityAdd = 1;
+        catalog_.push_back(makeTrait("defensive-reserve", "Defensive Reserve", "Adds one DefensiveSpecial charge capacity.", "ico_def_capacity", TraitRarity::Rare, m, {"specials", "defense"}));
+    }
+    {
+        auto m = mods(); m.offensiveSpecialPowerMul = 1.10F;
+        catalog_.push_back(makeTrait("offensive-overdrive", "Offensive Overdrive", "Increases offensive special output while sharing the Specials pool.", "ico_off_special", TraitRarity::Common, m, {"specials", "offense"}));
+    }
 
     active_.clear();
     aggregate_ = {};
@@ -181,12 +193,18 @@ void TraitSystem::rebuildAggregate() {
         aggregate_.playerHarvestMultiplier *= t.modifiers.playerHarvestMultiplier;
         aggregate_.enemyFireRateScale *= t.modifiers.enemyFireRateScale;
         aggregate_.enemyProjectileSpeedScale *= t.modifiers.enemyProjectileSpeedScale;
+        aggregate_.defensiveSpecialCooldownReduction += t.modifiers.defensiveSpecialCooldownReduction;
+        aggregate_.defensiveSpecialCapacityAdd += t.modifiers.defensiveSpecialCapacityAdd;
+        aggregate_.offensiveSpecialPowerMul *= t.modifiers.offensiveSpecialPowerMul;
     }
 
     aggregate_.projectileSpeedMul = std::clamp(aggregate_.projectileSpeedMul, 0.5F, 3.0F);
     aggregate_.patternCooldownScale = std::clamp(aggregate_.patternCooldownScale, 0.5F, 2.0F);
     aggregate_.enemyFireRateScale = std::clamp(aggregate_.enemyFireRateScale, 0.5F, 2.0F);
     aggregate_.enemyProjectileSpeedScale = std::clamp(aggregate_.enemyProjectileSpeedScale, 0.5F, 2.0F);
+    aggregate_.defensiveSpecialCooldownReduction = std::clamp(aggregate_.defensiveSpecialCooldownReduction, 0.0F, 0.5F);
+    aggregate_.defensiveSpecialCapacityAdd = std::clamp(aggregate_.defensiveSpecialCapacityAdd, 0, 2);
+    aggregate_.offensiveSpecialPowerMul = std::clamp(aggregate_.offensiveSpecialPowerMul, 0.5F, 2.0F);
 }
 
 void TraitSystem::setRareChanceMultiplier(const float multiplier) {
@@ -211,7 +229,7 @@ std::vector<TraitValidationIssue> TraitSystem::validateCatalog() const {
             issues.push_back(TraitValidationIssue {.traitId = "<empty>", .message = "id is required"});
         }
         if (t.modifiers.projectileSpeedMul <= 0.0F || t.modifiers.patternCooldownScale <= 0.0F || t.modifiers.playerHarvestMultiplier <= 0.0F
-            || t.modifiers.enemyFireRateScale <= 0.0F || t.modifiers.enemyProjectileSpeedScale <= 0.0F) {
+            || t.modifiers.enemyFireRateScale <= 0.0F || t.modifiers.enemyProjectileSpeedScale <= 0.0F || t.modifiers.offensiveSpecialPowerMul <= 0.0F) {
             issues.push_back(TraitValidationIssue {.traitId = t.id, .message = "multiplicative modifiers must be > 0"});
         }
     }

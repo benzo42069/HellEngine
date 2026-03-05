@@ -2,6 +2,9 @@
 
 #include <SDL.h>
 
+#include <engine/palette_fx_templates.h>
+#include <engine/standards.h>
+
 #include <array>
 #include <cstdint>
 #include <deque>
@@ -131,6 +134,8 @@ class ControlCenterToolSuite {
     bool showWaveEditor_ {true};
     bool showValidator_ {true};
     bool showProfiler_ {true};
+    bool showPaletteFxTemplates_ {true};
+    bool showStandards_ {true};
 
     std::string statusMessage_ {"Ready"};
     std::deque<float> frameHistoryMs_;
@@ -163,6 +168,17 @@ class ControlCenterToolSuite {
     bool workspaceLayoutInitialized_ {false};
     bool validatorRequested_ {false};
     bool validatorAutoOnSave_ {true};
+    PaletteFxTemplateRegistry paletteRegistry_ {};
+    bool paletteRegistryLoaded_ {false};
+    int paletteCategoryIndex_ {0};
+    int paletteTemplateIndex_ {0};
+    int paletteLayerIndex_ {0};
+    bool palettePaintMode_ {true};
+    bool paletteFxAutoMode_ {false};
+    int paletteFxPresetIndex_ {0};
+    std::vector<PaletteColor> paletteClipboard_ {};
+    std::optional<PaletteTemplate> paletteEditedTemplate_ {};
+    std::vector<PaletteMaterialParams> demoSelectionMaterials_ {};
 };
 
 } // namespace engine

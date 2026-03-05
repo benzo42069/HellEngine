@@ -5,6 +5,7 @@
 #include <engine/deterministic_rng.h>
 #include <engine/difficulty_scaling.h>
 #include <engine/diagnostics.h>
+#include <engine/defensive_special.h>
 #include <engine/editor_tools.h>
 #include <engine/gpu_bullets.h>
 #include <engine/upgrade_ui_model.h>
@@ -12,6 +13,7 @@
 #include <engine/job_system.h>
 #include <engine/memory.h>
 #include <engine/meta_progression.h>
+#include <engine/modern_renderer.h>
 #include <engine/patterns.h>
 #include <engine/perf_profiler.h>
 #include <engine/projectiles.h>
@@ -19,6 +21,7 @@
 #include <engine/render2d.h>
 #include <engine/run_structure.h>
 #include <engine/traits.h>
+#include <engine/standards.h>
 
 #include <SDL.h>
 
@@ -81,6 +84,8 @@ class Runtime {
 
     Camera2D camera_;
     std::unique_ptr<TextureStore> textures_;
+    RendererModernPipeline modernRenderer_ {};
+    bool useModernRenderer_ {false};
     SpriteBatch spriteBatch_;
     DebugDraw debugDraw_;
     DebugText debugText_;
@@ -135,6 +140,9 @@ class Runtime {
     float gpuUpdateMsFrame_ {0.0F};
     float gpuRenderMsFrame_ {0.0F};
     std::uint32_t currentInputMask_ {0};
+    DefensiveSpecialSystem defensiveSpecial_ {};
+    std::uint32_t prevHarvestedNodes_ {0};
+    std::uint32_t prevDefeatedBosses_ {0};
     std::string hotReloadErrorMessage_ {};
 };
 

@@ -1,6 +1,8 @@
 #include <engine/editor_tools.h>
 #include <engine/encounter_graph.h>
 #include <engine/pattern_generator.h>
+#include <engine/standards.h>
+#include <engine/palette_fx_templates.h>
 #include <engine/pattern_graph.h>
 #include <engine/public/plugins.h>
 
@@ -12,10 +14,12 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <numeric>
+#include <random>
 #include <sstream>
 
 namespace engine {
@@ -124,6 +128,13 @@ void ControlCenterToolSuite::initialize(SDL_Window* window, SDL_Renderer* render
     initialized_ = true;
 
     std::filesystem::create_directories("data/layouts");
+    std::string paletteError;
+    paletteRegistryLoaded_ = paletteRegistry_.loadFromJsonFile("data/palettes/palette_fx_templates.json", &paletteError);
+    if (!paletteRegistryLoaded_) {
+        appendConsole("Palette template load failed: " + paletteError);
+    } else {
+        appendConsole("Loaded Palette & FX templates");
+    }
     if (std::filesystem::exists("data/layouts/control_center_layout.ini")) {
         ImGui::LoadIniSettingsFromDisk("data/layouts/control_center_layout.ini");
         workspaceLayoutInitialized_ = true;
@@ -218,6 +229,8 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
                 ImGui::MenuItem("Trait Editor", nullptr, &showTraitEditor_);
                 ImGui::MenuItem("Profiler", nullptr, &showProfiler_);
                 ImGui::MenuItem("Validator", nullptr, &showValidator_);
+                ImGui::MenuItem("Palette & FX Templates", nullptr, &showPaletteFxTemplates_);
+                ImGui::MenuItem("Standards", nullptr, &showStandards_);
                 ImGui::EndMenu();
             }
 
@@ -342,6 +355,241 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
         }
         return asset;
     };
+
+
+    if (showPaletteFxTemplates_) {
+        ImGui::Begin("Palette & FX Templates");
+        std::string reloadError;
+        if (paletteRegistry_.reloadIfChanged(&reloadError)) {
+            appendConsole("Palette/FX templates hot reloaded");
+        }
+
+        if (!paletteRegistryLoaded_) {
+            ImGui::TextDisabled("Template database not loaded from data/palettes/palette_fx_templates.json");
+        }
+
+        const auto categories = paletteRegistry_.categories();
+        if (!categories.empty()) {
+            paletteCategoryIndex_ = std::clamp(paletteCategoryIndex_, 0, static_cast<int>(categories.size()) - 1);
+            if (ImGui::BeginCombo("Category", categories[paletteCategoryIndex_].c_str())) {
+                for (int i = 0; i < static_cast<int>(categories.size()); ++i) {
+                    const bool selected = i == paletteCategoryIndex_;
+                    if (ImGui::Selectable(categories[i].c_str(), selected)) {
+                        paletteCategoryIndex_ = i;
+                        paletteTemplateIndex_ = 0;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            const auto templates = paletteRegistry_.templatesForCategory(categories[paletteCategoryIndex_]);
+            if (!templates.empty()) {
+                paletteTemplateIndex_ = std::clamp(paletteTemplateIndex_, 0, static_cast<int>(templates.size()) - 1);
+                if (ImGui::BeginCombo("Template", templates[paletteTemplateIndex_]->name.c_str())) {
+                    for (int i = 0; i < static_cast<int>(templates.size()); ++i) {
+                        const bool selected = i == paletteTemplateIndex_;
+                        if (ImGui::Selectable(templates[i]->name.c_str(), selected)) {
+                            paletteTemplateIndex_ = i;
+                            paletteEditedTemplate_ = *templates[i];
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+
+                if (!paletteEditedTemplate_.has_value()) paletteEditedTemplate_ = *templates[paletteTemplateIndex_];
+                auto& edited = *paletteEditedTemplate_;
+
+                ImGui::SeparatorText("Palette Editing");
+                ImGui::Checkbox("Paint Mode", &palettePaintMode_);
+                ImGui::SameLine();
+                if (ImGui::Button("Fill Derive")) {
+                    if (!edited.layerColors.empty()) {
+                        if (edited.category == "Background") {
+                            PaletteFillResult fill = deriveBackgroundFillFromAccent(edited.layerColors.front());
+                            if (edited.layerColors.size() >= 3) {
+                                edited.layerColors[0] = fill.core;
+                                edited.layerColors[1] = fill.highlight;
+                                edited.layerColors[2] = fill.glow;
+                            }
+                        } else {
+                            PaletteFillResult fill = deriveProjectileFillFromCore(edited.layerColors.front());
+                            if (edited.layerColors.size() >= 3) {
+                                edited.layerColors[0] = fill.core;
+                                edited.layerColors[1] = fill.highlight;
+                                edited.layerColors[2] = fill.glow;
+                            }
+                        }
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Copy")) paletteClipboard_ = edited.layerColors;
+                ImGui::SameLine();
+                if (ImGui::Button("Paste") && !paletteClipboard_.empty()) edited.layerColors = paletteClipboard_;
+                ImGui::SameLine();
+                if (ImGui::Button("Revert")) edited = *templates[paletteTemplateIndex_];
+                ImGui::SameLine();
+                if (ImGui::Button("Randomize")) {
+                    std::mt19937 rng(static_cast<unsigned>(snapshot.tick));
+                    std::uniform_real_distribution<float> delta(-0.12F, 0.12F);
+                    for (auto& c : edited.layerColors) {
+                        c.r = std::clamp(c.r + delta(rng), 0.0F, 1.0F);
+                        c.g = std::clamp(c.g + delta(rng), 0.0F, 1.0F);
+                        c.b = std::clamp(c.b + delta(rng), 0.0F, 1.0F);
+                    }
+                }
+
+                for (std::size_t i = 0; i < edited.layerNames.size() && i < edited.layerColors.size(); ++i) {
+                    float color[4] = {edited.layerColors[i].r, edited.layerColors[i].g, edited.layerColors[i].b, edited.layerColors[i].a};
+                    ImGui::PushID(static_cast<int>(i));
+                    if (ImGui::ColorEdit4(edited.layerNames[i].c_str(), color, ImGuiColorEditFlags_NoInputs)) {
+                        edited.layerColors[i] = {color[0], color[1], color[2], color[3]};
+                    }
+                    if (palettePaintMode_ && ImGui::IsItemClicked()) {
+                        paletteLayerIndex_ = static_cast<int>(i);
+                    }
+                    ImGui::PopID();
+                }
+
+                ImGui::SeparatorText("Gradient");
+                const auto& db = paletteRegistry_.database();
+                for (const auto& gradient : db.gradients) {
+                    if (gradient.name != edited.gradientName) continue;
+                    auto lut = generateGradientLut(gradient, 32);
+                    for (const auto& c : lut) {
+                        ImGui::SameLine(0.0F, 0.0F);
+                        ImGui::ColorButton("##g", ImVec4(c.r, c.g, c.b, c.a), ImGuiColorEditFlags_NoTooltip, ImVec2(6.0F, 14.0F));
+                    }
+                    ImGui::NewLine();
+                }
+
+                ImGui::SeparatorText("Animated Palette");
+                static const char* animModes[] = {"None", "HueShift", "GradientCycle", "PulseBrightness", "PhaseScroll"};
+                int animMode = static_cast<int>(edited.animation.mode);
+                if (ImGui::Combo("Mode", &animMode, animModes, 5)) edited.animation.mode = static_cast<PaletteAnimationMode>(animMode);
+                ImGui::SliderFloat("Speed", &edited.animation.speed, 0.0F, 8.0F);
+                ImGui::SliderFloat("Phase Offset", &edited.animation.phaseOffset, 0.0F, 1.0F);
+                ImGui::SliderFloat("Per-instance Offset", &edited.animation.perInstanceOffset, 0.0F, 1.0F);
+
+                ImGui::SeparatorText("FX Presets");
+                ImGui::Checkbox("FX Mode Auto", &paletteFxAutoMode_);
+                const auto& fx = db.fxPresets;
+                if (!fx.empty()) {
+                    paletteFxPresetIndex_ = std::clamp(paletteFxPresetIndex_, 0, static_cast<int>(fx.size()) - 1);
+                    if (ImGui::BeginCombo("FX Preset", fx[paletteFxPresetIndex_].name.c_str())) {
+                        for (int i = 0; i < static_cast<int>(fx.size()); ++i) {
+                            if (ImGui::Selectable(fx[i].name.c_str(), i == paletteFxPresetIndex_)) paletteFxPresetIndex_ = i;
+                        }
+                        ImGui::EndCombo();
+                    }
+                    if (paletteFxAutoMode_ && !edited.autoFxPreset.empty()) {
+                        for (int i = 0; i < static_cast<int>(fx.size()); ++i) if (fx[i].name == edited.autoFxPreset) paletteFxPresetIndex_ = i;
+                    }
+                    const auto& chosen = fx[paletteFxPresetIndex_];
+                    ImGui::Text("Bloom T/I/R %.2f %.2f %.2f", chosen.bloomThreshold, chosen.bloomIntensity, chosen.bloomRadius);
+                    ImGui::Text("Vignette %.2f Round %.2f", chosen.vignetteIntensity, chosen.vignetteRoundness);
+                    if (ImGui::Button("Apply FX to Camera")) appendConsole("Applied FX preset to camera (stub): " + chosen.name);
+                    ImGui::SameLine();
+                    if (ImGui::Button("Revert FX")) appendConsole("Reverted FX preset from camera (stub)");
+                }
+
+                if (ImGui::Button("Apply to Selection")) {
+                    demoSelectionMaterials_.clear();
+                    demoSelectionMaterials_.push_back(buildMaterialParamsFromTemplate(edited));
+                    appendConsole("Applied palette material params to selection (demo stub)");
+                }
+                if (!demoSelectionMaterials_.empty()) {
+                    ImGui::Text("Selection material params ready: %zu", demoSelectionMaterials_.size());
+                }
+            }
+        }
+        ImGui::TextWrapped("Beam rendering default: strip mesh with UV.y mapped length + shader glow (fallback to stretched sprite where mesh path unavailable).");
+        ImGui::TextWrapped("Post-stack integration is partial-safe: data/UI implemented, camera apply/revert currently routed via stubs to avoid regressions in current SDL2 renderer backend.");
+        ImGui::End();
+    }
+
+
+    if (showStandards_) {
+        ImGui::Begin("Standards");
+        EngineStandards& stds = mutableEngineStandards();
+        if (ImGui::Button("Reset to Spec Defaults")) {
+            resetEngineStandardsToSpec();
+            appendConsole("Standards reset to spec defaults");
+        }
+        ImGui::SeparatorText("Playfield & Coordinate Space");
+        ImGui::SliderInt("Playfield Width", &stds.playfieldWidth, 480, 4096);
+        ImGui::InputInt("Playfield Width (exact)", &stds.playfieldWidth);
+        ImGui::SliderInt("Playfield Height", &stds.playfieldHeight, 640, 4096);
+        ImGui::InputInt("Playfield Height (exact)", &stds.playfieldHeight);
+        ImGui::Text("Origin: Bottom-Left, X:0..%d Y:0..%d", stds.playfieldWidth, stds.playfieldHeight);
+
+        ImGui::SeparatorText("Rendering & Scaling");
+        ImGui::SliderInt("Internal RT Width", &stds.renderTargetWidth, 640, 8192);
+        ImGui::InputInt("Internal RT Width (exact)", &stds.renderTargetWidth);
+        ImGui::SliderInt("Internal RT Height", &stds.renderTargetHeight, 640, 8192);
+        ImGui::InputInt("Internal RT Height (exact)", &stds.renderTargetHeight);
+        ImGui::TextWrapped("Scaling policy: preserve aspect ratio, centered playfield, no horizontal stretch.");
+
+        ImGui::SeparatorText("Projectile Sizes");
+        ImGui::SliderInt("Micro Min", &stds.projectileMicroMin, 2, 16); ImGui::SameLine(); ImGui::InputInt("Micro Min exact", &stds.projectileMicroMin);
+        ImGui::SliderInt("Micro Max", &stds.projectileMicroMax, 2, 20); ImGui::SameLine(); ImGui::InputInt("Micro Max exact", &stds.projectileMicroMax);
+        ImGui::SliderInt("Small Min", &stds.projectileSmallMin, 2, 20); ImGui::SameLine(); ImGui::InputInt("Small Min exact", &stds.projectileSmallMin);
+        ImGui::SliderInt("Small Max", &stds.projectileSmallMax, 2, 24); ImGui::SameLine(); ImGui::InputInt("Small Max exact", &stds.projectileSmallMax);
+        ImGui::SliderInt("Medium Min", &stds.projectileMediumMin, 4, 32); ImGui::SameLine(); ImGui::InputInt("Medium Min exact", &stds.projectileMediumMin);
+        ImGui::SliderInt("Medium Max", &stds.projectileMediumMax, 4, 40); ImGui::SameLine(); ImGui::InputInt("Medium Max exact", &stds.projectileMediumMax);
+
+        ImGui::SeparatorText("Player Hitbox");
+        ImGui::SliderInt("Hitbox Standard Min", &stds.playerHitboxStandardMin, 2, 12); ImGui::SameLine(); ImGui::InputInt("Hitbox Standard Min exact", &stds.playerHitboxStandardMin);
+        ImGui::SliderInt("Hitbox Standard Max", &stds.playerHitboxStandardMax, 2, 12); ImGui::SameLine(); ImGui::InputInt("Hitbox Standard Max exact", &stds.playerHitboxStandardMax);
+
+        ImGui::SeparatorText("Beams");
+        ImGui::SliderInt("Beam Thin Min", &stds.beamThinMin, 2, 40); ImGui::SameLine(); ImGui::InputInt("Beam Thin Min exact", &stds.beamThinMin);
+        ImGui::SliderInt("Beam Standard Max", &stds.beamStandardMax, 8, 128); ImGui::SameLine(); ImGui::InputInt("Beam Standard Max exact", &stds.beamStandardMax);
+        ImGui::SliderInt("Beam Boss Max", &stds.beamBossMax, 16, 200); ImGui::SameLine(); ImGui::InputInt("Beam Boss Max exact", &stds.beamBossMax);
+
+        ImGui::SeparatorText("Pattern Helpers");
+        ImGui::Text("Angle step 6: %.1f", getRadialAngleStep(6));
+        ImGui::Text("Angle step 8: %.1f", getRadialAngleStep(8));
+        ImGui::Text("Angle step 12: %.1f", getRadialAngleStep(12));
+        ImGui::Text("Angle step 16: %.1f", getRadialAngleStep(16));
+        ImGui::Text("Stream Gap Normal: %d", getStreamGapPreset(DifficultyGapPreset::Normal));
+        ImGui::Text("Wall Gap Hard: %d", getWallGapPreset(DifficultyGapPreset::Hard));
+
+        ImGui::SeparatorText("Density Targets");
+        ImGui::SliderInt("Density Normal", &stds.densityNormal, 100, 20000); ImGui::SameLine(); ImGui::InputInt("Density Normal exact", &stds.densityNormal);
+        ImGui::SliderInt("Density Boss", &stds.densityBoss, 500, 50000); ImGui::SameLine(); ImGui::InputInt("Density Boss exact", &stds.densityBoss);
+        ImGui::SliderInt("Density Extreme", &stds.densityExtreme, 1000, 100000); ImGui::SameLine(); ImGui::InputInt("Density Extreme exact", &stds.densityExtreme);
+
+        ImGui::SeparatorText("Background Constraints");
+        ImGui::SliderFloat("Brightness Min", &stds.backgroundBrightnessMin, 0.0F, 1.0F);
+        ImGui::InputFloat("Brightness Min (exact)", &stds.backgroundBrightnessMin, 0.01F, 0.05F, "%.3f");
+        ImGui::SliderFloat("Brightness Max", &stds.backgroundBrightnessMax, 0.0F, 1.0F);
+        ImGui::InputFloat("Brightness Max (exact)", &stds.backgroundBrightnessMax, 0.01F, 0.05F, "%.3f");
+        ImGui::SliderFloat("Saturation Max", &stds.backgroundSaturationMax, 0.0F, 1.0F);
+        ImGui::InputFloat("Saturation Max (exact)", &stds.backgroundSaturationMax, 0.01F, 0.05F, "%.3f");
+
+        ImGui::SeparatorText("Render Order");
+        for (std::size_t i = 0; i < stds.renderOrder.size(); ++i) {
+            ImGui::Text("%zu: %s", i, toString(stds.renderOrder[i]));
+        }
+
+        ImGui::SeparatorText("Camera Policy");
+        ImGui::SliderFloat("Camera Max Scroll", &stds.cameraMaxScrollUnitsPerSec, 10.0F, 2000.0F);
+        ImGui::InputFloat("Camera Max Scroll (exact)", &stds.cameraMaxScrollUnitsPerSec, 5.0F, 20.0F, "%.2f");
+        ImGui::SliderFloat("Camera Shake Max", &stds.cameraShakeMaxAmplitude, 0.0F, 100.0F);
+        ImGui::InputFloat("Camera Shake Max (exact)", &stds.cameraShakeMaxAmplitude, 0.5F, 2.0F, "%.2f");
+        ImGui::SliderFloat("Camera Zoom Min", &stds.cameraZoomMin, 0.1F, 4.0F);
+        ImGui::InputFloat("Camera Zoom Min (exact)", &stds.cameraZoomMin, 0.01F, 0.05F, "%.3f");
+        ImGui::SliderFloat("Camera Zoom Max", &stds.cameraZoomMax, 0.1F, 4.0F);
+        ImGui::InputFloat("Camera Zoom Max (exact)", &stds.cameraZoomMax, 0.01F, 0.05F, "%.3f");
+
+        clampStandards(stds);
+        const float canonicalAspect = static_cast<float>(stds.playfieldWidth) / static_cast<float>(stds.playfieldHeight);
+        if (std::abs(canonicalAspect - 0.75F) > 0.05F) {
+            ImGui::TextColored(ImVec4(1.0F, 0.6F, 0.2F, 1.0F), "Warning: playfield deviates from canonical 3:4 ratio.");
+        }
+
+        ImGui::End();
+    }
 
 
     if (showPatternEditor_) {
