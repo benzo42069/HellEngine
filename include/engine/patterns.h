@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engine/deterministic_rng.h>
+#include <engine/pattern_graph.h>
 #include <engine/projectiles.h>
 #include <engine/render2d.h>
 
@@ -47,6 +48,7 @@ struct PatternLayer {
     float bulletSpeed {120.0F};
     float projectileRadius {3.0F};
     float cooldownSeconds {0.15F};
+    ProjectileBehavior projectileBehavior {};
 
     float angleStepDeg {8.0F};
     float spreadAngleDeg {35.0F};
@@ -78,9 +80,13 @@ class PatternBank {
     void loadFallbackDefaults();
 
     [[nodiscard]] const std::vector<PatternDefinition>& patterns() const;
+    [[nodiscard]] const std::vector<CompiledPatternGraph>& compiledGraphs() const;
+    [[nodiscard]] const std::vector<PatternGraphDiagnostic>& graphDiagnostics() const;
 
   private:
     std::vector<PatternDefinition> patterns_;
+    std::vector<CompiledPatternGraph> compiledGraphs_;
+    std::vector<PatternGraphDiagnostic> graphDiagnostics_;
 };
 
 class PatternPlayer {

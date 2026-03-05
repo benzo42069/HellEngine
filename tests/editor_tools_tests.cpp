@@ -25,6 +25,15 @@ int main() {
         return EXIT_FAILURE;
     }
 
+
+    engine::ToolRuntimeSnapshot snapshot;
+    snapshot.spawnsPerSecond = 300.0F;
+    const engine::ControlCenterValidationReport report = engine::runControlCenterValidation("missing_test_root", snapshot);
+    if (report.issues.empty()) {
+        std::cerr << "validator should report missing content/perf hazards\n";
+        return EXIT_FAILURE;
+    }
+
     std::filesystem::remove_all(root);
     std::cout << "editor_tools_tests passed\n";
     return EXIT_SUCCESS;

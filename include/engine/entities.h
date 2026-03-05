@@ -93,6 +93,7 @@ struct EntityRuntimeModifiers {
     float enemyFireRateScale {1.0F};
     float enemyProjectileSpeedScale {1.0F};
     float harvestYieldMultiplier {1.0F};
+    float enemyHealthScale {1.0F};
 };
 
 struct EntityStats {
@@ -140,7 +141,7 @@ class EntitySystem {
       bool initialized {false};
     };
 
-    void spawnEntity(std::size_t templateIndex);
+    void spawnEntity(std::size_t templateIndex, float enemyHealthScale = 1.0F);
     void applyHarvest(const EntityTemplate& t, const EntityRuntimeModifiers& runtimeMods);
     void applyRewardDrop(const ResourceYield& reward, const EntityRuntimeModifiers& runtimeMods);
     void emitPatternFromTemplate(const EntityTemplate& t, const std::string& patternOverride, Vec2 origin, Vec2 playerPos, ProjectileSystem& projectiles, const EntityRuntimeModifiers& runtimeMods, float difficultyScale);

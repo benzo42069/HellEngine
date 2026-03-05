@@ -5,8 +5,22 @@
 namespace engine {
 
 namespace {
-Trait makeTrait(const char* id, const char* name, TraitRarity rarity, const TraitModifiers& m) {
-    return Trait {.id = id, .name = name, .rarity = rarity, .modifiers = m};
+Trait makeTrait(
+    const char* id,
+    const char* name,
+    const char* description,
+    const char* iconToken,
+    const TraitRarity rarity,
+    const TraitModifiers& m,
+    std::initializer_list<const char*> synergyTags) {
+    Trait t {.id = id, .name = name, .description = description, .iconToken = iconToken, .rarity = rarity, .modifiers = m};
+    std::size_t index = 0;
+    for (const char* tag : synergyTags) {
+        if (index >= t.synergyTags.size()) break;
+        t.synergyTags[index++] = tag;
+    }
+    t.synergyTagCount = static_cast<std::uint8_t>(index);
+    return t;
 }
 
 float rarityWeight(const TraitRarity r) {
@@ -33,60 +47,63 @@ void TraitSystem::initialize(const std::uint64_t seed) {
     rng_ = DeterministicRng(seed ^ 0xA11CE55ULL);
     catalog_.clear();
 
-    // 12 functional traits
     {
         auto m = mods(); m.projectileSpeedMul = 1.20F;
-        catalog_.push_back(makeTrait("swift-shots", "Swift Shots", TraitRarity::Common, m));
+        catalog_.push_back(makeTrait("swift-shots", "Swift Shots", "Boost muzzle velocity for tighter lead control.", "ico_speed", TraitRarity::Common, m, {"projectile", "tempo"}));
     }
     {
         auto m = mods(); m.projectileRadiusAdd = 0.8F; m.projectileSpeedMul = 0.95F;
-        catalog_.push_back(makeTrait("heavy-rounds", "Heavy Rounds", TraitRarity::Common, m));
+        catalog_.push_back(makeTrait("heavy-rounds", "Heavy Rounds", "Increase impact width with slightly slower rounds.", "ico_radius", TraitRarity::Common, m, {"projectile", "burst"}));
     }
     {
         auto m = mods(); m.patternCooldownScale = 0.92F;
-        catalog_.push_back(makeTrait("tempo-core", "Tempo Core", TraitRarity::Common, m));
+        catalog_.push_back(makeTrait("tempo-core", "Tempo Core", "Lower firing cycle cooldown for sustained pressure.", "ico_cooldown", TraitRarity::Common, m, {"tempo", "rapid"}));
     }
     {
         auto m = mods(); m.patternExtraBullets = 2;
-        catalog_.push_back(makeTrait("scatter-core", "Scatter Core", TraitRarity::Common, m));
+        catalog_.push_back(makeTrait("scatter-core", "Scatter Core", "Add extra pellets to every firing pattern.", "ico_scatter", TraitRarity::Common, m, {"burst", "projectile"}));
     }
     {
         auto m = mods(); m.patternJitterAddDeg = -0.4F; m.projectileSpeedMul = 1.05F;
-        catalog_.push_back(makeTrait("focus-core", "Focus Core", TraitRarity::Rare, m));
+        catalog_.push_back(makeTrait("focus-core", "Focus Core", "Tighten spread and nudge projectile speed.", "ico_focus", TraitRarity::Rare, m, {"tempo", "precision"}));
     }
     {
         auto m = mods(); m.playerHarvestMultiplier = 1.35F;
-        catalog_.push_back(makeTrait("lucky-harvest", "Lucky Harvest", TraitRarity::Common, m));
+        catalog_.push_back(makeTrait("lucky-harvest", "Lucky Harvest", "Improves upgrade currency gain from resources.", "ico_resource", TraitRarity::Common, m, {"economy", "survive"}));
     }
     {
         auto m = mods(); m.playerRadiusAdd = 4.0F; m.playerHarvestMultiplier = 1.10F;
-        catalog_.push_back(makeTrait("vital-shell", "Vital Shell", TraitRarity::Rare, m));
+        catalog_.push_back(makeTrait("vital-shell", "Vital Shell", "Expand defensive shell and improve resource pickup.", "ico_shield", TraitRarity::Rare, m, {"survive", "economy"}));
     }
     {
         auto m = mods(); m.enemyFireRateScale = 0.88F; m.projectileSpeedMul = 1.08F;
-        catalog_.push_back(makeTrait("overclock", "Overclock", TraitRarity::Rare, m));
+        catalog_.push_back(makeTrait("overclock", "Overclock", "Accelerate your shots while suppressing enemy cadence.", "ico_overclock", TraitRarity::Rare, m, {"tempo", "control"}));
     }
     {
         auto m = mods(); m.enemyFireRateScale = 1.12F; m.enemyProjectileSpeedScale = 0.82F;
-        catalog_.push_back(makeTrait("jammer", "Jammer", TraitRarity::Epic, m));
+        catalog_.push_back(makeTrait("jammer", "Jammer", "Slow hostile projectiles with a risky aggression spike.", "ico_jammer", TraitRarity::Relic, m, {"control", "risk"}));
     }
     {
         auto m = mods(); m.patternJitterAddDeg = 0.9F; m.patternExtraBullets = 1;
-        catalog_.push_back(makeTrait("barrel-spin", "Barrel Spin", TraitRarity::Rare, m));
+        catalog_.push_back(makeTrait("barrel-spin", "Barrel Spin", "Adds bonus pellets with chaotic spread bloom.", "ico_spin", TraitRarity::Rare, m, {"burst", "risk"}));
     }
     {
         auto m = mods(); m.projectileRadiusAdd = 1.4F; m.patternCooldownScale = 0.90F;
-        catalog_.push_back(makeTrait("arc-furnace", "Arc Furnace", TraitRarity::Epic, m));
+        catalog_.push_back(makeTrait("arc-furnace", "Arc Furnace", "Large projectiles and rapid cadence for area denial.", "ico_arc", TraitRarity::Relic, m, {"projectile", "tempo"}));
     }
     {
         auto m = mods(); m.enemyProjectileSpeedScale = 1.12F; m.projectileSpeedMul = 1.05F;
-        catalog_.push_back(makeTrait("predator-mark", "Predator Mark", TraitRarity::Rare, m));
+        catalog_.push_back(makeTrait("predator-mark", "Predator Mark", "Boost offense by forcing faster enemy bullet lanes.", "ico_predator", TraitRarity::Rare, m, {"precision", "risk"}));
     }
 
     active_.clear();
     aggregate_ = {};
     hasPending_ = false;
     rareChanceMultiplier_ = 1.0F;
+    rerollCharges_ = 2;
+    nextRerollTick_ = 0;
+    currentTick_ = 0;
+    validationCache_ = validateCatalog();
 }
 
 const Trait& TraitSystem::rollOne() {
@@ -102,7 +119,7 @@ const Trait& TraitSystem::rollOne() {
     return catalog_.front();
 }
 
-std::array<Trait, 3> TraitSystem::rollChoices() {
+std::array<Trait, TraitSystem::choiceCount> TraitSystem::rollChoices() {
     for (std::size_t i = 0; i < pending_.size(); ++i) {
         pending_[i] = rollOne();
     }
@@ -110,10 +127,44 @@ std::array<Trait, 3> TraitSystem::rollChoices() {
     return pending_;
 }
 
+bool TraitSystem::rerollChoices() {
+    if (!hasPending_ || !canReroll()) return false;
+    --rerollCharges_;
+    nextRerollTick_ = currentTick_ + rerollCooldownTicks_;
+    return !rollChoices().empty();
+}
+
+bool TraitSystem::canReroll() const {
+    return rerollCharges_ > 0;
+}
+
+
+void TraitSystem::forcePendingRarity(const TraitRarity rarity) {
+    if (!hasPending_) return;
+    for (std::size_t i = 0; i < pending_.size(); ++i) {
+        for (int attempts = 0; attempts < 64; ++attempts) {
+            const Trait& candidate = rollOne();
+            if (candidate.rarity == rarity) {
+                pending_[i] = candidate;
+                break;
+            }
+        }
+    }
+}
+
+void TraitSystem::onTick(const std::uint64_t tick) {
+    currentTick_ = tick;
+    if (tick >= nextRerollTick_ && rerollCharges_ < 2) {
+        ++rerollCharges_;
+        nextRerollTick_ = tick + rerollCooldownTicks_;
+    }
+}
+
 bool TraitSystem::choose(const std::size_t index) {
     if (!hasPending_ || index >= pending_.size()) return false;
     active_.push_back(pending_[index]);
     hasPending_ = false;
+    nextRerollTick_ = 0;
     rebuildAggregate();
     return true;
 }
@@ -138,24 +189,51 @@ void TraitSystem::rebuildAggregate() {
     aggregate_.enemyProjectileSpeedScale = std::clamp(aggregate_.enemyProjectileSpeedScale, 0.5F, 2.0F);
 }
 
-
 void TraitSystem::setRareChanceMultiplier(const float multiplier) {
     rareChanceMultiplier_ = std::clamp(multiplier, 0.5F, 3.0F);
 }
 
 bool TraitSystem::hasPendingChoices() const { return hasPending_; }
 
-const std::array<Trait, 3>& TraitSystem::pendingChoices() const { return pending_; }
+const std::array<Trait, TraitSystem::choiceCount>& TraitSystem::pendingChoices() const { return pending_; }
 
 const std::vector<Trait>& TraitSystem::activeTraits() const { return active_; }
 
 const TraitModifiers& TraitSystem::modifiers() const { return aggregate_; }
 
+std::vector<TraitValidationIssue> TraitSystem::validateCatalog() const {
+    std::vector<TraitValidationIssue> issues;
+    for (const Trait& t : catalog_) {
+        if (t.description.empty()) {
+            issues.push_back(TraitValidationIssue {.traitId = t.id, .message = "description is required"});
+        }
+        if (t.id.empty()) {
+            issues.push_back(TraitValidationIssue {.traitId = "<empty>", .message = "id is required"});
+        }
+        if (t.modifiers.projectileSpeedMul <= 0.0F || t.modifiers.patternCooldownScale <= 0.0F || t.modifiers.playerHarvestMultiplier <= 0.0F
+            || t.modifiers.enemyFireRateScale <= 0.0F || t.modifiers.enemyProjectileSpeedScale <= 0.0F) {
+            issues.push_back(TraitValidationIssue {.traitId = t.id, .message = "multiplicative modifiers must be > 0"});
+        }
+    }
+    return issues;
+}
+
+
+const std::vector<TraitValidationIssue>& TraitSystem::validationIssues() const {
+    return validationCache_;
+}
+int TraitSystem::rerollCharges() const { return rerollCharges_; }
+
+std::uint64_t TraitSystem::rerollCooldownRemainingTicks(const std::uint64_t tick) const {
+    if (tick >= nextRerollTick_) return 0;
+    return nextRerollTick_ - tick;
+}
+
 std::string toString(const TraitRarity rarity) {
     switch (rarity) {
         case TraitRarity::Common: return "Common";
         case TraitRarity::Rare: return "Rare";
-        case TraitRarity::Epic: return "Epic";
+        case TraitRarity::Relic: return "Relic";
     }
     return "Unknown";
 }

@@ -21,6 +21,7 @@ struct EngineConfig {
     std::string contentPackPath {"content.pak"};
     std::string replayRecordPath;
     std::string replayPlaybackPath;
+    std::string difficultyProfile {"normal"};
 };
 
 EngineConfig loadConfigFromFile(const std::string& filePath);
