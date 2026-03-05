@@ -30,6 +30,11 @@ cmake --build build --config Debug
 .\build\Debug\EngineDemo.exe --headless --ticks 1200 --seed 1337
 ```
 
+## Run (Renderer Smoke Test)
+```powershell
+.\build\Debug\EngineDemo.exe --renderer-smoke-test
+```
+
 ## Build ContentPacker
 ```powershell
 cmake --build build --config Debug --target ContentPacker
@@ -53,6 +58,7 @@ ctest --test-dir build -C Debug --output-on-failure
 ## Controls (Windowed)
 - Pan camera: `W/A/S/D` or arrow keys
 - Zoom camera: mouse wheel or `Q/E`
+- Toggle fullscreen/windowed: `F`
 - Toggle projectile hitboxes: `H`
 - Toggle collision grid overlay: `G`
 - Pattern select: `1..9` or `TAB`
@@ -121,14 +127,14 @@ PowerShell scripts are provided at repository root to automate release outputs.
 
 ### 1) Build Release
 ```powershell
-./build_release.ps1
+./tools/build_release.ps1
 ```
 - Configures and builds a Release tree.
 - Runs CTest in Release mode.
 
 ### 2) Create Portable Distribution + Zip
 ```powershell
-./package_dist.ps1
+./tools/package_dist.ps1
 ```
 Outputs:
 - Portable folder: `dist/portable`
@@ -140,3 +146,43 @@ Outputs:
 ```
 - Uses NSIS (`makensis`) when available.
 - If NSIS is not installed, writes a guidance note instead of failing hard.
+
+
+See also: `docs/BuildAndRelease.md` for the scripted build/test/package pipeline.
+
+
+## Replay Verify (Determinism Verifier)
+```powershell
+.\build\Debug\EngineDemo.exe --replay-verify --headless --ticks 1200 --seed 1337 --content-pack content.pak
+```
+- Runs simulation twice (record + playback verification).
+- Reports first divergence tick and subsystem (`bullets`, `entities`, `run_state`) if detected.
+
+
+## Compiled Pattern Graphs
+
+Pattern graph authoring JSON supports a `graphs` array where each graph contains `id`, `nodes[]`, and per-node fields:
+- `id`
+- `type` (`emit_ring`, `emit_spread`, `emit_spiral`, `emit_wave`, `emit_aimed`, `wait`, `loop`, `modifier_rotate`, `modifier_phase`, `random_range`)
+- `params` (numeric map)
+- `targetNode` (for loop back-edges)
+- `outputs` (optional edge list, first output is used as loop target fallback)
+
+Compiler validation enforces bounded loops (`count <= 64`) and validates loop targets.
+
+Run performance check:
+- `ctest --test-dir build -R pattern_graph_perf_tests --output-on-failure`
+
+
+## Stability + Diagnostics
+
+- Structured errors are logged as JSON (`error_report=...`) with code/message/context/stack.
+- Bad content load paths now fall back to last-good/default content and report an error instead of hard-crashing.
+- In Release builds, crash handlers write reports under `crashes/` including build stamp and recent log tail; on Windows they also emit a minidump (`.dmp`).
+- Toggle the on-screen debug HUD with the backquote key (`).
+
+
+## Local CI Health Check
+```powershell
+./tools/ci_local.ps1
+```

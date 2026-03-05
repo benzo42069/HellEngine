@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2,
+  "packVersion": 3,
+  "encounters": [
+    {
+      "id": "stage_01_intro",
+      "name": "Stage 01 Intro",
+      "guid": "encounter-8a9d891cf73c4871"
+    }
+  ]
+}

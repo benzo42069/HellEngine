@@ -6,9 +6,25 @@
 
 int main() {
     engine::ReplayRecorder rec;
-    rec.begin(777, engine::buildContentVersionTag("content.pak"));
-    rec.recordTick(engine::InputMoveLeft | engine::InputMoveUp, 12345);
-    rec.recordTick(engine::InputMoveRight, 54321);
+    rec.begin(777, engine::buildContentVersionTag("content.pak"), engine::buildContentHashTag("content.pak"), 30);
+    rec.recordTickInput(engine::InputMoveLeft | engine::InputMoveUp);
+    rec.recordTickInput(engine::InputMoveRight);
+
+    engine::ReplayStateSample s0;
+    s0.tick = 0;
+    s0.bulletsHash = 11;
+    s0.entitiesHash = 22;
+    s0.runStateHash = 33;
+    s0.totalHash = engine::computeReplayStateHash(0, s0.bulletsHash, s0.entitiesHash, s0.runStateHash);
+    rec.recordStateSample(s0);
+
+    engine::ReplayStateSample s1;
+    s1.tick = 30;
+    s1.bulletsHash = 111;
+    s1.entitiesHash = 222;
+    s1.runStateHash = 333;
+    s1.totalHash = engine::computeReplayStateHash(30, s1.bulletsHash, s1.entitiesHash, s1.runStateHash);
+    rec.recordStateSample(s1);
 
     const std::string path = "replay_test.json";
     if (!rec.save(path)) {
@@ -22,8 +38,13 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    if (!player.validFor(777, engine::buildContentVersionTag("content.pak"))) {
+    if (!player.validFor(777, engine::buildContentVersionTag("content.pak"), engine::buildContentHashTag("content.pak"))) {
         std::cerr << "replay header validation failed\n";
+        return EXIT_FAILURE;
+    }
+
+    if (player.hashPeriodTicks() != 30) {
+        std::cerr << "hash period mismatch\n";
         return EXIT_FAILURE;
     }
 
@@ -32,13 +53,22 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    if (!player.verifyTick(1, 54321) || player.verifyTick(1, 1)) {
-        std::cerr << "state hash verification mismatch\n";
+    engine::ReplayMismatch mismatch;
+    if (!player.verifyStateSample(s1, &mismatch)) {
+        std::cerr << "state sample should match\n";
         return EXIT_FAILURE;
     }
 
-    const auto h1 = engine::computeReplayStateHash(12, 9, 3, 1, 14.5F);
-    const auto h2 = engine::computeReplayStateHash(12, 9, 3, 1, 14.5F);
+    engine::ReplayStateSample bad = s1;
+    bad.bulletsHash += 1;
+    bad.totalHash = engine::computeReplayStateHash(bad.tick, bad.bulletsHash, bad.entitiesHash, bad.runStateHash);
+    if (player.verifyStateSample(bad, &mismatch) || mismatch.subsystem != engine::ReplaySubsystem::Bullets) {
+        std::cerr << "state mismatch classification failed\n";
+        return EXIT_FAILURE;
+    }
+
+    const auto h1 = engine::computeReplayStateHash(12, 9, 3, 145);
+    const auto h2 = engine::computeReplayStateHash(12, 9, 3, 145);
     if (h1 != h2) {
         std::cerr << "hash function not deterministic\n";
         return EXIT_FAILURE;

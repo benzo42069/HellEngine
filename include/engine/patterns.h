@@ -67,6 +67,7 @@ struct PatternSequenceStep {
 };
 
 struct PatternDefinition {
+    std::string guid;
     std::string name;
     std::uint64_t seedOffset {0};
     bool loopSequence {true};
@@ -82,6 +83,7 @@ class PatternBank {
     [[nodiscard]] const std::vector<PatternDefinition>& patterns() const;
     [[nodiscard]] const std::vector<CompiledPatternGraph>& compiledGraphs() const;
     [[nodiscard]] const std::vector<PatternGraphDiagnostic>& graphDiagnostics() const;
+    [[nodiscard]] std::size_t findPatternIndexByGuidOrName(const std::string& ref) const;
 
   private:
     std::vector<PatternDefinition> patterns_;

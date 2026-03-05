@@ -40,6 +40,7 @@ struct ResourceYield {
 };
 
 struct BossPhase {
+    std::string attackPatternGuid;
     std::string attackPatternName;
     MovementBehavior movement {MovementBehavior::Static};
     float durationSeconds {4.0F};
@@ -54,6 +55,7 @@ struct BossDefinition {
 };
 
 struct EntityTemplate {
+    std::string guid;
     std::string name;
     EntityType type {EntityType::Enemy};
     MovementBehavior movement {MovementBehavior::Static};
@@ -67,6 +69,7 @@ struct EntityTemplate {
     float contactDamage {1.0F};
 
     bool attacksEnabled {false};
+    std::string attackPatternGuid;
     std::string attackPatternName;
     float attackIntervalSeconds {0.5F};
 

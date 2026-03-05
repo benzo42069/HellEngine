@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstddef>
+#include <deque>
 #include <mutex>
 #include <string>
+#include <vector>
 
 namespace engine {
 
@@ -18,12 +21,14 @@ class Logger {
 
     void setLevel(LogLevel level);
     void log(LogLevel level, const std::string& message);
+    [[nodiscard]] std::vector<std::string> recentLines(std::size_t maxLines) const;
 
   private:
     Logger() = default;
 
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     LogLevel level_ {LogLevel::Info};
+    std::deque<std::string> recentLines_ {};
 };
 
 void logDebug(const std::string& message);

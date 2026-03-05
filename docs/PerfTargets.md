@@ -18,6 +18,30 @@ The profiler reports:
 - Draw calls submitted
 - Render batch flushes
 
+## Benchmark Suite Thresholds (CI Local)
+
+`benchmark_suite_tests --assert-thresholds` enforces the following max wall times:
+
+- 10k bullets stress (80 ticks): **<= 250 ms**
+- 25k bullets stress (60 ticks): **<= 450 ms**
+- 50k bullets stress (40 ticks): **<= 700 ms**
+- collision-heavy scene (25k bullets, 60 ticks): **<= 500 ms**
+- render-heavy scene (50k sprites/frame, 30 frames): **<= 2200 ms**
+
+These are guard-rail thresholds for regression detection in local CI, not absolute hardware-independent performance claims.
+
+## One-command Local Health Check
+
+```powershell
+./tools/ci_local.ps1
+```
+
+This script runs:
+1. configure + build
+2. ctest suite
+3. replay verify run
+4. benchmark threshold checks
+
 ## Usage
 - Open **Control Center** and inspect:
   - Profiler Overview

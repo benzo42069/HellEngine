@@ -1,0 +1,11 @@
+#pragma once
+
+#include <string_view>
+
+namespace engine {
+
+inline constexpr std::string_view kEngineVersion = "@ENGINE_PROJECT_VERSION@";
+inline constexpr std::string_view kEngineGitHash = "@ENGINE_GIT_HASH@";
+inline constexpr std::string_view kEngineBuildStamp = "@ENGINE_PROJECT_VERSION@+@ENGINE_GIT_HASH@";
+
+} // namespace engine

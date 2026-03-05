@@ -1,9 +1,44 @@
 cmake_minimum_required(VERSION 3.28)
-project(EngineDemo VERSION 0.2.0 LANGUAGES CXX)
+
+set(ENGINE_VERSION_FILE "${CMAKE_SOURCE_DIR}/version/VERSION.txt")
+if(EXISTS "${ENGINE_VERSION_FILE}")
+  file(READ "${ENGINE_VERSION_FILE}" ENGINE_PROJECT_VERSION_RAW)
+  string(STRIP "${ENGINE_PROJECT_VERSION_RAW}" ENGINE_PROJECT_VERSION)
+else()
+  set(ENGINE_PROJECT_VERSION "0.2.0")
+endif()
+
+project(EngineDemo VERSION ${ENGINE_PROJECT_VERSION} LANGUAGES CXX)
+
+execute_process(
+  COMMAND git -C "${CMAKE_SOURCE_DIR}" rev-parse --short=12 HEAD
+  OUTPUT_VARIABLE ENGINE_GIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET
+)
+if(ENGINE_GIT_HASH STREQUAL "")
+  set(ENGINE_GIT_HASH "nogit")
+endif()
+
+configure_file(
+  "${CMAKE_SOURCE_DIR}/include/engine/version.h.in"
+  "${CMAKE_BINARY_DIR}/generated/engine/version.h"
+  @ONLY
+)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(ENGINE_DETERMINISTIC_BUILD "Enable deterministic/reproducible compiler and linker flags" OFF)
+if(ENGINE_DETERMINISTIC_BUILD)
+  if(MSVC)
+    add_compile_options(/Brepro)
+    add_link_options(/Brepro)
+  else()
+    add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
+  endif()
+endif()
 
 include(FetchContent)
 
@@ -57,6 +92,9 @@ target_link_libraries(imgui_sdl2 PUBLIC ${ENGINEDEMO_SDL_TARGET})
 add_library(engine_core STATIC
   src/engine/archetypes.cpp
   src/engine/config.cpp
+  src/engine/crash_handler.cpp
+  src/engine/diagnostics.cpp
+  src/engine/content_pipeline.cpp
   src/engine/deterministic_rng.cpp
   src/engine/difficulty_scaling.cpp
   src/engine/encounter_graph.cpp
@@ -68,6 +106,8 @@ add_library(engine_core STATIC
   src/engine/memory.cpp
   src/engine/meta_progression.cpp
   src/engine/perf_profiler.cpp
+  src/engine/public_api.cpp
+  src/engine/plugin_registry.cpp
   src/engine/pattern_generator.cpp
   src/engine/pattern_graph.cpp
   src/engine/patterns.cpp
@@ -86,6 +126,7 @@ target_include_directories(engine_core
   PUBLIC
     include
     third_party/stb
+    "${CMAKE_BINARY_DIR}/generated"
 )
 
 target_link_libraries(engine_core
@@ -98,8 +139,10 @@ target_link_libraries(engine_core
 
 add_executable(ContentPacker
   src/tools_content_packer.cpp
+  src/engine/content_pipeline.cpp
 )
 
+target_include_directories(ContentPacker PRIVATE include)
 target_link_libraries(ContentPacker PRIVATE nlohmann_json::nlohmann_json)
 
 add_executable(EngineDemo
@@ -192,6 +235,10 @@ add_executable(pattern_generator_tests tests/pattern_generator_tests.cpp)
 target_link_libraries(pattern_generator_tests PRIVATE engine_core)
 add_test(NAME pattern_generator_tests COMMAND pattern_generator_tests)
 
+
+add_executable(pattern_graph_perf_tests tests/pattern_graph_perf_tests.cpp)
+target_link_libraries(pattern_graph_perf_tests PRIVATE engine_core)
+add_test(NAME pattern_graph_perf_tests COMMAND pattern_graph_perf_tests)
 add_executable(encounter_graph_tests tests/encounter_graph_tests.cpp)
 target_link_libraries(encounter_graph_tests PRIVATE engine_core)
 add_test(NAME encounter_graph_tests COMMAND encounter_graph_tests)
@@ -200,6 +247,30 @@ add_executable(difficulty_scaling_tests tests/difficulty_scaling_tests.cpp)
 target_link_libraries(difficulty_scaling_tests PRIVATE engine_core)
 add_test(NAME difficulty_scaling_tests COMMAND difficulty_scaling_tests)
 
+
+add_executable(diagnostics_tests tests/diagnostics_tests.cpp)
+target_link_libraries(diagnostics_tests PRIVATE engine_core)
+add_test(NAME diagnostics_tests COMMAND diagnostics_tests)
+
 add_executable(gpu_bullets_tests tests/gpu_bullets_tests.cpp)
 target_link_libraries(gpu_bullets_tests PRIVATE engine_core)
 add_test(NAME gpu_bullets_tests COMMAND gpu_bullets_tests)
+
+
+
+
+add_executable(golden_replay_tests tests/golden_replay_tests.cpp)
+target_link_libraries(golden_replay_tests PRIVATE engine_core)
+add_test(NAME golden_replay_tests COMMAND golden_replay_tests)
+
+add_executable(benchmark_suite_tests tests/benchmark_suite.cpp)
+target_link_libraries(benchmark_suite_tests PRIVATE engine_core)
+add_test(NAME benchmark_suite_tests COMMAND benchmark_suite_tests)
+
+add_executable(public_api_tests tests/public_api_tests.cpp)
+target_link_libraries(public_api_tests PRIVATE engine_core)
+add_test(NAME public_api_tests COMMAND public_api_tests)
+
+add_executable(renderer_smoke_tests tests/renderer_smoke_tests.cpp)
+target_link_libraries(renderer_smoke_tests PRIVATE engine_core)
+add_test(NAME renderer_smoke_tests COMMAND renderer_smoke_tests)

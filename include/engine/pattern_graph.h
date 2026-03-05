@@ -37,6 +37,7 @@ struct PatternGraphNode {
     PatternGraphNodeType type {PatternGraphNodeType::Wait};
     std::unordered_map<std::string, float> params;
     std::vector<std::string> outputs;
+    std::string targetNodeId;
 };
 
 struct PatternGraphAsset {
@@ -107,8 +108,22 @@ class PatternGraphVm {
         Vec2 aimTarget,
         const std::function<void(const ProjectileSpawn&)>& emitProjectile
     ) const;
+    using EmitProjectileFn = void (*)(void* user, const ProjectileSpawn& spawn);
+
+    void execute(
+        const CompiledPatternGraph& graph,
+        RuntimeState& state,
+        float dt,
+        Vec2 origin,
+        Vec2 aimTarget,
+        void* user,
+        EmitProjectileFn emitProjectile
+    ) const;
+
 };
 
 bool loadPatternGraphsFromFile(const std::string& filePath, std::vector<PatternGraphAsset>& outAssets, std::vector<PatternGraphDiagnostic>& outDiagnostics);
+bool savePatternGraphsToFile(const std::string& filePath, const std::vector<PatternGraphAsset>& assets, std::string* error = nullptr);
+PatternGraphAsset migrateLegacyPatternToGraph(const std::string& graphId, float cooldownSeconds, std::uint32_t bulletCount, float bulletSpeed);
 
 } // namespace engine

@@ -12,7 +12,7 @@ int main() {
         engine::PatternGraphNode {.id = "001-random", .type = engine::PatternGraphNodeType::RandomRange, .params = {{"min", -10.0F}, {"max", 10.0F}, {"stream", 2.0F}}},
         engine::PatternGraphNode {.id = "010-emit", .type = engine::PatternGraphNodeType::EmitRing, .params = {{"count", 8.0F}, {"speed", 120.0F}, {"radius", 2.5F}, {"angle", 0.0F}}},
         engine::PatternGraphNode {.id = "020-wait", .type = engine::PatternGraphNodeType::Wait, .params = {{"seconds", 0.05F}}},
-        engine::PatternGraphNode {.id = "030-loop", .type = engine::PatternGraphNodeType::Loop, .params = {{"count", 4.0F}, {"target", 0.0F}}},
+        engine::PatternGraphNode {.id = "030-loop", .type = engine::PatternGraphNodeType::Loop, .params = {{"count", 4.0F}}, .targetNodeId = "010-emit"},
     };
 
     engine::CompiledPatternGraph compiled;
@@ -47,6 +47,24 @@ int main() {
         }
     }
 
+
+    std::string err;
+    if (!engine::savePatternGraphsToFile("pattern_graph_roundtrip.json", {asset}, &err)) {
+        std::cerr << "failed to save graph json: " << err << "\n";
+        return EXIT_FAILURE;
+    }
+    std::vector<engine::PatternGraphAsset> loadedAssets;
+    std::vector<engine::PatternGraphDiagnostic> loadDiag;
+    if (!engine::loadPatternGraphsFromFile("pattern_graph_roundtrip.json", loadedAssets, loadDiag) || loadedAssets.empty()) {
+        std::cerr << "failed to reload graph json\n";
+        return EXIT_FAILURE;
+    }
+    const engine::PatternGraphAsset migrated = engine::migrateLegacyPatternToGraph("migrated", 0.12F, 12, 150.0F);
+    engine::CompiledPatternGraph migratedCompiled;
+    if (!compiler.compile(migrated, migratedCompiled)) {
+        std::cerr << "legacy migration compile failed\n";
+        return EXIT_FAILURE;
+    }
     std::cout << "pattern_graph_tests passed\n";
     return EXIT_SUCCESS;
 }

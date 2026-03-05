@@ -32,6 +32,8 @@ EngineConfig loadConfigFromFile(const std::string& filePath) {
     if (json.contains("contentPackPath")) config.contentPackPath = json["contentPackPath"].get<std::string>();
     if (json.contains("replayRecordPath")) config.replayRecordPath = json["replayRecordPath"].get<std::string>();
     if (json.contains("replayPlaybackPath")) config.replayPlaybackPath = json["replayPlaybackPath"].get<std::string>();
+    if (json.contains("replayVerifyMode")) config.replayVerifyMode = json["replayVerifyMode"].get<bool>();
+    if (json.contains("replayHashPeriodTicks")) config.replayHashPeriodTicks = json["replayHashPeriodTicks"].get<std::uint32_t>();
     if (json.contains("difficultyProfile")) config.difficultyProfile = json["difficultyProfile"].get<std::string>();
 
     return config;
@@ -43,6 +45,11 @@ void applyCommandLineOverrides(EngineConfig& config, const int argc, char** argv
 
         if (arg == "--headless") {
             config.headless = true;
+            continue;
+        }
+
+        if (arg == "--renderer-smoke-test") {
+            config.rendererSmokeTest = true;
             continue;
         }
 
@@ -83,6 +90,16 @@ void applyCommandLineOverrides(EngineConfig& config, const int argc, char** argv
 
         if (arg == "--replay-playback" && i + 1 < argc) {
             config.replayPlaybackPath = argv[++i];
+            continue;
+        }
+
+        if (arg == "--replay-verify") {
+            config.replayVerifyMode = true;
+            continue;
+        }
+
+        if (arg == "--replay-hash-period" && i + 1 < argc) {
+            config.replayHashPeriodTicks = static_cast<std::uint32_t>(std::stoul(argv[++i]));
             continue;
         }
 

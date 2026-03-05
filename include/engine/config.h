@@ -11,6 +11,7 @@ struct EngineConfig {
     std::string windowTitle {"EngineDemo"};
     double fixedDeltaSeconds {1.0 / 60.0};
     bool headless {false};
+    bool rendererSmokeTest {false};
     std::uint32_t maxFrameSteps {8};
     std::uint64_t simulationSeed {1337};
     int targetTicks {0};
@@ -21,6 +22,8 @@ struct EngineConfig {
     std::string contentPackPath {"content.pak"};
     std::string replayRecordPath;
     std::string replayPlaybackPath;
+    bool replayVerifyMode {false};
+    std::uint32_t replayHashPeriodTicks {60};
     std::string difficultyProfile {"normal"};
 };
 

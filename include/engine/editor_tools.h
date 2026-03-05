@@ -116,10 +116,15 @@ class ControlCenterToolSuite {
     [[nodiscard]] std::string consumeGeneratedGraphPath();
 
   private:
+    void appendConsole(const std::string& message);
+
     bool initialized_ {false};
     bool open_ {true};
 
     bool showContentBrowser_ {true};
+    bool showInspector_ {true};
+    bool showPreviewViewport_ {true};
+    bool showConsole_ {true};
     bool showPatternEditor_ {true};
     bool showEntityEditor_ {true};
     bool showTraitEditor_ {true};
@@ -133,6 +138,14 @@ class ControlCenterToolSuite {
     UpgradeDebugOptions upgradeDebug_ {};
     ProjectileDebugOptions projectileDebug_ {};
     PatternGeneratorDebugState patternGenerator_ {};
+    std::vector<std::string> graphNodeIds_ {};
+    std::vector<int> graphNodeTypes_ {};
+    std::vector<float> graphNodeA_ {};
+    std::vector<float> graphNodeB_ {};
+    std::vector<float> graphNodeC_ {};
+    std::vector<float> graphNodeD_ {};
+    std::vector<std::string> graphNodeTarget_ {};
+    int selectedGraphNode_ {0};
     std::vector<std::string> encounterNodeIds_ {};
     std::vector<int> encounterNodeTypes_ {};
     std::vector<float> encounterNodeTimes_ {};
@@ -141,9 +154,13 @@ class ControlCenterToolSuite {
     std::vector<std::string> encounterNodePayloads_ {};
     EncounterEditorState encounterState_ {};
     std::string browserSearch_;
+    std::string selectedAssetPath_;
+    std::string selectedAssetTag_;
     std::string browserTagFilter_;
     std::vector<std::string> browserEntries_ {};
     ControlCenterValidationReport validationReport_ {};
+    std::deque<std::string> consoleLines_ {};
+    bool workspaceLayoutInitialized_ {false};
     bool validatorRequested_ {false};
     bool validatorAutoOnSave_ {true};
 };

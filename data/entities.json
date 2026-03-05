@@ -4,18 +4,30 @@
       "name": "Player",
       "type": "player",
       "movement": "static",
-      "spawnPosition": [0.0, 0.0],
+      "spawnPosition": [
+        0.0,
+        0.0
+      ],
       "maxHealth": 100.0,
       "contactDamage": 0.0,
       "attacksEnabled": false,
-      "spawnRule": { "enabled": false }
+      "spawnRule": {
+        "enabled": false
+      },
+      "guid": "enemy-3a04e2e52c2b8f2"
     },
     {
       "name": "Basic Enemy Shooter",
       "type": "enemy",
       "movement": "sine",
-      "spawnPosition": [0.0, -180.0],
-      "baseVelocity": [0.0, 18.0],
+      "spawnPosition": [
+        0.0,
+        -180.0
+      ],
+      "baseVelocity": [
+        0.0,
+        18.0
+      ],
       "sineAmplitude": 120.0,
       "sineFrequencyHz": 0.55,
       "maxHealth": 30.0,
@@ -28,14 +40,22 @@
         "initialDelaySeconds": 0.5,
         "intervalSeconds": 2.5,
         "maxAlive": 4
-      }
+      },
+      "guid": "enemy-523cea28222c09c7",
+      "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
     },
     {
       "name": "Asterion Dreadnought",
       "type": "boss",
       "movement": "linear",
-      "spawnPosition": [0.0, -230.0],
-      "baseVelocity": [0.0, 24.0],
+      "spawnPosition": [
+        0.0,
+        -230.0
+      ],
+      "baseVelocity": [
+        0.0,
+        24.0
+      ],
       "maxHealth": 450.0,
       "contactDamage": 14.0,
       "attacksEnabled": true,
@@ -48,19 +68,22 @@
             "attackPatternName": "Wave Weave",
             "movement": "linear",
             "durationSeconds": 4.0,
-            "difficultyScale": 1.0
+            "difficultyScale": 1.0,
+            "attackPatternGuid": "pattern-7305ed346ff7c0ae"
           },
           {
             "attackPatternName": "Composed Helix",
             "movement": "sine",
             "durationSeconds": 5.0,
-            "difficultyScale": 1.3
+            "difficultyScale": 1.3,
+            "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
           },
           {
             "attackPatternName": "Wave Weave",
             "movement": "chase",
             "durationSeconds": 5.0,
-            "difficultyScale": 1.6
+            "difficultyScale": 1.6,
+            "attackPatternGuid": "pattern-7305ed346ff7c0ae"
           }
         ],
         "rewardDrop": {
@@ -74,14 +97,22 @@
         "initialDelaySeconds": 7.0,
         "intervalSeconds": 24.0,
         "maxAlive": 1
-      }
+      },
+      "guid": "enemy-2503085d2280a3bb",
+      "attackPatternGuid": "pattern-7305ed346ff7c0ae"
     },
     {
       "name": "Nyx Seraph",
       "type": "boss",
       "movement": "sine",
-      "spawnPosition": [180.0, -180.0],
-      "baseVelocity": [0.0, 18.0],
+      "spawnPosition": [
+        180.0,
+        -180.0
+      ],
+      "baseVelocity": [
+        0.0,
+        18.0
+      ],
       "sineAmplitude": 90.0,
       "sineFrequencyHz": 0.4,
       "maxHealth": 520.0,
@@ -96,19 +127,22 @@
             "attackPatternName": "Composed Helix",
             "movement": "sine",
             "durationSeconds": 4.5,
-            "difficultyScale": 1.1
+            "difficultyScale": 1.1,
+            "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
           },
           {
             "attackPatternName": "Wave Weave",
             "movement": "chase",
             "durationSeconds": 4.5,
-            "difficultyScale": 1.5
+            "difficultyScale": 1.5,
+            "attackPatternGuid": "pattern-7305ed346ff7c0ae"
           },
           {
             "attackPatternName": "Composed Helix",
             "movement": "linear",
             "durationSeconds": 5.0,
-            "difficultyScale": 1.8
+            "difficultyScale": 1.8,
+            "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
           }
         ],
         "rewardDrop": {
@@ -122,13 +156,18 @@
         "initialDelaySeconds": 14.0,
         "intervalSeconds": 28.0,
         "maxAlive": 1
-      }
+      },
+      "guid": "enemy-981a413aa9f8e0a3",
+      "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
     },
     {
       "name": "Currency Crystal",
       "type": "resource",
       "movement": "static",
-      "spawnPosition": [18.0, 0.0],
+      "spawnPosition": [
+        18.0,
+        0.0
+      ],
       "interactionRadius": 28.0,
       "maxHealth": 1.0,
       "contactDamage": 0.0,
@@ -143,13 +182,17 @@
         "initialDelaySeconds": 0.2,
         "intervalSeconds": 6.0,
         "maxAlive": 2
-      }
+      },
+      "guid": "enemy-6f2798ffe8de1412"
     },
     {
       "name": "Med Bloom",
       "type": "resource",
       "movement": "static",
-      "spawnPosition": [-30.0, 8.0],
+      "spawnPosition": [
+        -30.0,
+        8.0
+      ],
       "interactionRadius": 42.0,
       "maxHealth": 1.0,
       "contactDamage": 0.0,
@@ -164,13 +207,17 @@
         "initialDelaySeconds": 1.0,
         "intervalSeconds": 9.0,
         "maxAlive": 1
-      }
+      },
+      "guid": "enemy-9935dd4a1670f670"
     },
     {
       "name": "Overclock Node",
       "type": "resource",
       "movement": "static",
-      "spawnPosition": [40.0, 20.0],
+      "spawnPosition": [
+        40.0,
+        20.0
+      ],
       "interactionRadius": 48.0,
       "maxHealth": 1.0,
       "contactDamage": 0.0,
@@ -185,13 +232,17 @@
         "initialDelaySeconds": 2.0,
         "intervalSeconds": 12.0,
         "maxAlive": 1
-      }
+      },
+      "guid": "enemy-5f0b538e69468df3"
     },
     {
       "name": "Lava Vent",
       "type": "hazard",
       "movement": "static",
-      "spawnPosition": [220.0, 130.0],
+      "spawnPosition": [
+        220.0,
+        130.0
+      ],
       "maxHealth": 9999.0,
       "contactDamage": 10.0,
       "attacksEnabled": false,
@@ -200,7 +251,10 @@
         "initialDelaySeconds": 1.0,
         "intervalSeconds": 10.0,
         "maxAlive": 1
-      }
+      },
+      "guid": "enemy-5343b91e7003b5e8"
     }
-  ]
+  ],
+  "schemaVersion": 2,
+  "packVersion": 3
 }

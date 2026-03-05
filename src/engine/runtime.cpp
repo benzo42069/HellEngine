@@ -2,6 +2,7 @@
 
 #include <engine/logging.h>
 #include <engine/timing.h>
+#include <engine/public/plugins.h>
 
 #include <imgui.h>
 
@@ -21,18 +22,148 @@ Runtime::Runtime(EngineConfig config)
       rngStreams_(config_.simulationSeed) {}
 
 Runtime::~Runtime() {
-    if (!config_.headless) {
-        toolSuite_.shutdown();
-    }
+    destroyRenderContext();
 
-    textures_.reset();
-
-    if (!config_.headless) {
-        if (renderer_) SDL_DestroyRenderer(renderer_);
-        if (window_) SDL_DestroyWindow(window_);
+    if (window_) {
+        SDL_DestroyWindow(window_);
+        window_ = nullptr;
     }
 
     SDL_Quit();
+}
+
+
+bool Runtime::initializeRenderContext() {
+    if (!window_) {
+        logError("Renderer initialization failed: window handle is null.");
+        return false;
+    }
+
+    const std::array<Uint32, 3> rendererFlags = {
+        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC,
+        SDL_RENDERER_ACCELERATED,
+        SDL_RENDERER_SOFTWARE,
+    };
+
+    for (const Uint32 flags : rendererFlags) {
+        renderer_ = SDL_CreateRenderer(window_, -1, flags);
+        if (renderer_) {
+            break;
+        }
+    }
+
+    if (!renderer_) {
+        logError("GPU/renderer initialization failed. Tried accelerated and software paths. SDL error: " + std::string(SDL_GetError()));
+        return false;
+    }
+
+    textures_ = std::make_unique<TextureStore>(renderer_);
+    if (!textures_->loadTexture("projectile", "assets/sprites/sample.bmp")) {
+        textures_->createSolidTexture("projectile", 8, 8, Color {250, 200, 120, 255});
+    }
+
+    toolSuite_.initialize(window_, renderer_);
+
+    if (!debugText_.init(renderer_)) {
+        logWarn("Debug text initialization failed; continuing without debug text atlas texture.");
+    }
+    debugText_.registerTexture(*textures_, "debug_font");
+
+    renderContextReady_ = true;
+    refreshDisplayMetrics();
+    spriteBatch_.reserve(config_.projectileCapacity + 2048);
+    return true;
+}
+
+bool Runtime::recreateRenderContext(const char* reason) {
+    logWarn(std::string("Recreating render context: ") + (reason ? reason : "unknown reason"));
+    destroyRenderContext();
+    return initializeRenderContext();
+}
+
+void Runtime::destroyRenderContext() {
+    if (!renderContextReady_ && !renderer_ && !textures_) {
+        return;
+    }
+
+    toolSuite_.shutdown();
+    textures_.reset();
+
+    if (renderer_) {
+        SDL_DestroyRenderer(renderer_);
+        renderer_ = nullptr;
+    }
+
+    renderContextReady_ = false;
+}
+
+void Runtime::refreshDisplayMetrics() {
+    if (!window_) {
+        return;
+    }
+
+    int windowW = 1;
+    int windowH = 1;
+    SDL_GetWindowSize(window_, &windowW, &windowH);
+
+    int drawableW = windowW;
+    int drawableH = windowH;
+    SDL_GL_GetDrawableSize(window_, &drawableW, &drawableH);
+
+    drawableW = std::max(drawableW, 1);
+    drawableH = std::max(drawableH, 1);
+    windowW = std::max(windowW, 1);
+    windowH = std::max(windowH, 1);
+
+    dpiScaleX_ = static_cast<float>(drawableW) / static_cast<float>(windowW);
+    dpiScaleY_ = static_cast<float>(drawableH) / static_cast<float>(windowH);
+    uiTextScale_ = std::clamp((dpiScaleX_ + dpiScaleY_) * 0.5F, 1.0F, 2.0F);
+
+    camera_.setViewport(drawableW, drawableH);
+}
+
+Vec2 Runtime::currentMouseWorldPosition() const {
+    if (!window_) {
+        return {0.0F, 0.0F};
+    }
+
+    int mouseX = 0;
+    int mouseY = 0;
+    SDL_GetMouseState(&mouseX, &mouseY);
+
+    int windowW = 1;
+    int windowH = 1;
+    SDL_GetWindowSize(window_, &windowW, &windowH);
+    windowW = std::max(windowW, 1);
+    windowH = std::max(windowH, 1);
+
+    const float drawableX = static_cast<float>(mouseX) * dpiScaleX_;
+    const float drawableY = static_cast<float>(mouseY) * dpiScaleY_;
+    const float halfW = static_cast<float>(windowW) * dpiScaleX_ * 0.5F;
+    const float halfH = static_cast<float>(windowH) * dpiScaleY_ * 0.5F;
+    const Vec2 camCenter = camera_.center();
+    const float invZoom = 1.0F / camera_.zoom();
+
+    return {
+        (drawableX - halfW) * invZoom + camCenter.x,
+        (drawableY - halfH) * invZoom + camCenter.y,
+    };
+}
+
+bool Runtime::toggleFullscreen() {
+    if (!window_) {
+        return false;
+    }
+
+    const Uint32 mode = fullscreen_ ? 0U : SDL_WINDOW_FULLSCREEN_DESKTOP;
+    if (SDL_SetWindowFullscreen(window_, mode) != 0) {
+        logError("Failed to toggle fullscreen mode: " + std::string(SDL_GetError()));
+        return false;
+    }
+
+    fullscreen_ = !fullscreen_;
+    refreshDisplayMetrics();
+    return true;
 }
 
 int Runtime::run() {
@@ -44,20 +175,48 @@ int Runtime::run() {
     projectiles_.initialize(config_.projectileCapacity, 420.0F, 32, 18);
     gpuBullets_.initialize(std::max<std::uint32_t>(config_.projectileCapacity, 500000U), 420.0F);
 
-    const bool loadedPack = patternBank_.loadFromFile(config_.contentPackPath)
+    std::string packSearchPath = config_.contentPackPath;
+    for (const auto* plugin : engine::public_api::contentPackPlugins()) {
+        for (const std::string& extraPath : plugin->contentPackPaths()) {
+            if (!extraPath.empty()) {
+                if (!packSearchPath.empty()) packSearchPath += ";";
+                packSearchPath += extraPath;
+            }
+        }
+    }
+
+    const bool loadedPack = patternBank_.loadFromFile(packSearchPath)
         || patternBank_.loadFromFile("assets/patterns/sandbox_patterns.json");
     if (!loadedPack) {
+        ErrorReport err = makeError(ErrorCode::ContentLoadFailed, "Pattern content failed to load");
+        addContext(err, "requestedPath", packSearchPath);
+        addContext(err, "fallbackPath", "assets/patterns/sandbox_patterns.json");
+        pushStack(err, "Runtime::run/loadPatterns");
+        logErrorReport(err);
+
         patternBank_.loadFallbackDefaults();
+        ErrorReport fallback = makeError(ErrorCode::ContentFallbackActivated, "Using fallback patterns");
+        pushStack(fallback, "Runtime::run/loadPatterns");
+        logErrorReport(fallback);
     }
     patternPlayer_.setBank(&patternBank_);
     patternPlayer_.setRunSeed(config_.simulationSeed);
     patternPlayer_.setPatternIndex(0);
     graphVm_.reset(graphVmState_, config_.simulationSeed);
 
-    const bool loadedEntities = entityDatabase_.loadFromFile(config_.contentPackPath)
+    const bool loadedEntities = entityDatabase_.loadFromFile(packSearchPath)
         || entityDatabase_.loadFromFile("data/entities.json");
     if (!loadedEntities) {
+        ErrorReport err = makeError(ErrorCode::ContentLoadFailed, "Entity content failed to load");
+        addContext(err, "requestedPath", packSearchPath);
+        addContext(err, "fallbackPath", "data/entities.json");
+        pushStack(err, "Runtime::run/loadEntities");
+        logErrorReport(err);
+
         entityDatabase_.loadFallbackDefaults();
+        ErrorReport fallback = makeError(ErrorCode::ContentFallbackActivated, "Using fallback entities");
+        pushStack(fallback, "Runtime::run/loadEntities");
+        logErrorReport(fallback);
     }
     entitySystem_.setTemplates(&entityDatabase_.templates());
     entitySystem_.setPatternBank(&patternBank_);
@@ -77,15 +236,16 @@ int Runtime::run() {
     prevTotalCollisions_ = 0;
     prevHealthRecoveryAccum_ = 0.0F;
     replayContentVersion_ = buildContentVersionTag(config_.contentPackPath);
+    replayContentHash_ = buildContentHashTag(config_.contentPackPath);
     replayPlaybackMode_ = !config_.replayPlaybackPath.empty();
     if (replayPlaybackMode_) {
-        if (!replayPlayer_.load(config_.replayPlaybackPath) || !replayPlayer_.validFor(config_.simulationSeed, replayContentVersion_)) {
+        if (!replayPlayer_.load(config_.replayPlaybackPath) || !replayPlayer_.validFor(config_.simulationSeed, replayContentVersion_, replayContentHash_)) {
             logError("Replay load/validation failed: " + config_.replayPlaybackPath);
             return 1;
         }
     }
     if (!config_.replayRecordPath.empty()) {
-        replayRecorder_.begin(config_.simulationSeed, replayContentVersion_);
+        replayRecorder_.begin(config_.simulationSeed, replayContentVersion_, replayContentHash_, config_.replayHashPeriodTicks);
     }
 
     (void)traitSystem_.rollChoices();
@@ -102,36 +262,27 @@ int Runtime::run() {
             SDL_WINDOWPOS_CENTERED,
             config_.windowWidth,
             config_.windowHeight,
-            SDL_WINDOW_RESIZABLE
+            SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
         );
 
         if (!window_) {
-            logError("SDL_CreateWindow failed: " + std::string(SDL_GetError()));
+            logError("Window initialization failed: " + std::string(SDL_GetError()));
             return 1;
         }
 
-        renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-        if (!renderer_) {
-            logError("SDL_CreateRenderer failed: " + std::string(SDL_GetError()));
+        if (!initializeRenderContext()) {
             return 1;
         }
 
-        textures_ = std::make_unique<TextureStore>(renderer_);
-        if (!textures_->loadTexture("projectile", "assets/sprites/sample.bmp")) {
-            textures_->createSolidTexture("projectile", 8, 8, Color {250, 200, 120, 255});
-        }
-
-        toolSuite_.initialize(window_, renderer_);
-
-        debugText_.init(renderer_);
-        debugText_.registerTexture(*textures_, "debug_font");
-
-        int winW = 0;
-        int winH = 0;
-        SDL_GetWindowSize(window_, &winW, &winH);
-        camera_.setViewport(winW, winH);
         camera_.setCenter({0.0F, 0.0F});
-        spriteBatch_.reserve(config_.projectileCapacity + 2048);
+
+        if (config_.rendererSmokeTest) {
+            SDL_SetRenderDrawColor(renderer_, 12, 12, 16, 255);
+            SDL_RenderClear(renderer_);
+            SDL_RenderPresent(renderer_);
+            logInfo("Renderer smoke test completed successfully.");
+            return 0;
+        }
     }
 
     auto last = std::chrono::steady_clock::now();
@@ -149,9 +300,13 @@ int Runtime::run() {
             while (SDL_PollEvent(&event) != 0) {
                 toolSuite_.processEvent(event);
                 if (event.type == SDL_QUIT) running_ = false;
-                if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) running_ = false;
-                if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    camera_.setViewport(event.window.data1, event.window.data2);
+                if (event.type == SDL_WINDOWEVENT) {
+                    if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                        running_ = false;
+                    }
+                    if (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED || event.window.event == SDL_WINDOWEVENT_DISPLAY_CHANGED) {
+                        refreshDisplayMetrics();
+                    }
                 }
                 if (event.type == SDL_MOUSEWHEEL) {
                     camera_.addZoom(static_cast<float>(event.wheel.y) * 0.1F);
@@ -161,6 +316,22 @@ int Runtime::run() {
                 }
                 if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_g) {
                     showGrid_ = !showGrid_;
+                }
+                if (event.type == SDL_RENDER_TARGETS_RESET) {
+                    if (!recreateRenderContext("SDL_RENDER_TARGETS_RESET")) {
+                        running_ = false;
+                    }
+                }
+                if (event.type == SDL_RENDER_DEVICE_RESET) {
+                    if (!recreateRenderContext("SDL_RENDER_DEVICE_RESET")) {
+                        running_ = false;
+                    }
+                }
+                if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_f) {
+                    (void)toggleFullscreen();
+                }
+                if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_BACKQUOTE) {
+                    debugHudOpen_ = !debugHudOpen_;
                 }
                 if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_F10) {
                     perfHudOpen_ = !perfHudOpen_;
@@ -259,7 +430,7 @@ int Runtime::run() {
         (void)replayRecorder_.save(config_.replayRecordPath);
     }
 
-    return 0;
+    return replayVerificationFailed_ ? 2 : 0;
 }
 
 void Runtime::simTick(const double dt) {
@@ -282,6 +453,10 @@ void Runtime::simTick(const double dt) {
     if (replayPlaybackMode_) {
         inputMask = replayPlayer_.inputForTick(tickIndex_);
     }
+    if (!config_.replayRecordPath.empty()) {
+        replayRecorder_.recordTickInput(inputMask);
+    }
+
     const float moveStep = static_cast<float>(dt) * 120.0F;
     if ((inputMask & InputMoveLeft) != 0U) playerPos_.x -= moveStep;
     if ((inputMask & InputMoveRight) != 0U) playerPos_.x += moveStep;
@@ -307,10 +482,19 @@ void Runtime::simTick(const double dt) {
 
         const std::string generatedGraphPath = toolSuite_.consumeGeneratedGraphPath();
         if (!generatedGraphPath.empty()) {
-            if (patternBank_.loadFromFile(generatedGraphPath)) {
+            PatternBank candidate = patternBank_;
+            if (candidate.loadFromFile(generatedGraphPath)) {
+                patternBank_ = std::move(candidate);
                 patternPlayer_.setBank(&patternBank_);
                 graphVm_.reset(graphVmState_, config_.simulationSeed ^ tickIndex_);
                 useCompiledPatternGraph_ = !patternBank_.compiledGraphs().empty();
+                hotReloadErrorMessage_.clear();
+            } else {
+                hotReloadErrorMessage_ = "Hot reload failed, kept last-good content: " + generatedGraphPath;
+                ErrorReport err = makeError(ErrorCode::HotReloadFailed, hotReloadErrorMessage_);
+                addContext(err, "path", generatedGraphPath);
+                pushStack(err, "Runtime::simTick/hotReload");
+                logErrorReport(err);
             }
         }
         if (upgradeDebug.spawnUpgradeScreen && !traitSystem_.hasPendingChoices()) {
@@ -398,8 +582,32 @@ void Runtime::simTick(const double dt) {
         };
 
         if (useCompiledPatternGraph_ && !patternBank_.compiledGraphs().empty()) {
+            struct GraphEmitContext {
+                Runtime* self {nullptr};
+                const TraitModifiers* tm {nullptr};
+                const ArchetypeDefinition* archetype {nullptr};
+                const MetaBonuses* mb {nullptr};
+                const DifficultyScalars* diff {nullptr};
+            } ctx {this, &tm, &archetype, &mb, &diffScalars};
+
             graphVmState_.difficultyScalar = diffScalars.patternSpeed;
-            graphVm_.execute(patternBank_.compiledGraphs().front(), graphVmState_, static_cast<float>(dt), {0.0F, 0.0F}, aimTarget_, emitWithRuntimeMods);
+            graphVm_.execute(
+                patternBank_.compiledGraphs().front(),
+                graphVmState_,
+                static_cast<float>(dt),
+                {0.0F, 0.0F},
+                aimTarget_,
+                &ctx,
+                [](void* user, const ProjectileSpawn& spawn) {
+                    auto* c = static_cast<GraphEmitContext*>(user);
+                    ProjectileSpawn mod = spawn;
+                    const float powerScale = 0.85F + (c->archetype->stats.power + c->mb->powerBonus) * 0.03F;
+                    mod.vel.x *= c->tm->projectileSpeedMul * powerScale * c->diff->patternSpeed;
+                    mod.vel.y *= c->tm->projectileSpeedMul * powerScale * c->diff->patternSpeed;
+                    mod.radius = std::max(0.5F, spawn.radius + c->tm->projectileRadiusAdd);
+                    c->self->projectiles_.spawn(mod);
+                }
+            );
         } else {
             patternPlayer_.update(static_cast<float>(dt), {0.0F, 0.0F}, aimTarget_, emitWithRuntimeMods);
         }
@@ -495,13 +703,44 @@ void Runtime::simTick(const double dt) {
         cardAnim_ = {};
     }
 
-    const std::uint64_t stateHash = computeReplayStateHash(tickIndex_, ps.activeCount, es.aliveTotal, ps.totalCollisions, es.upgradeCurrency);
-    if (!config_.replayRecordPath.empty()) {
-        replayRecorder_.recordTick(inputMask, stateHash);
-    }
-    if (replayPlaybackMode_ && !replayPlayer_.verifyTick(tickIndex_, stateHash)) {
-        logError("Replay verification mismatch at tick " + std::to_string(tickIndex_));
-        running_ = false;
+    const std::uint32_t hashPeriod = replayPlaybackMode_ ? replayPlayer_.hashPeriodTicks() : std::max(1U, config_.replayHashPeriodTicks);
+    if ((tickIndex_ % hashPeriod) == 0U) {
+        const std::uint64_t bulletsHash = projectiles_.debugStateHash();
+        const std::uint64_t entitiesHash = computeReplayStateHash(
+            tickIndex_,
+            static_cast<std::uint64_t>(es.aliveTotal) ^ (static_cast<std::uint64_t>(es.aliveEnemies) << 8U),
+            static_cast<std::uint64_t>(es.aliveBosses) ^ (static_cast<std::uint64_t>(es.harvestedNodes) << 8U),
+            static_cast<std::uint64_t>(ps.totalCollisions) ^ static_cast<std::uint64_t>(es.defeatedBosses)
+        );
+        const std::uint64_t runStateHash = computeReplayStateHash(
+            tickIndex_,
+            static_cast<std::uint64_t>(runStructure_.stageIndex()),
+            static_cast<std::uint64_t>(runStructure_.zoneIndex()),
+            static_cast<std::uint64_t>(runStructure_.state()) ^ static_cast<std::uint64_t>(std::llround(playerHealth_ * 100.0F))
+        );
+        ReplayStateSample sample;
+        sample.tick = tickIndex_;
+        sample.bulletsHash = bulletsHash;
+        sample.entitiesHash = entitiesHash;
+        sample.runStateHash = runStateHash;
+        sample.totalHash = computeReplayStateHash(tickIndex_, bulletsHash, entitiesHash, runStateHash);
+
+        if (!config_.replayRecordPath.empty()) {
+            replayRecorder_.recordStateSample(sample);
+        }
+        if (replayPlaybackMode_) {
+            ReplayMismatch mismatch;
+            if (!replayPlayer_.verifyStateSample(sample, &mismatch)) {
+                logError(
+                    "Replay verification mismatch at tick " + std::to_string(mismatch.tick)
+                    + " subsystem=" + std::string(toString(mismatch.subsystem))
+                    + " expected=" + std::to_string(mismatch.expected)
+                    + " actual=" + std::to_string(mismatch.actual)
+                );
+                replayVerificationFailed_ = true;
+                running_ = false;
+            }
+        }
     }
 
     if (runStructure_.state() == RunState::Completed || runStructure_.state() == RunState::Failed) {
@@ -563,7 +802,9 @@ void Runtime::buildSceneOverlay(const double frameDelta) {
     const StageDefinition* stage = runStructure_.currentStage();
     const ZoneDefinition* zone = runStructure_.currentZone();
     const MetaBonuses& mb = metaProgression_.bonuses();
+    const Vec2 mouseWorld = currentMouseWorldPosition();
 
+    if (debugHudOpen_) {
     std::ostringstream overlay;
     overlay << "FPS " << static_cast<int>(fps)
             << "  Tick " << tickIndex_
@@ -594,6 +835,9 @@ void Runtime::buildSceneOverlay(const double frameDelta) {
             << "\nGraphVM " << (useCompiledPatternGraph_ ? "on" : "off")
             << "  GraphPrograms " << patternBank_.compiledGraphs().size()
             << "  GraphIssues " << patternBank_.graphDiagnostics().size()
+            << "  ShaderPacks " << engine::public_api::shaderPackPlugins().size()
+            << "  ContentPlugins " << engine::public_api::contentPackPlugins().size()
+            << "  ToolPanels " << engine::public_api::toolPanelPlugins().size()
             << "\nArchetype " << archetype.name
             << "  Weapon " << archetype.primaryWeapon
             << "  Active " << archetype.activeAbility
@@ -603,7 +847,7 @@ void Runtime::buildSceneOverlay(const double frameDelta) {
             << "  ActiveLayers " << patternPlayer_.activeLayerCountForStep()
             << "  Speed " << patternPlayer_.playbackSpeed()
             << "  Paused " << (patternPlayer_.paused() ? "yes" : "no")
-            << "\n[F1] archetypes  [F2-F9] buy meta node  [U] upgrades  [Arrows/Pad] navigate upgrades  [Enter/A] confirm  [X/R] reroll  [1-9/TAB] pattern  [SPACE] pause  [R] reset  [,/.] speed  [H] hitboxes  [G] grid  [F10] perf HUD  [F11] graph VM  [F12] bullet mode";
+            << "\n[F1] archetypes  [F2-F9] buy meta node  [U] upgrades  [Arrows/Pad] navigate upgrades  [Enter/A] confirm  [X/R] reroll  [1-9/TAB] pattern  [SPACE] pause  [R] reset  [,/.] speed  [H] hitboxes  [G] grid  [`] debug HUD  [F10] perf HUD  [F11] graph VM  [F12] bullet mode";
 
     if (archetypeSelectionOpen_) {
         overlay << "\n\n=== Archetype Selection (press [1-8], [Enter] to close) ===";
@@ -626,7 +870,12 @@ void Runtime::buildSceneOverlay(const double frameDelta) {
         }
     }
 
-    debugText_.drawText(spriteBatch_, overlay.str(), Vec2 {-620.0F, -330.0F}, 0.85F, Color {255, 255, 255, 255});
+    if (!hotReloadErrorMessage_.empty()) {
+        overlay << "\nHotReloadError: " << hotReloadErrorMessage_;
+    }
+
+    debugText_.drawText(spriteBatch_, overlay.str(), Vec2 {-620.0F, -330.0F}, 0.85F * uiTextScale_, Color {255, 255, 255, 255});
+    }
 
     if (perfHudOpen_) {
         const PerfSnapshot& perf = profiler_.snapshot();
@@ -647,7 +896,7 @@ void Runtime::buildSceneOverlay(const double frameDelta) {
             if (perf.warningRenderBudget) perfHud << " Render > 4ms";
             if (perf.warningCollisionBudget) perfHud << " Collisions > 2ms";
         }
-        debugText_.drawText(spriteBatch_, perfHud.str(), Vec2 {320.0F, -330.0F}, 0.9F, Color {255, 240, 180, 255});
+        debugText_.drawText(spriteBatch_, perfHud.str(), Vec2 {320.0F, -330.0F}, 0.9F * uiTextScale_, Color {255, 240, 180, 255});
     }
 }
 
@@ -805,6 +1054,12 @@ void Runtime::drawUpgradeSelectionUi(const double frameDelta) {
 }
 
 void Runtime::renderFrame(const double frameDelta) {
+    if (!renderContextReady_ || !renderer_ || !textures_) {
+        logError("Render frame skipped because render context is unavailable.");
+        running_ = false;
+        return;
+    }
+
     using Clock = std::chrono::steady_clock;
     const auto renderStart = Clock::now();
 

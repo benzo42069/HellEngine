@@ -4,6 +4,7 @@
 #include <engine/config.h>
 #include <engine/deterministic_rng.h>
 #include <engine/difficulty_scaling.h>
+#include <engine/diagnostics.h>
 #include <engine/editor_tools.h>
 #include <engine/gpu_bullets.h>
 #include <engine/upgrade_ui_model.h>
@@ -53,12 +54,23 @@ class Runtime {
     UpgradeViewStats buildCurrentViewStats() const;
     UpgradeViewStats buildProjectedViewStats(const Trait& trait) const;
     bool hasSynergyWithActive(const Trait& trait) const;
+    bool initializeRenderContext();
+    bool recreateRenderContext(const char* reason);
+    void destroyRenderContext();
+    void refreshDisplayMetrics();
+    [[nodiscard]] Vec2 currentMouseWorldPosition() const;
+    bool toggleFullscreen();
 
     EngineConfig config_;
     bool running_ {true};
 
     SDL_Window* window_ {nullptr};
     SDL_Renderer* renderer_ {nullptr};
+    bool renderContextReady_ {false};
+    bool fullscreen_ {false};
+    float dpiScaleX_ {1.0F};
+    float dpiScaleY_ {1.0F};
+    float uiTextScale_ {1.0F};
 
     FrameAllocator frameAllocator_;
     JobSystem jobSystem_;
@@ -87,7 +99,9 @@ class Runtime {
     ReplayRecorder replayRecorder_;
     ReplayPlayer replayPlayer_;
     bool replayPlaybackMode_ {false};
+    bool replayVerificationFailed_ {false};
     std::string replayContentVersion_;
+    std::string replayContentHash_;
 
     Vec2 playerPos_ {0.0F, 0.0F};
     Vec2 aimTarget_ {160.0F, 0.0F};
@@ -96,6 +110,7 @@ class Runtime {
     bool showGrid_ {true};
     bool archetypeSelectionOpen_ {true};
     bool perfHudOpen_ {true};
+    bool debugHudOpen_ {true};
     bool useCompiledPatternGraph_ {false};
     BulletSimulationMode bulletSimMode_ {BulletSimulationMode::CpuDeterministic};
     GpuBulletSystem gpuBullets_ {};
@@ -120,6 +135,7 @@ class Runtime {
     float gpuUpdateMsFrame_ {0.0F};
     float gpuRenderMsFrame_ {0.0F};
     std::uint32_t currentInputMask_ {0};
+    std::string hotReloadErrorMessage_ {};
 };
 
 } // namespace engine

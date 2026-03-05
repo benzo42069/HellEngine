@@ -1,8 +1,12 @@
+#include <engine/content_pipeline.h>
+
 #include <nlohmann/json.hpp>
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -15,33 +19,27 @@ struct ValidationError {
     std::string message;
 };
 
-bool hasNumber(const nlohmann::json& j, const char* key) {
-    return j.contains(key) && (j[key].is_number_float() || j[key].is_number_integer() || j[key].is_number_unsigned());
+bool hasNumber(const nlohmann::json& obj, const char* key) {
+    return obj.contains(key) && obj[key].is_number();
 }
 
-bool validateLayer(const nlohmann::json& layer, std::vector<ValidationError>& errors, const std::string& file, std::size_t idx) {
-    bool ok = true;
-    if (!layer.is_object()) {
-        errors.push_back({file, "layer[" + std::to_string(idx) + "] must be object"});
-        return false;
+void ensureGuids(nlohmann::json& arr, const char* kind, const char* fallbackName) {
+    if (!arr.is_array()) return;
+    for (auto& item : arr) {
+        if (!item.is_object()) continue;
+        if (!item.contains("guid") || !item["guid"].is_string()) {
+            const std::string logicalKey = item.value("id", item.value("name", std::string(fallbackName)));
+            item["guid"] = engine::stableGuidForAsset(kind, logicalKey);
+        }
     }
-    if (!layer.contains("name") || !layer["name"].is_string()) {
-        errors.push_back({file, "layer[" + std::to_string(idx) + "] missing string `name`"});
-        ok = false;
-    }
-    if (!layer.contains("type") || !layer["type"].is_string()) {
-        errors.push_back({file, "layer[" + std::to_string(idx) + "] missing string `type`"});
-        ok = false;
-    }
-    if (!hasNumber(layer, "bulletCount") || !hasNumber(layer, "bulletSpeed") || !hasNumber(layer, "cooldownSeconds")) {
-        errors.push_back({file, "layer[" + std::to_string(idx) + "] requires numeric bulletCount, bulletSpeed, cooldownSeconds"});
-        ok = false;
-    }
-    return ok;
 }
 
 bool validatePatterns(const nlohmann::json& doc, std::vector<ValidationError>& errors, const std::string& file) {
     bool ok = true;
+    if (!doc["patterns"].is_array()) {
+        errors.push_back({file, "`patterns` must be array"});
+        return false;
+    }
     for (std::size_t pidx = 0; pidx < doc["patterns"].size(); ++pidx) {
         const auto& pattern = doc["patterns"][pidx];
         if (!pattern.is_object()) {
@@ -53,24 +51,16 @@ bool validatePatterns(const nlohmann::json& doc, std::vector<ValidationError>& e
             errors.push_back({file, "pattern[" + std::to_string(pidx) + "] missing string `name`"});
             ok = false;
         }
-        if (pattern.contains("layers")) {
-            if (!pattern["layers"].is_array() || pattern["layers"].empty()) {
-                errors.push_back({file, "pattern[" + std::to_string(pidx) + "].layers must be non-empty array"});
-                ok = false;
-            } else {
-                for (std::size_t lidx = 0; lidx < pattern["layers"].size(); ++lidx) {
-                    ok = validateLayer(pattern["layers"][lidx], errors, file, lidx) && ok;
-                }
-            }
-        } else {
-            ok = validateLayer(pattern, errors, file, 0) && ok;
-        }
     }
     return ok;
 }
 
 bool validateEntities(const nlohmann::json& doc, std::vector<ValidationError>& errors, const std::string& file) {
     bool ok = true;
+    if (!doc["entities"].is_array()) {
+        errors.push_back({file, "`entities` must be array"});
+        return false;
+    }
     for (std::size_t i = 0; i < doc["entities"].size(); ++i) {
         const auto& e = doc["entities"][i];
         if (!e.is_object()) {
@@ -82,14 +72,6 @@ bool validateEntities(const nlohmann::json& doc, std::vector<ValidationError>& e
             errors.push_back({file, "entity[" + std::to_string(i) + "] missing string `name`"});
             ok = false;
         }
-        if (!e.contains("type") || !e["type"].is_string()) {
-            errors.push_back({file, "entity[" + std::to_string(i) + "] missing string `type`"});
-            ok = false;
-        }
-        if (!e.contains("movement") || !e["movement"].is_string()) {
-            errors.push_back({file, "entity[" + std::to_string(i) + "] missing string `movement`"});
-            ok = false;
-        }
         if (!hasNumber(e, "maxHealth")) {
             errors.push_back({file, "entity[" + std::to_string(i) + "] missing numeric `maxHealth`"});
             ok = false;
@@ -98,11 +80,42 @@ bool validateEntities(const nlohmann::json& doc, std::vector<ValidationError>& e
     return ok;
 }
 
+void mergeByGuid(const nlohmann::json& src, nlohmann::json& dst, std::vector<std::string>& conflicts) {
+    std::map<std::string, std::size_t> guidToIndex;
+    for (std::size_t i = 0; i < dst.size(); ++i) {
+        const std::string guid = dst[i].value("guid", std::string());
+        if (!guid.empty()) guidToIndex[guid] = i;
+    }
+
+    for (const auto& item : src) {
+        const std::string guid = item.value("guid", std::string());
+        if (guid.empty()) continue;
+        if (auto found = guidToIndex.find(guid); found != guidToIndex.end()) {
+            conflicts.push_back(guid);
+            dst[found->second] = item;
+        } else {
+            guidToIndex[guid] = dst.size();
+            dst.push_back(item);
+        }
+    }
+}
+
+void appendAssetRegistry(nlohmann::json& pack, const nlohmann::json& arr, const char* kind) {
+    for (const auto& item : arr) {
+        nlohmann::json rec;
+        rec["kind"] = kind;
+        rec["guid"] = item.value("guid", "");
+        rec["name"] = item.value("name", item.value("id", "unnamed"));
+        pack["assetRegistry"].push_back(rec);
+    }
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
     fs::path inputDir = "data";
     fs::path outputPak = "content.pak";
+    std::string packId = "base";
 
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
@@ -112,6 +125,10 @@ int main(int argc, char** argv) {
         }
         if (arg == "--output" && i + 1 < argc) {
             outputPak = argv[++i];
+            continue;
+        }
+        if (arg == "--pack-id" && i + 1 < argc) {
+            packId = argv[++i];
             continue;
         }
     }
@@ -124,6 +141,10 @@ int main(int argc, char** argv) {
     std::vector<ValidationError> errors;
     nlohmann::json mergedPatterns = nlohmann::json::array();
     nlohmann::json mergedEntities = nlohmann::json::array();
+    nlohmann::json mergedTraits = nlohmann::json::array();
+    nlohmann::json mergedArchetypes = nlohmann::json::array();
+    nlohmann::json mergedEncounters = nlohmann::json::array();
+    std::vector<std::string> conflicts;
 
     for (const auto& entry : fs::recursive_directory_iterator(inputDir)) {
         if (!entry.is_regular_file() || entry.path().extension() != ".json") continue;
@@ -137,20 +158,37 @@ int main(int argc, char** argv) {
         nlohmann::json doc;
         in >> doc;
 
+        std::string migrationMessage;
+        if (!engine::migratePackJson(doc, migrationMessage)) {
+            errors.push_back({entry.path().string(), migrationMessage});
+            continue;
+        }
+
         if (doc.contains("patterns")) {
-            if (!doc["patterns"].is_array()) {
-                errors.push_back({entry.path().string(), "`patterns` must be array"});
-            } else if (validatePatterns(doc, errors, entry.path().string())) {
-                for (const auto& p : doc["patterns"]) mergedPatterns.push_back(p);
+            if (validatePatterns(doc, errors, entry.path().string())) {
+                ensureGuids(doc["patterns"], "pattern", "pattern");
+                mergeByGuid(doc["patterns"], mergedPatterns, conflicts);
             }
         }
 
         if (doc.contains("entities")) {
-            if (!doc["entities"].is_array()) {
-                errors.push_back({entry.path().string(), "`entities` must be array"});
-            } else if (validateEntities(doc, errors, entry.path().string())) {
-                for (const auto& e : doc["entities"]) mergedEntities.push_back(e);
+            if (validateEntities(doc, errors, entry.path().string())) {
+                ensureGuids(doc["entities"], "enemy", "entity");
+                mergeByGuid(doc["entities"], mergedEntities, conflicts);
             }
+        }
+
+        if (doc.contains("traits") && doc["traits"].is_array()) {
+            ensureGuids(doc["traits"], "trait", "trait");
+            mergeByGuid(doc["traits"], mergedTraits, conflicts);
+        }
+        if (doc.contains("archetypes") && doc["archetypes"].is_array()) {
+            ensureGuids(doc["archetypes"], "archetype", "archetype");
+            mergeByGuid(doc["archetypes"], mergedArchetypes, conflicts);
+        }
+        if (doc.contains("encounters") && doc["encounters"].is_array()) {
+            ensureGuids(doc["encounters"], "encounter", "encounter");
+            mergeByGuid(doc["encounters"], mergedEncounters, conflicts);
         }
     }
 
@@ -163,10 +201,38 @@ int main(int argc, char** argv) {
     }
 
     nlohmann::json pack;
-    pack["packVersion"] = 2;
+    pack["packId"] = packId;
+    pack["schemaVersion"] = 2;
+    pack["packVersion"] = 3;
     pack["sourceDir"] = inputDir.string();
+    pack["compatibility"] = {
+        {"minRuntimePackVersion", 2},
+        {"maxRuntimePackVersion", 3},
+        {"notes", "Schema v2 requires GUID-based references; regenerate packs after schema edits."},
+    };
     pack["patterns"] = mergedPatterns;
     pack["entities"] = mergedEntities;
+    pack["traits"] = mergedTraits;
+    pack["archetypes"] = mergedArchetypes;
+    pack["encounters"] = mergedEncounters;
+    pack["assetRegistry"] = nlohmann::json::array();
+    appendAssetRegistry(pack, mergedPatterns, "pattern");
+    appendAssetRegistry(pack, mergedEntities, "enemy");
+    appendAssetRegistry(pack, mergedTraits, "trait");
+    appendAssetRegistry(pack, mergedArchetypes, "archetype");
+    appendAssetRegistry(pack, mergedEncounters, "encounter");
+
+    const std::string payloadNoHash = pack.dump();
+    pack["contentHash"] = engine::fnv1a64Hex(payloadNoHash);
+
+    if (!conflicts.empty()) {
+        std::set<std::string> unique(conflicts.begin(), conflicts.end());
+        pack["conflicts"] = nlohmann::json::array();
+        for (const auto& c : unique) {
+            pack["conflicts"].push_back(c);
+            std::cerr << "[conflict] GUID override detected: " << c << "\n";
+        }
+    }
 
     std::ofstream out(outputPak, std::ios::binary);
     if (!out.good()) {
@@ -177,6 +243,7 @@ int main(int argc, char** argv) {
     const std::string payload = pack.dump();
     out.write(payload.data(), static_cast<std::streamsize>(payload.size()));
 
-    std::cout << "Packed patterns=" << mergedPatterns.size() << " entities=" << mergedEntities.size() << " -> " << outputPak << "\n";
+    std::cout << "Packed patterns=" << mergedPatterns.size() << " entities=" << mergedEntities.size() << " traits=" << mergedTraits.size()
+              << " archetypes=" << mergedArchetypes.size() << " encounters=" << mergedEncounters.size() << " -> " << outputPak << "\n";
     return 0;
 }

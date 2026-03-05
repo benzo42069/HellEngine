@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 2,
+  "packVersion": 3,
+  "packId": "starter-core",
+  "compatibility": {
+    "minRuntimePackVersion": 2,
+    "maxRuntimePackVersion": 3,
+    "notes": "Starter authored content pack"
+  },
+  "patterns": [
+    {
+      "guid": "pattern-starter-ring",
+      "name": "Starter Ring",
+      "seedOffset": 101,
+      "loopSequence": true,
+      "layers": [
+        {
+          "name": "ring",
+          "type": "radial",
+          "bulletCount": 18,
+          "bulletSpeed": 155.0,
+          "projectileRadius": 3.0,
+          "cooldownSeconds": 0.16,
+          "modifiers": {
+            "rotationDeg": 0.0,
+            "phaseOffsetDeg": 0.0,
+            "speedCurveAmp": 0.1,
+            "angleOscillationDeg": 6.0,
+            "angleOscillationHz": 1.0,
+            "deterministicJitterDeg": 0.25
+          }
+        }
+      ],
+      "sequence": [
+        { "durationSeconds": 1.0, "activeLayers": [0] }
+      ]
+    },
+    {
+      "guid": "pattern-starter-wave",
+      "name": "Starter Wave",
+      "seedOffset": 202,
+      "loopSequence": true,
+      "layers": [
+        {
+          "name": "wave",
+          "type": "wave",
+          "bulletCount": 12,
+          "bulletSpeed": 145.0,
+          "projectileRadius": 2.8,
+          "cooldownSeconds": 0.12,
+          "waveAmplitudeDeg": 20.0,
+          "waveFrequencyHz": 1.3
+        }
+      ],
+      "sequence": [
+        { "durationSeconds": 1.2, "activeLayers": [0] }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "guid": "enemy-starter-drone",
+      "name": "Starter Drone",
+      "type": "enemy",
+      "movement": "sine",
+      "spawnPosition": [0.0, -140.0],
+      "baseVelocity": [0.0, 30.0],
+      "sineAmplitude": 70.0,
+      "sineFrequencyHz": 0.8,
+      "maxHealth": 24.0,
+      "contactDamage": 3.0,
+      "interactionRadius": 14.0,
+      "attacksEnabled": true,
+      "attackPatternGuid": "pattern-starter-ring",
+      "attackIntervalSeconds": 0.55,
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 0.5,
+        "intervalSeconds": 2.0,
+        "maxAlive": 4
+      }
+    },
+    {
+      "guid": "boss-starter-overseer",
+      "name": "Starter Overseer",
+      "type": "boss",
+      "movement": "linear",
+      "spawnPosition": [0.0, -210.0],
+      "baseVelocity": [0.0, 18.0],
+      "maxHealth": 320.0,
+      "contactDamage": 7.0,
+      "interactionRadius": 20.0,
+      "attacksEnabled": true,
+      "attackPatternGuid": "pattern-starter-wave",
+      "attackIntervalSeconds": 0.6,
+      "boss": {
+        "enabled": true,
+        "introDurationSeconds": 1.4,
+        "rewardDrop": {
+          "upgradeCurrency": 120.0,
+          "healthRecovery": 20.0,
+          "buffDurationSeconds": 4.5
+        },
+        "phases": [
+          {
+            "attackPatternGuid": "pattern-starter-wave",
+            "movement": "linear",
+            "durationSeconds": 4.0,
+            "difficultyScale": 1.0
+          },
+          {
+            "attackPatternGuid": "pattern-starter-ring",
+            "movement": "chase",
+            "durationSeconds": 5.0,
+            "difficultyScale": 1.25
+          }
+        ]
+      },
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 8.0,
+        "intervalSeconds": 30.0,
+        "maxAlive": 1
+      }
+    }
+  ],
+  "traits": [
+    {
+      "guid": "trait-starter-casting",
+      "id": "starter_casting",
+      "name": "Starter Casting",
+      "rarity": "rare",
+      "modifiers": {
+        "patternCooldownScale": 0.9,
+        "projectileSpeedMul": 1.08
+      }
+    },
+    {
+      "guid": "trait-starter-bulwark",
+      "id": "starter_bulwark",
+      "name": "Starter Bulwark",
+      "rarity": "common",
+      "modifiers": {
+        "playerRadiusAdd": 0.4,
+        "enemyFireRateScale": 0.95
+      }
+    }
+  ],
+  "archetypes": [
+    {
+      "guid": "archetype-starter-vanguard",
+      "name": "Vanguard Starter",
+      "description": "Balanced beginner archetype",
+      "primaryWeapon": "Pulse Blaster",
+      "activeAbility": "Guard Dash",
+      "requiredUnlockTier": 0,
+      "stats": {
+        "power": 4,
+        "fireRate": 4,
+        "moveSpeed": 4,
+        "defense": 4,
+        "synergy": 3,
+        "resourceGain": 3,
+        "dotPower": 2,
+        "rareChance": 2
+      }
+    }
+  ],
+  "encounters": [
+    {
+      "guid": "encounter-starter-stage1",
+      "id": "starter_stage_1",
+      "name": "Starter Stage 1",
+      "waves": [
+        {
+          "timeSeconds": 0.0,
+          "entityGuid": "enemy-starter-drone",
+          "count": 3
+        },
+        {
+          "timeSeconds": 10.0,
+          "entityGuid": "enemy-starter-drone",
+          "count": 5
+        },
+        {
+          "timeSeconds": 25.0,
+          "entityGuid": "boss-starter-overseer",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

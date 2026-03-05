@@ -1,5 +1,7 @@
 #include <engine/patterns.h>
 
+#include <engine/content_pipeline.h>
+#include <engine/diagnostics.h>
 #include <engine/logging.h>
 #include <nlohmann/json.hpp>
 
@@ -7,6 +9,7 @@
 #include <cmath>
 #include <fstream>
 #include <numbers>
+#include <unordered_map>
 
 namespace engine {
 
@@ -135,26 +138,100 @@ PatternDefinition parsePatternDefinition(const nlohmann::json& item) {
 } // namespace
 
 bool PatternBank::loadFromFile(const std::string& filePath) {
-    std::ifstream in(filePath);
-    if (!in.good()) {
-        logWarn("Pattern file not found: " + filePath);
+    const std::vector<std::string> packPaths = splitPackPaths(filePath);
+    if (packPaths.empty()) {
         return false;
     }
-
-    nlohmann::json json;
-    in >> json;
 
     patterns_.clear();
-    if (!json.contains("patterns") || !json["patterns"].is_array()) {
-        logWarn("Pattern file missing `patterns` array: " + filePath);
-        return false;
-    }
+    compiledGraphs_.clear();
+    graphDiagnostics_.clear();
+    std::unordered_map<std::string, std::size_t> guidToIndex;
 
-    for (const nlohmann::json& item : json["patterns"]) {
-        patterns_.push_back(parsePatternDefinition(item));
+    for (const std::string& packPath : packPaths) {
+        std::ifstream in(packPath);
+        if (!in.good()) {
+            logWarn("Pattern pack not found: " + packPath);
+            continue;
+        }
+
+        nlohmann::json json;
+        try {
+            in >> json;
+        } catch (const std::exception& ex) {
+            ErrorReport err = makeError(ErrorCode::ContentLoadFailed, std::string("JSON parse failed: ") + ex.what());
+            addContext(err, "path", packPath);
+            pushStack(err, "PatternBank::loadFromFile/parse");
+            logErrorReport(err);
+            continue;
+        }
+
+        std::string migrationMessage;
+        if (!migratePackJson(json, migrationMessage)) {
+            logError("Pattern pack schema error: " + migrationMessage + " path=" + packPath);
+            return false;
+        }
+        if (!migrationMessage.empty()) {
+            logWarn(migrationMessage + " path=" + packPath);
+        }
+
+        PackMetadata metadata;
+        std::string metaError;
+        if (!parsePackMetadata(json, metadata, metaError)) {
+            logError("Pattern pack metadata error: " + metaError + " path=" + packPath);
+            return false;
+        }
+        constexpr int kRuntimePackVersion = 3;
+        if (kRuntimePackVersion < metadata.minRuntimePackVersion || kRuntimePackVersion > metadata.maxRuntimePackVersion) {
+            logError("Pattern pack compatibility mismatch for pack=" + metadata.packId + " path=" + packPath + " runtimeVersion=" + std::to_string(kRuntimePackVersion));
+            return false;
+        }
+
+        if (!json.contains("patterns") || !json["patterns"].is_array()) {
+            logWarn("Pattern pack missing `patterns` array: " + packPath);
+            continue;
+        }
+
+        for (const nlohmann::json& item : json["patterns"]) {
+            PatternDefinition parsed = parsePatternDefinition(item);
+            if (parsed.guid.empty()) parsed.guid = stableGuidForAsset("pattern", parsed.name);
+            if (auto found = guidToIndex.find(parsed.guid); found != guidToIndex.end()) {
+                logWarn("Pattern conflict override guid=" + parsed.guid + " old=" + patterns_[found->second].name + " new=" + parsed.name + " pack=" + metadata.packId);
+                patterns_[found->second] = std::move(parsed);
+            } else {
+                guidToIndex[parsed.guid] = patterns_.size();
+                patterns_.push_back(std::move(parsed));
+            }
+        }
+
+        if (json.contains("graphs") && json["graphs"].is_array()) {
+            std::vector<PatternGraphAsset> graphs;
+            std::vector<PatternGraphDiagnostic> readDiagnostics;
+            if (loadPatternGraphsFromFile(packPath, graphs, readDiagnostics)) {
+                graphDiagnostics_.insert(graphDiagnostics_.end(), readDiagnostics.begin(), readDiagnostics.end());
+                PatternGraphCompiler compiler;
+                for (const PatternGraphAsset& graph : graphs) {
+                    CompiledPatternGraph compiled;
+                    if (compiler.compile(graph, compiled)) {
+                        compiledGraphs_.push_back(std::move(compiled));
+                    } else {
+                        graphDiagnostics_.insert(graphDiagnostics_.end(), compiled.diagnostics.begin(), compiled.diagnostics.end());
+                    }
+                }
+            }
+        }
     }
 
     return !patterns_.empty();
+}
+
+std::size_t PatternBank::findPatternIndexByGuidOrName(const std::string& ref) const {
+    for (std::size_t i = 0; i < patterns_.size(); ++i) {
+        if (patterns_[i].guid == ref || patterns_[i].name == ref) {
+            return i;
+        }
+    }
+    return patterns_.size();
 }
 
 void PatternBank::loadFallbackDefaults() {
@@ -163,6 +240,7 @@ void PatternBank::loadFallbackDefaults() {
     graphDiagnostics_.clear();
 
     PatternDefinition basic;
+    basic.guid = stableGuidForAsset("pattern", "Fallback Composite");
     basic.name = "Fallback Composite";
     basic.seedOffset = 101;
     basic.layers = {
