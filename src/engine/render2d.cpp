@@ -62,6 +62,10 @@ float Camera2D::zoom() const { return zoom_; }
 
 Vec2 Camera2D::center() const { return center_; }
 
+int Camera2D::viewportWidth() const { return viewportWidth_; }
+
+int Camera2D::viewportHeight() const { return viewportHeight_; }
+
 TextureAtlas::TextureAtlas(std::string textureId)
     : textureId_(std::move(textureId)) {}
 

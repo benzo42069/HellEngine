@@ -16,6 +16,7 @@
    - render-context lifecycle (init/recreate/shutdown)
    - `BulletPaletteTable` maps palette template registry entries to projectile render colors
    - scene overlay composition through `SimSnapshot` sim->render contract
+   - `BackgroundSystem` generates startup procedural parallax layers (deep-space noise, grid lines, particle dust) and renders them before gameplay sprites
    - sprite/debug draw + tool HUD composition
    - `ParticleFxSystem` consumes projectile despawn events and renders short-lived impact bursts using frame-time updates (visual-only, no sim coupling)
 

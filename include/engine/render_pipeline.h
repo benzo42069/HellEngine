@@ -1,5 +1,6 @@
 #pragma once
 
+#include <engine/background_layers.h>
 #include <engine/config.h>
 #include <engine/editor_tools.h>
 #include <engine/gameplay_session.h>
@@ -50,6 +51,7 @@ class RenderPipeline {
     SpriteBatch spriteBatch_;
     DebugDraw debugDraw_;
     DebugText debugText_;
+    BackgroundSystem backgroundSystem_ {};
     EngineConfig config_ {};
 };
 
