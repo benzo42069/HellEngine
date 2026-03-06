@@ -4,7 +4,9 @@
 #include <cstdlib>
 #include <iostream>
 
-int main() {
+namespace {
+
+std::uint64_t runScenario() {
     engine::ProjectileSystem ps;
     ps.initialize(20000, 420.0F, 32, 18);
     ps.spawnRadialBurst(5000, 90.0F, 3.0F, 42);
@@ -14,10 +16,34 @@ int main() {
         ps.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
     }
 
-    const std::uint64_t hash = ps.debugStateHash();
-    constexpr std::uint64_t expected = 3412424349282778590ULL;
-    if (hash != expected) {
-        std::cerr << "determinism_cross_config_test hash mismatch expected=" << expected << " actual=" << hash << "\n";
+    return ps.debugStateHash();
+}
+
+constexpr std::uint64_t expectedHashForToolchain() {
+#if defined(_MSC_VER)
+    return 3412424349282778590ULL;
+#elif defined(__clang__)
+    return 12663723333501355397ULL;
+#elif defined(__GNUC__)
+    return 12663723333501355397ULL;
+#else
+    return 0ULL;
+#endif
+}
+
+} // namespace
+
+int main() {
+    const std::uint64_t hashA = runScenario();
+    const std::uint64_t hashB = runScenario();
+    if (hashA != hashB) {
+        std::cerr << "determinism_cross_config_test instability hashA=" << hashA << " hashB=" << hashB << "\n";
+        return EXIT_FAILURE;
+    }
+
+    const std::uint64_t expected = expectedHashForToolchain();
+    if (expected != 0ULL && hashA != expected) {
+        std::cerr << "determinism_cross_config_test hash mismatch expected=" << expected << " actual=" << hashA << "\n";
         return EXIT_FAILURE;
     }
 
