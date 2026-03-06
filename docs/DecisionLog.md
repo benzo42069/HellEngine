@@ -341,3 +341,9 @@
 - **Decision**: Add an opt-in visual-only projectile trail system using a fixed per-bullet ring buffer of 4 past positions and faded afterimage rendering before the main sprite.
 - **Rationale**: Improves legibility at low memory overhead (~32 bytes per bullet) without affecting replay hashes.
 - **Status**: Accepted.
+
+## 2026-03-06 — Impact particles visual-only boundary
+- **Context**: Projectile despawn/hit feedback needs readability without affecting deterministic simulation.
+- **Decision**: Add `ParticleFxSystem` as a render-layer-only subsystem fed by projectile despawn events, updated on frame delta and excluded from collision/state hash/replay determinism.
+- **Rationale**: Preserves simulation determinism while improving visual clarity for bullet hit/expire events.
+- **Status**: Accepted.

@@ -35,6 +35,7 @@ void BulletPaletteTable::setEntry(const std::uint8_t index, const PaletteFillRes
         .highlight = toColor(fill.highlight),
         .glow = toColor(fill.glow),
         .trail = toColor(fill.trail),
+        .impact = toColor(fill.glow),
     };
 }
 
@@ -50,7 +51,9 @@ void BulletPaletteTable::buildFromRegistry(const PaletteFxTemplateRegistry& regi
                 break;
             }
         }
-        setEntry(idx, deriveProjectileFillFromCore(core));
+        const PaletteFillResult fill = deriveProjectileFillFromCore(core);
+        setEntry(idx, fill);
+        entries_[idx].impact = toColor(buildMaterialParamsFromTemplate(templ).paletteImpact);
         ++idx;
     }
 }

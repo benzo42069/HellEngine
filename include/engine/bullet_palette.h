@@ -17,6 +17,7 @@ class BulletPaletteTable {
         Color highlight;
         Color glow;
         Color trail;
+        Color impact;
     };
 
     BulletPaletteTable();
