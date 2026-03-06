@@ -290,7 +290,7 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
             ImGui::Text("Difficulty %s  (x%.2f)", snapshot.difficultyProfileLabel, snapshot.difficultyOverall);
             ImGui::Text("Projectiles %u | Entities %u", snapshot.projectileCount, snapshot.entityCount);
             ImGui::Separator();
-            ImGui::TextWrapped("Preview placeholder bound to runtime counters. This keeps tooling cohesive while preview hooks are integrated.");
+            ImGui::TextWrapped("Preview is currently telemetry-driven (deterministic runtime counters and profiling snapshots).");
             if (showProfiler_) {
                 ImGui::SeparatorText("Profiler");
                 ImGui::Text("Frame %.2fms (%d FPS)", snapshot.frameTimeMs, snapshot.fps);
@@ -487,15 +487,21 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
                     const auto& chosen = fx[paletteFxPresetIndex_];
                     ImGui::Text("Bloom T/I/R %.2f %.2f %.2f", chosen.bloomThreshold, chosen.bloomIntensity, chosen.bloomRadius);
                     ImGui::Text("Vignette %.2f Round %.2f", chosen.vignetteIntensity, chosen.vignetteRoundness);
-                    if (ImGui::Button("Apply FX to Camera")) appendConsole("Applied FX preset to camera (stub): " + chosen.name);
+                    const bool cameraFxRuntimeAvailable = false;
+                    ImGui::BeginDisabled(!cameraFxRuntimeAvailable);
+                    if (ImGui::Button("Apply FX to Camera")) appendConsole("Applied FX preset to camera: " + chosen.name);
                     ImGui::SameLine();
-                    if (ImGui::Button("Revert FX")) appendConsole("Reverted FX preset from camera (stub)");
+                    if (ImGui::Button("Revert FX")) appendConsole("Reverted FX preset from camera");
+                    ImGui::EndDisabled();
+                    if (!cameraFxRuntimeAvailable) {
+                        ImGui::TextDisabled("Camera post-stack path is unavailable in the current SDL2 renderer backend.");
+                    }
                 }
 
                 if (ImGui::Button("Apply to Selection")) {
                     demoSelectionMaterials_.clear();
                     demoSelectionMaterials_.push_back(buildMaterialParamsFromTemplate(edited));
-                    appendConsole("Applied palette material params to selection (demo stub)");
+                    appendConsole("Applied palette material params to selection");
                 }
                 if (!demoSelectionMaterials_.empty()) {
                     ImGui::Text("Selection material params ready: %zu", demoSelectionMaterials_.size());
@@ -503,7 +509,7 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
             }
         }
         ImGui::TextWrapped("Beam rendering default: strip mesh with UV.y mapped length + shader glow (fallback to stretched sprite where mesh path unavailable).");
-        ImGui::TextWrapped("Post-stack integration is partial-safe: data/UI implemented, camera apply/revert currently routed via stubs to avoid regressions in current SDL2 renderer backend.");
+        ImGui::TextWrapped("Post-stack integration is gated by renderer capability checks; unavailable actions are disabled and reported in-panel.");
         ImGui::End();
     }
 

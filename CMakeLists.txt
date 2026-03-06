@@ -43,6 +43,12 @@ endif()
 
 include(FetchContent)
 
+# Avoid building both SDL shared and static variants in this project to reduce
+# archive/write races under parallel generators and to keep linkage explicit.
+set(SDL_SHARED ON CACHE BOOL "Build SDL shared library" FORCE)
+set(SDL_STATIC OFF CACHE BOOL "Build SDL static library" FORCE)
+set(SDL_TEST OFF CACHE BOOL "Build SDL tests" FORCE)
+
 FetchContent_Declare(
   SDL2
   GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
