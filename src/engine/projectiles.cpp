@@ -45,6 +45,7 @@ void ProjectileSystem::initialize(const std::uint32_t capacity, const float worl
     splitDone_.assign(capacity_, 0);
     allegiance_.assign(capacity_, static_cast<std::uint8_t>(ProjectileAllegiance::Enemy));
     paletteIndex_.assign(capacity_, 0);
+    shape_.assign(capacity_, static_cast<std::uint8_t>(BulletShape::Circle));
     grazeAwardTick_.assign(capacity_, 0ULL);
 
     freeList_.clear();
@@ -97,6 +98,7 @@ bool ProjectileSystem::spawn(const ProjectileSpawn& spawnData) {
     allegiance_[slot] = static_cast<std::uint8_t>(spawnData.allegiance);
     grazeAwardTick_[slot] = 0ULL;
     paletteIndex_[slot] = spawnData.paletteIndex;
+    shape_[slot] = static_cast<std::uint8_t>(spawnData.shape);
     active_[slot] = 1;
     indexInActive_[slot] = activeCount_;
     activeIndices_[activeCount_] = slot;
@@ -214,6 +216,7 @@ void ProjectileSystem::updateMotion(const float dt, const float enemyTimeScale, 
                     .behavior = ProjectileBehavior {},
                     .allegiance = static_cast<ProjectileAllegiance>(allegiance_[i]),
                     .paletteIndex = paletteIndex_[i],
+                    .shape = static_cast<BulletShape>(shape_[i]),
                 };
                 }
             }
@@ -373,6 +376,25 @@ void ProjectileSystem::render(SpriteBatch& batch, const std::string& textureId, 
     for (std::uint32_t j = 0; j < activeCount_; ++j) {
         const std::uint32_t i = activeIndices_[j];
         const float d = radius_[i] * 2.0F;
+        batch.draw(SpriteDrawCmd {
+            .textureId = textureId,
+            .dest = SDL_FRect {posX_[i] - radius_[i], posY_[i] - radius_[i], d, d},
+            .src = std::nullopt,
+            .rotationDeg = 0.0F,
+            .color = paletteIndex_[i] == 0
+                ? (allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
+                : paletteTable.get(paletteIndex_[i]).core,
+        });
+    }
+}
+
+
+void ProjectileSystem::renderProcedural(SpriteBatch& batch, const BulletPaletteTable& paletteTable) const {
+    for (std::uint32_t j = 0; j < activeCount_; ++j) {
+        const std::uint32_t i = activeIndices_[j];
+        const float d = radius_[i] * 2.0F;
+        const BulletShape shape = static_cast<BulletShape>(shape_[i]);
+        const std::string textureId = bulletTextureId(std::to_string(paletteIndex_[i]), shape);
         batch.draw(SpriteDrawCmd {
             .textureId = textureId,
             .dest = SDL_FRect {posX_[i] - radius_[i], posY_[i] - radius_[i], d, d},

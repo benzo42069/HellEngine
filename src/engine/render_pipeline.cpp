@@ -1,5 +1,7 @@
 #include <engine/render_pipeline.h>
 
+#include <engine/bullet_sprite_gen.h>
+
 #include <engine/logging.h>
 
 #include <imgui.h>
@@ -27,7 +29,6 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
         return false;
     }
     textures_ = std::make_unique<TextureStore>(renderer_);
-    (void)textures_->loadTexture("projectile", "assets/projectile.png");
     toolSuite.initialize(window, renderer_);
     (void)debugText_.init(renderer_);
     debugText_.registerTexture(*textures_, "debug_font");
@@ -73,6 +74,29 @@ void RenderPipeline::refreshDisplayMetrics(SDL_Window* window) {
     camera_.setViewport(drawableW, drawableH);
 }
 
+
+void RenderPipeline::generateBulletSprites(const PaletteFxTemplateRegistry& registry, const BulletPaletteTable& table) {
+    if (!renderer_ || !textures_) return;
+    BulletSpriteGenerator generator;
+    const auto defaultFill = deriveProjectileFillFromCore(PaletteColor {1.0F, 1.0F, 1.0F, 1.0F});
+    generator.generatePaletteSet(renderer_, *textures_, "0", defaultFill, 16);
+
+    const auto& db = registry.database();
+    std::uint8_t idx = 1;
+    for (const PaletteTemplate& templ : db.palettes) {
+        if (idx >= BulletPaletteTable::kMaxPalettes) break;
+        const auto& entry = table.get(idx);
+        PaletteFillResult fill;
+        fill.core = PaletteColor {entry.core.r / 255.0F, entry.core.g / 255.0F, entry.core.b / 255.0F, entry.core.a / 255.0F};
+        fill.highlight = PaletteColor {entry.highlight.r / 255.0F, entry.highlight.g / 255.0F, entry.highlight.b / 255.0F, entry.highlight.a / 255.0F};
+        fill.glow = PaletteColor {entry.glow.r / 255.0F, entry.glow.g / 255.0F, entry.glow.b / 255.0F, entry.glow.a / 255.0F};
+        fill.trail = PaletteColor {entry.trail.r / 255.0F, entry.trail.g / 255.0F, entry.trail.b / 255.0F, entry.trail.a / 255.0F};
+        generator.generatePaletteSet(renderer_, *textures_, std::to_string(idx), fill, 16);
+        generator.generatePaletteSet(renderer_, *textures_, templ.name, fill, 16);
+        ++idx;
+    }
+}
+
 bool RenderPipeline::toggleFullscreen(SDL_Window* window) {
     if (!window) return false;
     const Uint32 mode = fullscreen_ ? 0U : SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -89,7 +113,7 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
     camera_.update(static_cast<float>(frameDelta));
     const GameplaySession& s = snapshot.session;
     if (s.bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
-        s.projectiles_.render(spriteBatch_, "projectile", s.bulletPaletteTable_);
+        s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_);
         s.projectiles_.debugDraw(debugDraw_, true, true);
     }
     s.entitySystem_.debugDraw(debugDraw_);

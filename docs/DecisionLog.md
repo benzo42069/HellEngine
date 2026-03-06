@@ -329,3 +329,9 @@
 - **Decision**: Add visual-only `paletteIndex` projectile SoA data, route per-shot palette assignment through emission paths, and introduce `BulletPaletteTable` built from `PaletteFxTemplateRegistry`/`deriveProjectileFillFromCore`.
 - **Rationale**: Preserves deterministic simulation/replay hashes while enabling authored palette-driven projectile colors.
 - **Status**: Accepted.
+
+## 2026-03-06 — Procedural Bullet Sprites
+- **Context**: Bullet rendering previously relied on an external texture asset and single-shape tinting.
+- **Decision**: Procedural bullet sprites are generated at render startup via SDFs from palette-derived colors, with six built-in shapes (circle, rice, star, diamond, ring, beam) and no required external bullet art.
+- **Rationale**: Eliminates sprite-sheet dependency while preserving palette identity and shape readability.
+- **Status**: Accepted.

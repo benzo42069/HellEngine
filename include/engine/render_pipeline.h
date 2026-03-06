@@ -4,6 +4,7 @@
 #include <engine/editor_tools.h>
 #include <engine/gameplay_session.h>
 #include <engine/modern_renderer.h>
+#include <engine/palette_fx_templates.h>
 #include <engine/render2d.h>
 
 #include <SDL.h>
@@ -30,6 +31,7 @@ class RenderPipeline {
     [[nodiscard]] float dpiScaleY() const { return dpiScaleY_; }
     [[nodiscard]] float uiTextScale() const { return uiTextScale_; }
     bool toggleFullscreen(SDL_Window* window);
+    void generateBulletSprites(const PaletteFxTemplateRegistry& registry, const BulletPaletteTable& table);
 
   private:
     void buildSceneOverlay(const SimSnapshot& snapshot, double frameDelta);
