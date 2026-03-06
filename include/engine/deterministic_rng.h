@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 namespace engine {
@@ -16,6 +17,8 @@ class DeterministicRng {
   private:
     std::uint64_t state_;
 };
+
+std::uint64_t stableHash64(std::string_view text);
 
 class RngStreams {
   public:

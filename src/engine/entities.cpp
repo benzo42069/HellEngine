@@ -1,4 +1,5 @@
 #include <engine/entities.h>
+#include <engine/deterministic_math.h>
 
 #include <engine/content_pipeline.h>
 #include <engine/diagnostics.h>
@@ -34,7 +35,7 @@ MovementBehavior parseMovement(const std::string& s) {
 
 Vec2 velocityFromDeg(const float deg, const float speed) {
     const float r = deg * std::numbers::pi_v<float> / 180.0F;
-    return {std::cos(r) * speed, std::sin(r) * speed};
+    return {dmath::cos(r) * speed, dmath::sin(r) * speed};
 }
 
 void parseResourceYield(const nlohmann::json& json, ResourceYield& y) {
@@ -296,7 +297,7 @@ void EntitySystem::emitPatternFromTemplate(
         }
         case PatternType::Aimed:
         default: {
-            const float base = std::atan2(playerPos.y - origin.y, playerPos.x - origin.x) * 180.0F / std::numbers::pi_v<float>;
+            const float base = dmath::atan2(playerPos.y - origin.y, playerPos.x - origin.x) * 180.0F / std::numbers::pi_v<float>;
             const float spread = layer.spreadAngleDeg;
             const std::uint32_t bullets = std::max(1U, static_cast<std::uint32_t>(std::round(static_cast<float>(layer.bulletCount) * std::max(0.5F, difficultyScale))));
             for (std::uint32_t i = 0; i < bullets; ++i) {
@@ -386,12 +387,12 @@ void EntitySystem::update(const float dt, ProjectileSystem& projectiles, const V
                 break;
             case MovementBehavior::Sine:
                 e.position.y += t.baseVelocity.y * dt;
-                e.position.x = t.spawnPosition.x + std::sin(e.ageSeconds * t.sineFrequencyHz * 2.0F * std::numbers::pi_v<float>) * t.sineAmplitude;
+                e.position.x = t.spawnPosition.x + dmath::sin(e.ageSeconds * t.sineFrequencyHz * 2.0F * std::numbers::pi_v<float>) * t.sineAmplitude;
                 break;
             case MovementBehavior::Chase: {
                 const float dx = playerPos.x - e.position.x;
                 const float dy = playerPos.y - e.position.y;
-                const float len = std::sqrt(dx * dx + dy * dy);
+                const float len = dmath::sqrt(dx * dx + dy * dy);
                 if (len > 0.001F) {
                     const float speed = std::max(std::abs(t.baseVelocity.x) + std::abs(t.baseVelocity.y), 40.0F) * std::max(0.7F, difficultyScale);
                     e.position.x += dx / len * speed * dt;
@@ -472,6 +473,41 @@ std::string toString(const EntityType type) {
         case EntityType::Hazard: return "hazard";
     }
     return "unknown";
+}
+
+} // namespace engine
+
+namespace engine {
+
+void EntitySystem::appendCollisionTargets(std::vector<CollisionTarget>& outTargets, const std::uint32_t idBase) const {
+    if (!templates_) return;
+    for (std::size_t i = 0; i < entities_.size(); ++i) {
+        const EntityInstance& e = entities_[i];
+        if (!e.alive) continue;
+        const EntityTemplate& t = (*templates_)[e.templateIndex];
+        if (t.type != EntityType::Enemy && t.type != EntityType::Boss && t.type != EntityType::Hazard) continue;
+        outTargets.push_back(CollisionTarget {.pos = e.position, .radius = t.interactionRadius, .id = idBase + static_cast<std::uint32_t>(i), .team = 1U});
+    }
+}
+
+void EntitySystem::processCollisionEvents(const std::span<const CollisionEvent> events) {
+    if (!templates_) return;
+    for (const CollisionEvent& e : events) {
+        if (e.targetId < 1000U) continue;
+        const std::size_t idx = static_cast<std::size_t>(e.targetId - 1000U);
+        if (idx >= entities_.size()) continue;
+        EntityInstance& inst = entities_[idx];
+        if (!inst.alive) continue;
+        inst.health -= 1.0F;
+        if (inst.health <= 0.0F) {
+            inst.alive = false;
+            const EntityTemplate& t = (*templates_)[inst.templateIndex];
+            if (t.type == EntityType::Boss) {
+                stats_.defeatedBosses += 1;
+                if (t.boss.enabled) applyRewardDrop(t.boss.rewardDrop, {});
+            }
+        }
+    }
 }
 
 } // namespace engine

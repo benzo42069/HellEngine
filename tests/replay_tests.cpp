@@ -1,4 +1,5 @@
 #include <engine/replay.h>
+#include <engine/deterministic_rng.h>
 
 #include <filesystem>
 #include <cstdlib>
@@ -64,6 +65,12 @@ int main() {
     bad.totalHash = engine::computeReplayStateHash(bad.tick, bad.bulletsHash, bad.entitiesHash, bad.runStateHash);
     if (player.verifyStateSample(bad, &mismatch) || mismatch.subsystem != engine::ReplaySubsystem::Bullets) {
         std::cerr << "state mismatch classification failed\n";
+        return EXIT_FAILURE;
+    }
+
+
+    if (engine::stableHash64("sim") != 0x82489E195CECBF94ULL || engine::stableHash64("gpu-bullets") != 0xD206C4205F96CCB1ULL) {
+        std::cerr << "stableHash64 regression\n";
         return EXIT_FAILURE;
     }
 

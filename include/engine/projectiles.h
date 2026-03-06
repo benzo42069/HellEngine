@@ -2,7 +2,9 @@
 
 #include <engine/render2d.h>
 
+#include <array>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 namespace engine {
@@ -51,6 +53,19 @@ struct ProjectileStats {
     std::uint32_t narrowphaseChecksThisTick {0};
 };
 
+struct CollisionTarget {
+    Vec2 pos;
+    float radius {0.0F};
+    std::uint32_t id {0};
+    std::uint8_t team {0};
+};
+
+struct CollisionEvent {
+    std::uint32_t bulletIndex {0};
+    std::uint32_t targetId {0};
+    bool graze {false};
+};
+
 class ProjectileSystem {
   public:
     void initialize(std::uint32_t capacity, float worldHalfExtent, std::uint32_t gridX, std::uint32_t gridY);
@@ -60,6 +75,9 @@ class ProjectileSystem {
     void spawnRadialBurst(std::uint32_t count, float speed, float radius, std::uint64_t seedOffset = 0);
 
     void beginTick();
+    void updateMotion(float dt, float enemyTimeScale = 1.0F, float playerTimeScale = 1.0F);
+    void buildGrid();
+    void resolveCollisions(std::span<const CollisionTarget> targets, std::vector<CollisionEvent>& outEvents);
     void update(float dt, Vec2 playerPos, float playerRadius, float enemyTimeScale = 1.0F, float playerTimeScale = 1.0F);
 
     void debugDraw(DebugDraw& draw, bool drawHitboxes, bool drawGrid) const;
@@ -92,12 +110,21 @@ class ProjectileSystem {
     std::vector<std::uint8_t> allegiance_;
     std::vector<std::uint64_t> grazeAwardTick_;
 
-    std::vector<ProjectileSpawn> pendingSpawns_;
+    static constexpr std::uint32_t kMaxPendingSpawns = 4096;
+    std::array<ProjectileSpawn, kMaxPendingSpawns> pendingSpawns_ {};
+    std::uint32_t pendingSpawnCount_ {0};
 
     std::vector<std::uint32_t> freeList_;
+    std::vector<std::uint32_t> activeIndices_;
+    std::vector<std::uint32_t> indexInActive_;
+    std::uint32_t activeCount_ {0};
 
     std::vector<int> gridHead_;
     std::vector<int> gridNext_;
+    std::vector<std::uint32_t> collisionVisitedStamp_;
+    std::vector<std::uint32_t> collisionHitStamp_;
+    std::vector<std::uint32_t> collisionScratch_;
+    std::uint32_t collisionStampCursor_ {1};
 
     ProjectileStats stats_ {};
 };

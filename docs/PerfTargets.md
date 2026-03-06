@@ -48,3 +48,8 @@ This script runs:
   - Bullet/Collision Diagnostics
   - Render Stats
 - Toggle in-game Perf HUD with **F10**.
+
+
+## Phase 5 active-list optimization note
+- `ProjectileSystem` hot loops now iterate over compact active indices instead of scanning full capacity with active checks.
+- Keep current CI thresholds unchanged unless repeated benchmark runs show stable margin gains across environments.

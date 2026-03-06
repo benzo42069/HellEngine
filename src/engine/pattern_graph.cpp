@@ -1,4 +1,5 @@
 #include <engine/pattern_graph.h>
+#include <engine/deterministic_math.h>
 
 #include <nlohmann/json.hpp>
 
@@ -61,7 +62,7 @@ float degToRad(const float deg) { return deg * std::numbers::pi_v<float> / 180.0
 
 Vec2 velocityFromDeg(const float deg, const float speed) {
     const float rad = degToRad(deg);
-    return Vec2 {std::cos(rad) * speed, std::sin(rad) * speed};
+    return Vec2 {dmath::cos(rad) * speed, dmath::sin(rad) * speed};
 }
 
 void emitWithFn(void* user, const ProjectileSpawn& spawn, const PatternGraphVm::EmitProjectileFn fn) {
@@ -327,7 +328,7 @@ void PatternGraphVm::execute(
                         emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(angle, speed), .radius = radius}, emitProjectile);
                     }
                 } else if (emitType == PatternGraphNodeType::EmitAimed) {
-                    const float a = std::atan2(aimTarget.y - origin.y, aimTarget.x - origin.x) * 180.0F / std::numbers::pi_v<float> + op.d + state.rotateDeg;
+                    const float a = dmath::atan2(aimTarget.y - origin.y, aimTarget.x - origin.x) * 180.0F / std::numbers::pi_v<float> + op.d + state.rotateDeg;
                     emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(a, speed), .radius = radius}, emitProjectile);
                 } else {
                     for (std::uint32_t i = 0; i < count; ++i) {
