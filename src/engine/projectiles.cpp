@@ -46,6 +46,10 @@ void ProjectileSystem::initialize(const std::uint32_t capacity, const float worl
     allegiance_.assign(capacity_, static_cast<std::uint8_t>(ProjectileAllegiance::Enemy));
     paletteIndex_.assign(capacity_, 0);
     shape_.assign(capacity_, static_cast<std::uint8_t>(BulletShape::Circle));
+    enableTrails_.assign(capacity_, 0);
+    trailX_.assign(static_cast<std::size_t>(capacity_) * kTrailLength, 0.0F);
+    trailY_.assign(static_cast<std::size_t>(capacity_) * kTrailLength, 0.0F);
+    trailHead_.assign(capacity_, 0);
     grazeAwardTick_.assign(capacity_, 0ULL);
 
     freeList_.clear();
@@ -77,6 +81,9 @@ void ProjectileSystem::clear() {
     }
     activeCount_ = 0;
     pendingSpawnCount_ = 0;
+    std::fill(trailX_.begin(), trailX_.end(), 0.0F);
+    std::fill(trailY_.begin(), trailY_.end(), 0.0F);
+    std::fill(trailHead_.begin(), trailHead_.end(), static_cast<std::uint8_t>(0));
     stats_ = {};
 }
 
@@ -96,6 +103,15 @@ bool ProjectileSystem::spawn(const ProjectileSpawn& spawnData) {
     bounceCount_[slot] = 0;
     splitDone_[slot] = 0;
     allegiance_[slot] = static_cast<std::uint8_t>(spawnData.allegiance);
+    const bool trailsEnabled = spawnData.enableTrails || spawnData.behavior.enableTrails
+        || spawnData.allegiance == ProjectileAllegiance::Player;
+    enableTrails_[slot] = static_cast<std::uint8_t>(trailsEnabled);
+    const std::uint32_t trailBase = slot * kTrailLength;
+    for (std::uint8_t t = 0; t < kTrailLength; ++t) {
+        trailX_[trailBase + t] = 0.0F;
+        trailY_[trailBase + t] = 0.0F;
+    }
+    trailHead_[slot] = 0;
     grazeAwardTick_[slot] = 0ULL;
     paletteIndex_[slot] = spawnData.paletteIndex;
     shape_[slot] = static_cast<std::uint8_t>(spawnData.shape);
@@ -215,6 +231,7 @@ void ProjectileSystem::updateMotion(const float dt, const float enemyTimeScale, 
                     .radius = radius_[i] * 0.9F,
                     .behavior = ProjectileBehavior {},
                     .allegiance = static_cast<ProjectileAllegiance>(allegiance_[i]),
+                    .enableTrails = enableTrails_[i] != 0,
                     .paletteIndex = paletteIndex_[i],
                     .shape = static_cast<BulletShape>(shape_[i]),
                 };
@@ -223,6 +240,13 @@ void ProjectileSystem::updateMotion(const float dt, const float enemyTimeScale, 
             splitDone_[i] = 1;
             deactivateAt(i);
             continue;
+        }
+
+        if (enableTrails_[i] != 0) {
+            const std::uint32_t trailBase = i * kTrailLength;
+            trailX_[trailBase + trailHead_[i]] = posX_[i];
+            trailY_[trailBase + trailHead_[i]] = posY_[i];
+            trailHead_[i] = static_cast<std::uint8_t>((trailHead_[i] + 1U) % kTrailLength);
         }
 
         posX_[i] += velX_[i] * localDt;
@@ -376,14 +400,42 @@ void ProjectileSystem::render(SpriteBatch& batch, const std::string& textureId, 
     for (std::uint32_t j = 0; j < activeCount_; ++j) {
         const std::uint32_t i = activeIndices_[j];
         const float d = radius_[i] * 2.0F;
+        const Color bulletColor = paletteIndex_[i] == 0
+            ? (allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
+            : paletteTable.get(paletteIndex_[i]).core;
+
+        if (enableTrails_[i] != 0) {
+            const std::uint32_t trailBase = i * kTrailLength;
+            for (std::uint8_t t = 0; t < kTrailLength; ++t) {
+                const std::uint8_t idx = static_cast<std::uint8_t>((trailHead_[i] + t) % kTrailLength);
+                const float tx = trailX_[trailBase + idx];
+                const float ty = trailY_[trailBase + idx];
+                if (tx == 0.0F && ty == 0.0F) continue;
+
+                const float alpha = 0.15F + 0.15F * static_cast<float>(t);
+                const float scale = 0.6F + 0.1F * static_cast<float>(t);
+                const float trailR = radius_[i] * scale;
+                const float trailD = trailR * 2.0F;
+
+                Color trailColor = paletteIndex_[i] == 0 ? bulletColor : paletteTable.get(paletteIndex_[i]).trail;
+                trailColor.a = static_cast<Uint8>(alpha * 255.0F);
+
+                batch.draw(SpriteDrawCmd {
+                    .textureId = textureId,
+                    .dest = SDL_FRect {tx - trailR, ty - trailR, trailD, trailD},
+                    .src = std::nullopt,
+                    .rotationDeg = 0.0F,
+                    .color = trailColor,
+                });
+            }
+        }
+
         batch.draw(SpriteDrawCmd {
             .textureId = textureId,
             .dest = SDL_FRect {posX_[i] - radius_[i], posY_[i] - radius_[i], d, d},
             .src = std::nullopt,
             .rotationDeg = 0.0F,
-            .color = paletteIndex_[i] == 0
-                ? (allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
-                : paletteTable.get(paletteIndex_[i]).core,
+            .color = bulletColor,
         });
     }
 }
@@ -395,14 +447,42 @@ void ProjectileSystem::renderProcedural(SpriteBatch& batch, const BulletPaletteT
         const float d = radius_[i] * 2.0F;
         const BulletShape shape = static_cast<BulletShape>(shape_[i]);
         const std::string textureId = bulletTextureId(std::to_string(paletteIndex_[i]), shape);
+        const Color bulletColor = paletteIndex_[i] == 0
+            ? (allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
+            : paletteTable.get(paletteIndex_[i]).core;
+
+        if (enableTrails_[i] != 0) {
+            const std::uint32_t trailBase = i * kTrailLength;
+            for (std::uint8_t t = 0; t < kTrailLength; ++t) {
+                const std::uint8_t idx = static_cast<std::uint8_t>((trailHead_[i] + t) % kTrailLength);
+                const float tx = trailX_[trailBase + idx];
+                const float ty = trailY_[trailBase + idx];
+                if (tx == 0.0F && ty == 0.0F) continue;
+
+                const float alpha = 0.15F + 0.15F * static_cast<float>(t);
+                const float scale = 0.6F + 0.1F * static_cast<float>(t);
+                const float trailR = radius_[i] * scale;
+                const float trailD = trailR * 2.0F;
+
+                Color trailColor = paletteIndex_[i] == 0 ? bulletColor : paletteTable.get(paletteIndex_[i]).trail;
+                trailColor.a = static_cast<Uint8>(alpha * 255.0F);
+
+                batch.draw(SpriteDrawCmd {
+                    .textureId = textureId,
+                    .dest = SDL_FRect {tx - trailR, ty - trailR, trailD, trailD},
+                    .src = std::nullopt,
+                    .rotationDeg = 0.0F,
+                    .color = trailColor,
+                });
+            }
+        }
+
         batch.draw(SpriteDrawCmd {
             .textureId = textureId,
             .dest = SDL_FRect {posX_[i] - radius_[i], posY_[i] - radius_[i], d, d},
             .src = std::nullopt,
             .rotationDeg = 0.0F,
-            .color = paletteIndex_[i] == 0
-                ? (allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
-                : paletteTable.get(paletteIndex_[i]).core,
+            .color = bulletColor,
         });
     }
 }
