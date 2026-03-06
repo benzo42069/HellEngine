@@ -6,6 +6,7 @@
 #include <engine/render2d.h>
 
 #include <cstdint>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -123,6 +124,8 @@ class EntitySystem {
     void reset();
     void update(float dt, ProjectileSystem& projectiles, Vec2 playerPos, const EntityRuntimeModifiers& runtimeMods = {});
     void debugDraw(DebugDraw& draw) const;
+    void appendCollisionTargets(std::vector<CollisionTarget>& outTargets, std::uint32_t idBase = 1000U) const;
+    void processCollisionEvents(std::span<const CollisionEvent> events);
 
     [[nodiscard]] const EntityStats& stats() const;
 

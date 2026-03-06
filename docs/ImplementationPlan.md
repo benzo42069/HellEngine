@@ -232,3 +232,73 @@ ctest --test-dir build -C RelWithDebInfo --output-on-failure
 .\build\RelWithDebInfo\EngineEditor.exe --open world_generator
 .\build\RelWithDebInfo\EngineEditor.exe --open pattern_ai_generator --profile benchmark_25k
 ```
+
+
+## Phase 1 — Decompose Runtime (Complete)
+### What changed
+- Extracted input processing and replay input integration into `InputSystem`.
+- Extracted render-context lifecycle and frame rendering into `RenderPipeline`.
+- Extracted gameplay simulation/update and upgrade UI logic into `GameplaySession`.
+- Reduced `runtime.cpp` to orchestration-oriented loop and system wiring.
+
+### Files added/edited
+- Added: `include/engine/input_system.h`, `src/engine/input_system.cpp`
+- Added: `include/engine/render_pipeline.h`, `src/engine/render_pipeline.cpp`
+- Added: `include/engine/gameplay_session.h`, `src/engine/gameplay_session.cpp`
+- Edited: `include/engine/runtime.h`, `src/engine/runtime.cpp`, `CMakeLists.txt`
+- Edited: `docs/DecisionLog.md`, `docs/Architecture.md`, `docs/MasterSpec.md`, `docs/ImplementationPlan.md`
+
+
+## Phase 2 — Fix Collision Architecture (Complete)
+### What changed
+- Added `CollisionTarget` and `CollisionEvent` data types to projectile collision interface.
+- Split projectile update into motion/grid/resolution stages and retained legacy `update()` wrapper for compatibility.
+- Wired gameplay collision flow to use multi-target query pipeline with deterministic event sorting.
+- Added `collision_correctness_tests` coverage for hit/graze/allegiance/brute-force parity/deterministic ordering.
+
+### Files added/edited
+- Added: `tests/collision_correctness_tests.cpp`
+- Edited: `include/engine/projectiles.h`, `src/engine/projectiles.cpp`
+- Edited: `include/engine/entities.h`, `src/engine/entities.cpp`
+- Edited: `include/engine/gameplay_session.h`, `src/engine/gameplay_session.cpp`
+- Edited: `CMakeLists.txt`
+- Edited: `docs/DecisionLog.md`, `docs/Architecture.md`, `docs/MasterSpec.md`, `docs/ImplementationPlan.md`
+
+
+## Phase 3 — Harden Floating-Point Determinism (Complete)
+### What changed
+- Added strict floating-point compiler options to `engine_core` only.
+- Added `include/engine/deterministic_math.h` (`dmath::sin/cos/atan2/sqrt`) as the simulation math choke-point.
+- Replaced direct `std::sin/cos/atan2/sqrt` calls with `dmath::` wrappers in projectile, pattern graph, entity, pattern, and GPU bullet simulation files.
+- Added `tests/determinism_cross_config_test.cpp` with a 300-tick deterministic hash assertion.
+
+### Files added/edited
+- Added: `include/engine/deterministic_math.h`, `tests/determinism_cross_config_test.cpp`
+- Edited: `CMakeLists.txt`
+- Edited: `src/engine/projectiles.cpp`, `src/engine/pattern_graph.cpp`, `src/engine/entities.cpp`, `src/engine/patterns.cpp`, `src/engine/gpu_bullets.cpp`
+- Edited: `docs/DecisionLog.md`, `docs/MasterSpec.md`, `docs/ImplementationPlan.md`
+
+
+## Phase 4 — Fix GpuBulletSystem (Complete)
+### What changed
+- Added free-list backed slot allocation and cached active count to `GpuBulletSystem`.
+- Replaced O(N) `emit()` scan with O(1) free-list pop.
+- Replaced O(N) `activeCount()` scan with O(1) cached return.
+- Updated `update()` and `clear()` to recycle slots deterministically.
+- Expanded tests with 100k emit + expire + refill cycle.
+
+### Files added/edited
+- Edited: `include/engine/gpu_bullets.h`, `src/engine/gpu_bullets.cpp`, `tests/gpu_bullets_tests.cpp`
+- Edited: `docs/DecisionLog.md`, `docs/MasterSpec.md`, `docs/GpuBulletAssumptions.md`, `docs/ImplementationPlan.md`
+
+
+## Phase 5 — Compact Active-List Iteration (Complete)
+### What changed
+- Added compact active index list and cached active count to `ProjectileSystem`.
+- Converted motion, grid build, render, debug draw, graze collection, and debug hash iteration to O(active) traversal.
+- Added deterministic sort-on-removal for active index ordering at tick end to stabilize replay/hash behavior.
+
+### Files added/edited
+- Edited: `include/engine/projectiles.h`, `src/engine/projectiles.cpp`
+- Edited: `docs/DecisionLog.md`, `docs/ImplementationPlan.md`
+- Edited: `docs/PerfTargets.md` (benchmark note)

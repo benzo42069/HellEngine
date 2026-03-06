@@ -1,8 +1,19 @@
 #include <engine/deterministic_rng.h>
 
-#include <functional>
+#include <string_view>
 
 namespace engine {
+
+namespace {
+std::uint64_t fnv1a64(std::string_view text) {
+    std::uint64_t hash = 14695981039346656037ULL;
+    for (unsigned char c : text) {
+        hash ^= static_cast<std::uint64_t>(c);
+        hash *= 1099511628211ULL;
+    }
+    return hash;
+}
+} // namespace
 
 DeterministicRng::DeterministicRng(const std::uint64_t seed)
     : state_(seed == 0 ? 0x9E3779B97F4A7C15ULL : seed) {}
@@ -20,6 +31,8 @@ float DeterministicRng::nextFloat01() {
     return static_cast<float>(static_cast<double>(nextU64()) * maxInv);
 }
 
+std::uint64_t stableHash64(const std::string_view text) { return fnv1a64(text); }
+
 RngStreams::RngStreams(const std::uint64_t runSeed)
     : runSeed_(runSeed) {}
 
@@ -29,7 +42,7 @@ DeterministicRng& RngStreams::stream(const std::string& name) {
         return iter->second;
     }
 
-    const std::uint64_t seed = runSeed_ ^ static_cast<std::uint64_t>(std::hash<std::string> {}(name));
+    const std::uint64_t seed = runSeed_ ^ stableHash64(name);
     auto [insertedIter, _] = streams_.emplace(name, DeterministicRng(seed));
     return insertedIter->second;
 }

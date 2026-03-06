@@ -1,4 +1,5 @@
 #include <engine/patterns.h>
+#include <engine/deterministic_math.h>
 
 #include <engine/content_pipeline.h>
 #include <engine/diagnostics.h>
@@ -27,7 +28,7 @@ float degToRad(const float deg) { return deg * std::numbers::pi_v<float> / 180.0
 
 Vec2 velocityFromDeg(const float deg, const float speed) {
     const float rad = degToRad(deg);
-    return Vec2 {std::cos(rad) * speed, std::sin(rad) * speed};
+    return Vec2 {dmath::cos(rad) * speed, dmath::sin(rad) * speed};
 }
 
 PatternLayer parseLayer(const nlohmann::json& item) {
@@ -409,11 +410,11 @@ void PatternPlayer::emitLayer(
     const float timelineRot = timeline ? timeline->extraRotationDeg : 0.0F;
     const float timelineSpeedScale = timeline ? timeline->speedScale : 1.0F;
 
-    const float speedCurve = 1.0F + layer.modifiers.speedCurveAmp * std::sin(patternTime_ * 2.0F * std::numbers::pi_v<float>);
+    const float speedCurve = 1.0F + layer.modifiers.speedCurveAmp * dmath::sin(patternTime_ * 2.0F * std::numbers::pi_v<float>);
     const float speedScale = std::max(0.1F, timelineSpeedScale * speedCurve);
 
     const float osc = layer.modifiers.angleOscillationDeg *
-                      std::sin(patternTime_ * layer.modifiers.angleOscillationHz * 2.0F * std::numbers::pi_v<float>);
+                      dmath::sin(patternTime_ * layer.modifiers.angleOscillationHz * 2.0F * std::numbers::pi_v<float>);
 
     const float baseRotation = layer.modifiers.rotationDeg + layer.modifiers.phaseOffsetDeg + phaseOffsetDeg + timelineRot + osc;
 
@@ -460,11 +461,11 @@ void PatternPlayer::emitLayer(
         }
         case PatternType::Wave: {
             const std::uint32_t count = std::max(1, static_cast<int>(layer.bulletCount) + runtimeExtraBullets_);
-            const float wave = std::sin(patternTime_ * layer.waveFrequencyHz * 2.0F * std::numbers::pi_v<float>) * layer.waveAmplitudeDeg;
+            const float wave = dmath::sin(patternTime_ * layer.waveFrequencyHz * 2.0F * std::numbers::pi_v<float>) * layer.waveAmplitudeDeg;
             for (std::uint32_t i = 0; i < count; ++i) {
                 const float t = static_cast<float>(i) / static_cast<float>(count);
                 const float angle = baseRotation + wave + t * 360.0F;
-                const float localSpeed = 0.8F + 0.2F * std::sin((patternTime_ + t) * 5.0F);
+                const float localSpeed = 0.8F + 0.2F * dmath::sin((patternTime_ + t) * 5.0F);
                 emitAtDeg(angle, localSpeed);
             }
             break;
@@ -473,7 +474,7 @@ void PatternPlayer::emitLayer(
             const std::uint32_t count = std::max(1, static_cast<int>(layer.bulletCount) + runtimeExtraBullets_);
             const float dx = aimTarget.x - origin.x;
             const float dy = aimTarget.y - origin.y;
-            const float aimDeg = std::atan2(dy, dx) * 180.0F / std::numbers::pi_v<float>;
+            const float aimDeg = dmath::atan2(dy, dx) * 180.0F / std::numbers::pi_v<float>;
             const float spreadStart = -layer.spreadAngleDeg * 0.5F;
             const float spreadStep = count > 1 ? layer.spreadAngleDeg / static_cast<float>(count - 1) : 0.0F;
             for (std::uint32_t i = 0; i < count; ++i) {

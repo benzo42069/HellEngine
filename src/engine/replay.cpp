@@ -1,12 +1,12 @@
 #include <engine/replay.h>
 
 #include <engine/content_pipeline.h>
+#include <engine/deterministic_rng.h>
 
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <filesystem>
-#include <functional>
 #include <fstream>
 
 namespace engine {
@@ -150,12 +150,12 @@ std::string buildContentHashTag(const std::string& contentPackPath) {
     for (const std::string& p : packs) {
         std::ifstream in(p, std::ios::binary);
         if (!in.good()) {
-            h = mix64(h, std::hash<std::string> {}(p));
+            h = mix64(h, stableHash64(p));
             continue;
         }
         std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-        h = mix64(h, std::hash<std::string> {}(p));
-        h = mix64(h, std::hash<std::string> {}(bytes));
+        h = mix64(h, stableHash64(p));
+        h = mix64(h, stableHash64(bytes));
     }
     return fnv1a64Hex(std::to_string(h));
 }

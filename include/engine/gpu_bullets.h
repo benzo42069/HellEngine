@@ -44,6 +44,8 @@ class GpuBulletSystem {
     std::vector<GpuBullet> bullets_ {};
     std::vector<SDL_Vertex> vertices_ {};
     std::vector<int> indices_ {};
+    std::vector<std::uint32_t> freeList_ {};
+    std::uint32_t activeCount_ {0};
 };
 
 } // namespace engine
