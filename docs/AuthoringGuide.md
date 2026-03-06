@@ -165,3 +165,20 @@ Archetypes define base stat profile + flavor labels (weapon/active ability) and 
 
 If JSON is malformed, runtime logs structured errors and falls back rather than crashing.
 
+
+---
+
+## Procedural bullet visuals from palette JSON
+
+Bullet visuals are generated procedurally at startup from palette template data in `data/palettes/palette_fx_templates.json`.
+
+- No sprite-sheet image is required for bullets.
+- Each palette produces six shape variants: `circle`, `rice`, `star`, `diamond`, `ring`, `beam`.
+- The generator derives fill bands (core/highlight/glow) from the palette's Core layer through the existing palette fill pipeline.
+
+Authoring flow:
+1. Add or edit a palette template in `paletteTemplates`.
+2. Define a `Core` layer color (and optional supporting layers for material use).
+3. Run the engine; bullet textures are generated automatically at startup.
+
+Texture IDs are emitted in the form `bullet_<paletteName>_<shape>` (sanitized palette name) and index-compatible aliases (`bullet_<index>_<shape>`) for runtime lookup.

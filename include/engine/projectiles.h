@@ -3,6 +3,7 @@
 #include <engine/render2d.h>
 
 #include <engine/bullet_palette.h>
+#include <engine/bullet_sprite_gen.h>
 
 #include <array>
 #include <cstdint>
@@ -45,6 +46,7 @@ struct ProjectileSpawn {
     ProjectileBehavior behavior {};
     ProjectileAllegiance allegiance {ProjectileAllegiance::Enemy};
     std::uint8_t paletteIndex {0};
+    BulletShape shape {BulletShape::Circle};
 };
 
 struct ProjectileStats {
@@ -85,6 +87,7 @@ class ProjectileSystem {
 
     void debugDraw(DebugDraw& draw, bool drawHitboxes, bool drawGrid) const;
     void render(SpriteBatch& batch, const std::string& textureId, const BulletPaletteTable& paletteTable) const;
+    void renderProcedural(SpriteBatch& batch, const BulletPaletteTable& paletteTable) const;
 
     [[nodiscard]] const ProjectileStats& stats() const;
     [[nodiscard]] std::uint32_t capacity() const;
@@ -112,6 +115,7 @@ class ProjectileSystem {
     std::vector<std::uint8_t> splitDone_;
     std::vector<std::uint8_t> allegiance_;
     std::vector<std::uint8_t> paletteIndex_;
+    std::vector<std::uint8_t> shape_;
     std::vector<std::uint64_t> grazeAwardTick_;
 
     static constexpr std::uint32_t kMaxPendingSpawns = 4096;
