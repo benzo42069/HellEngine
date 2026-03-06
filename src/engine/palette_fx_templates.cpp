@@ -150,6 +150,11 @@ PaletteFillResult deriveProjectileFillFromCore(const PaletteColor& core) {
     glow.s = clamp01(glow.s * 0.45F);
     glow.v = clamp01(glow.v + 0.35F);
     out.glow = hsvToRgb(glow);
+
+    Hsv trail = hsv;
+    trail.s = clamp01(trail.s * 0.60F);
+    trail.v = clamp01(trail.v + 0.12F);
+    out.trail = hsvToRgb(trail);
     return out;
 }
 

@@ -80,6 +80,7 @@ struct EntityTemplate {
     BossDefinition boss {};
 
     SpawnRule spawnRule {};
+    std::uint8_t projectilePaletteIndex {0};
 };
 
 class EntityDatabase {

@@ -89,7 +89,7 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
     camera_.update(static_cast<float>(frameDelta));
     const GameplaySession& s = snapshot.session;
     if (s.bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
-        s.projectiles_.render(spriteBatch_, "projectile");
+        s.projectiles_.render(spriteBatch_, "projectile", s.bulletPaletteTable_);
         s.projectiles_.debugDraw(debugDraw_, true, true);
     }
     s.entitySystem_.debugDraw(debugDraw_);

@@ -325,17 +325,17 @@ void PatternGraphVm::execute(
                 if (emitType == PatternGraphNodeType::EmitRing && op.u1 + count <= graph.constantAnglesDeg.size()) {
                     for (std::uint32_t i = 0; i < count; ++i) {
                         const float angle = graph.constantAnglesDeg[op.u1 + i] + op.d + state.rotateDeg + state.phaseOffsetDeg;
-                        emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(angle, speed), .radius = radius}, emitProjectile);
+                        emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(angle, speed), .radius = radius, .paletteIndex = 0}, emitProjectile);
                     }
                 } else if (emitType == PatternGraphNodeType::EmitAimed) {
                     const float a = dmath::atan2(aimTarget.y - origin.y, aimTarget.x - origin.x) * 180.0F / std::numbers::pi_v<float> + op.d + state.rotateDeg;
-                    emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(a, speed), .radius = radius}, emitProjectile);
+                    emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(a, speed), .radius = radius, .paletteIndex = 0}, emitProjectile);
                 } else {
                     for (std::uint32_t i = 0; i < count; ++i) {
                         const float t = count > 1 ? static_cast<float>(i) / static_cast<float>(count - 1U) : 0.5F;
                         const float spread = (t - 0.5F) * 60.0F;
                         const float angle = op.d + spread + state.rotateDeg + state.phaseOffsetDeg;
-                        emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(angle, speed), .radius = radius}, emitProjectile);
+                        emitWithFn(user, ProjectileSpawn {.pos = origin, .vel = velocityFromDeg(angle, speed), .radius = radius, .paletteIndex = 0}, emitProjectile);
                     }
                 }
                 ++state.pc;

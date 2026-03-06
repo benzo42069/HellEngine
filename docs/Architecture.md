@@ -12,8 +12,9 @@
    - gameplay simulation update and progression orchestration in `GameplaySession`
    - input polling/event processing + replay input injection/recording in `InputSystem`
 
-3. **Render pipeline** (`render_pipeline.*`, `render2d.*`, `modern_renderer.*`)
+3. **Render pipeline** (`render_pipeline.*`, `render2d.*`, `modern_renderer.*`, `bullet_palette.*`)
    - render-context lifecycle (init/recreate/shutdown)
+   - `BulletPaletteTable` maps palette template registry entries to projectile render colors
    - scene overlay composition through `SimSnapshot` sim->render contract
    - sprite/debug draw + tool HUD composition
 

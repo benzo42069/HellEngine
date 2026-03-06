@@ -2,6 +2,8 @@
 
 #include <engine/render2d.h>
 
+#include <engine/bullet_palette.h>
+
 #include <array>
 #include <cstdint>
 #include <span>
@@ -42,6 +44,7 @@ struct ProjectileSpawn {
     float radius {4.0F};
     ProjectileBehavior behavior {};
     ProjectileAllegiance allegiance {ProjectileAllegiance::Enemy};
+    std::uint8_t paletteIndex {0};
 };
 
 struct ProjectileStats {
@@ -81,7 +84,7 @@ class ProjectileSystem {
     void update(float dt, Vec2 playerPos, float playerRadius, float enemyTimeScale = 1.0F, float playerTimeScale = 1.0F);
 
     void debugDraw(DebugDraw& draw, bool drawHitboxes, bool drawGrid) const;
-    void render(SpriteBatch& batch, const std::string& textureId) const;
+    void render(SpriteBatch& batch, const std::string& textureId, const BulletPaletteTable& paletteTable) const;
 
     [[nodiscard]] const ProjectileStats& stats() const;
     [[nodiscard]] std::uint32_t capacity() const;
@@ -108,6 +111,7 @@ class ProjectileSystem {
     std::vector<std::uint8_t> bounceCount_;
     std::vector<std::uint8_t> splitDone_;
     std::vector<std::uint8_t> allegiance_;
+    std::vector<std::uint8_t> paletteIndex_;
     std::vector<std::uint64_t> grazeAwardTick_;
 
     static constexpr std::uint32_t kMaxPendingSpawns = 4096;
