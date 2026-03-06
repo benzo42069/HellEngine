@@ -21,6 +21,7 @@ GameplaySession::GameplaySession(EngineConfig& config)
       config_(config) {
     collisionTargets_.reserve(1024);
     collisionEvents_.reserve(16384);
+    particleFx_.initialize(4096);
 }
 
 void GameplaySession::initializeContent(PatternBank& patternBank, PatternPlayer& patternPlayer) {
@@ -57,6 +58,18 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
 
     projectiles_.beginTick();
     traitSystem_.onTick(tickIndex_);
+
+    auto emitDespawnParticles = [this]() {
+        for (const ProjectileDespawnEvent& event : projectiles_.despawnEvents()) {
+            Color impactColor = event.paletteIndex == 0
+                ? (event.allegiance == ProjectileAllegiance::Enemy ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
+                : bulletPaletteTable_.get(event.paletteIndex).impact;
+            if (event.paletteIndex != 0 && impactColor.a == 0) {
+                impactColor = bulletPaletteTable_.get(event.paletteIndex).core;
+            }
+            particleFx_.burst(event.pos, impactColor);
+        }
+    };
 
     aimTarget_.x = 180.0F * std::cos(static_cast<float>(simClock_) * 0.9F);
     aimTarget_.y = 120.0F * std::sin(static_cast<float>(simClock_) * 1.3F);
@@ -155,15 +168,18 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
 
     if (bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
         projectiles_.updateMotion(static_cast<float>(dt), dilation.enemyProjectiles, dilation.playerProjectiles);
+        emitDespawnParticles();
         projectiles_.buildGrid();
         collisionTargets_.clear();
         collisionTargets_.push_back(CollisionTarget {.pos = playerPos_, .radius = playerRadius_, .id = 0U, .team = 0U});
         entitySystem_.appendCollisionTargets(collisionTargets_);
         collisionEvents_.clear();
         projectiles_.resolveCollisions(std::span<const CollisionTarget>(collisionTargets_.data(), collisionTargets_.size()), collisionEvents_);
+        emitDespawnParticles();
         entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(collisionEvents_.data(), collisionEvents_.size()));
     }
 
+    particleFx_.update(static_cast<float>(dt));
     runStructure_.update(static_cast<float>(dt), entitySystem_.stats().defeatedBosses, playerHealth_ > 0.0F);
     simClock_ += dt;
     ++tickIndex_;

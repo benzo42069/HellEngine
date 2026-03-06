@@ -69,6 +69,8 @@ void ProjectileSystem::initialize(const std::uint32_t capacity, const float worl
     collisionStampCursor_ = 1U;
 
     pendingSpawnCount_ = 0;
+    despawnEvents_.clear();
+    despawnEvents_.reserve(capacity_);
 
     stats_ = {};
 }
@@ -81,6 +83,7 @@ void ProjectileSystem::clear() {
     }
     activeCount_ = 0;
     pendingSpawnCount_ = 0;
+    despawnEvents_.clear();
     std::fill(trailX_.begin(), trailX_.end(), 0.0F);
     std::fill(trailY_.begin(), trailY_.end(), 0.0F);
     std::fill(trailHead_.begin(), trailHead_.end(), static_cast<std::uint8_t>(0));
@@ -155,6 +158,7 @@ void ProjectileSystem::beginTick() {
     stats_.spawnedThisTick = 0;
     stats_.broadphaseChecksThisTick = 0;
     stats_.narrowphaseChecksThisTick = 0;
+    despawnEvents_.clear();
 }
 
 void ProjectileSystem::updateMotion(const float dt, const float enemyTimeScale, const float playerTimeScale) {
@@ -163,6 +167,11 @@ void ProjectileSystem::updateMotion(const float dt, const float enemyTimeScale, 
 
     auto deactivateAt = [&](const std::uint32_t bulletIndex) {
         if (!active_[bulletIndex]) return;
+        despawnEvents_.push_back(ProjectileDespawnEvent {
+            .pos = {posX_[bulletIndex], posY_[bulletIndex]},
+            .paletteIndex = paletteIndex_[bulletIndex],
+            .allegiance = static_cast<ProjectileAllegiance>(allegiance_[bulletIndex]),
+        });
         active_[bulletIndex] = 0;
         freeList_.push_back(bulletIndex);
         const std::uint32_t pos = indexInActive_[bulletIndex];
@@ -231,9 +240,9 @@ void ProjectileSystem::updateMotion(const float dt, const float enemyTimeScale, 
                     .radius = radius_[i] * 0.9F,
                     .behavior = ProjectileBehavior {},
                     .allegiance = static_cast<ProjectileAllegiance>(allegiance_[i]),
-                    .enableTrails = enableTrails_[i] != 0,
                     .paletteIndex = paletteIndex_[i],
                     .shape = static_cast<BulletShape>(shape_[i]),
+                    .enableTrails = enableTrails_[i] != 0,
                 };
                 }
             }
@@ -359,6 +368,11 @@ void ProjectileSystem::resolveCollisions(const std::span<const CollisionTarget> 
         if (e.bulletIndex >= capacity_ || !active_[e.bulletIndex]) continue;
         ++stats_.collisionsThisTick;
         ++stats_.totalCollisions;
+        despawnEvents_.push_back(ProjectileDespawnEvent {
+            .pos = {posX_[e.bulletIndex], posY_[e.bulletIndex]},
+            .paletteIndex = paletteIndex_[e.bulletIndex],
+            .allegiance = static_cast<ProjectileAllegiance>(allegiance_[e.bulletIndex]),
+        });
     }
 }
 
@@ -489,6 +503,7 @@ void ProjectileSystem::renderProcedural(SpriteBatch& batch, const BulletPaletteT
 
 const ProjectileStats& ProjectileSystem::stats() const { return stats_; }
 
+std::span<const ProjectileDespawnEvent> ProjectileSystem::despawnEvents() const { return despawnEvents_; }
 
 std::uint32_t ProjectileSystem::collectGrazePoints(const Vec2 playerPos, const float playerRadius, const float innerPad, const float outerPad, const std::uint64_t tick, const std::uint64_t cooldownTicks) {
     const float inner = std::max(0.0F, playerRadius + innerPad);

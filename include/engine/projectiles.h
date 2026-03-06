@@ -74,6 +74,12 @@ struct CollisionEvent {
     bool graze {false};
 };
 
+struct ProjectileDespawnEvent {
+    Vec2 pos;
+    std::uint8_t paletteIndex {0};
+    ProjectileAllegiance allegiance {ProjectileAllegiance::Enemy};
+};
+
 class ProjectileSystem {
   public:
     static constexpr std::uint8_t kTrailLength = 4;
@@ -98,6 +104,7 @@ class ProjectileSystem {
     [[nodiscard]] std::uint32_t capacity() const;
     [[nodiscard]] std::uint64_t debugStateHash() const;
     [[nodiscard]] std::uint32_t collectGrazePoints(Vec2 playerPos, float playerRadius, float innerPad, float outerPad, std::uint64_t tick, std::uint64_t cooldownTicks);
+    [[nodiscard]] std::span<const ProjectileDespawnEvent> despawnEvents() const;
 
   private:
     std::uint32_t gridIndexFor(float x, float y) const;
@@ -130,6 +137,8 @@ class ProjectileSystem {
     static constexpr std::uint32_t kMaxPendingSpawns = 4096;
     std::array<ProjectileSpawn, kMaxPendingSpawns> pendingSpawns_ {};
     std::uint32_t pendingSpawnCount_ {0};
+
+    std::vector<ProjectileDespawnEvent> despawnEvents_ {};
 
     std::vector<std::uint32_t> freeList_;
     std::vector<std::uint32_t> activeIndices_;

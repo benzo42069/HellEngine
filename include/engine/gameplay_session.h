@@ -14,6 +14,7 @@
 #include <engine/memory.h>
 #include <engine/meta_progression.h>
 #include <engine/patterns.h>
+#include <engine/particle_fx.h>
 #include <engine/perf_profiler.h>
 #include <engine/projectiles.h>
 #include <engine/replay.h>
@@ -60,6 +61,7 @@ class GameplaySession {
     double simClock_ {0.0};
 
     ProjectileSystem projectiles_;
+    ParticleFxSystem particleFx_;
     PaletteFxTemplateRegistry bulletPaletteRegistry_ {};
     BulletPaletteTable bulletPaletteTable_ {};
     PatternBank patternBank_;

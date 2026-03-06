@@ -17,6 +17,7 @@
    - `BulletPaletteTable` maps palette template registry entries to projectile render colors
    - scene overlay composition through `SimSnapshot` sim->render contract
    - sprite/debug draw + tool HUD composition
+   - `ParticleFxSystem` consumes projectile despawn events and renders short-lived impact bursts using frame-time updates (visual-only, no sim coupling)
 
 4. **Diagnostics/replay** (`diagnostics.*`, `replay.*`, `logging.*`)
    - structured error reports (`code/context/stack`)
