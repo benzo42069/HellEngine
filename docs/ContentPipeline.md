@@ -48,3 +48,12 @@ Merge behavior:
 ## Reference stability
 Entity->pattern references can use `attackPatternGuid` (preferred) or `attackPatternName` (legacy fallback).
 Because references resolve by GUID-or-name, moving or renaming source JSON files does not break references.
+
+## Hot-reload workflow (runtime)
+`ContentWatcher` polls watched content files and emits change records. At tick boundaries, runtime validates and applies updates in place:
+- patterns
+- entities
+- traits
+- difficulty profiles
+
+If validation fails, runtime logs an error and keeps the previous content active.

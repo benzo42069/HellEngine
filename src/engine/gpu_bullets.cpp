@@ -1,4 +1,5 @@
 #include <engine/gpu_bullets.h>
+#include <engine/deterministic_math.h>
 
 #include <algorithm>
 #include <array>
@@ -16,23 +17,36 @@ void GpuBulletSystem::initialize(const std::uint32_t capacity, const float world
     indices_.clear();
     vertices_.reserve(static_cast<std::size_t>(capacity_) * 4U);
     indices_.reserve(static_cast<std::size_t>(capacity_) * 6U);
+    freeList_.clear();
+    freeList_.reserve(capacity_);
+    for (std::uint32_t i = 0; i < capacity_; ++i) {
+        freeList_.push_back(capacity_ - 1U - i);
+    }
+    activeCount_ = 0;
 }
 
 void GpuBulletSystem::clear() {
     for (GpuBullet& b : bullets_) b.flags = 0U;
     vertices_.clear();
     indices_.clear();
+    freeList_.clear();
+    freeList_.reserve(capacity_);
+    for (std::uint32_t i = 0; i < capacity_; ++i) {
+        freeList_.push_back(capacity_ - 1U - i);
+    }
+    activeCount_ = 0;
 }
 
 bool GpuBulletSystem::emit(const GpuBullet& bullet) {
-    for (GpuBullet& b : bullets_) {
-        if ((b.flags & 1U) == 0U) {
-            b = bullet;
-            b.flags |= 1U;
-            return true;
-        }
-    }
-    return false;
+    if (freeList_.empty()) return false;
+    const std::uint32_t slot = freeList_.back();
+    freeList_.pop_back();
+
+    GpuBullet& b = bullets_[slot];
+    b = bullet;
+    b.flags |= 1U;
+    ++activeCount_;
+    return true;
 }
 
 void GpuBulletSystem::update(const float dt) {
@@ -42,13 +56,15 @@ void GpuBulletSystem::update(const float dt) {
         b.lifetime -= clampedDt;
         if (b.lifetime <= 0.0F) {
             b.flags = 0U;
+            freeList_.push_back(static_cast<std::uint32_t>(&b - bullets_.data()));
+            --activeCount_;
             continue;
         }
 
         if ((b.flags & 2U) != 0U) {
             const float a = b.angularVelocityDegPerSec * clampedDt * std::numbers::pi_v<float> / 180.0F;
-            const float c = std::cos(a);
-            const float s = std::sin(a);
+            const float c = dmath::cos(a);
+            const float s = dmath::sin(a);
             const float nx = b.velX * c - b.velY * s;
             const float ny = b.velX * s + b.velY * c;
             b.velX = nx;
@@ -59,6 +75,8 @@ void GpuBulletSystem::update(const float dt) {
         b.posY += b.velY * clampedDt;
         if (std::fabs(b.posX) > worldHalfExtent_ || std::fabs(b.posY) > worldHalfExtent_) {
             b.flags = 0U;
+            freeList_.push_back(static_cast<std::uint32_t>(&b - bullets_.data()));
+            --activeCount_;
         }
     }
 }
@@ -103,13 +121,7 @@ void GpuBulletSystem::render(SDL_Renderer* renderer, const Camera2D& camera, con
     }
 }
 
-std::uint32_t GpuBulletSystem::activeCount() const {
-    std::uint32_t count = 0;
-    for (const GpuBullet& b : bullets_) {
-        if ((b.flags & 1U) != 0U) ++count;
-    }
-    return count;
-}
+std::uint32_t GpuBulletSystem::activeCount() const { return activeCount_; }
 
 std::uint32_t GpuBulletSystem::capacity() const { return capacity_; }
 

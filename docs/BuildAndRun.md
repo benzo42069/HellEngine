@@ -122,8 +122,8 @@ Data-driven entities are authored in `data/entities.json` and support:
 - Traits apply rarity-weighted stat/behavior modifiers to projectiles, patterns, player harvest stats, and enemy interactions.
 - Current trait effects are displayed in the runtime overlay.
 
-## Release Packaging (Phase 18)
-PowerShell scripts are provided at repository root to automate release outputs.
+## Release Packaging (Windows)
+PowerShell scripts are provided to automate release outputs.
 
 ### 1) Build Release
 ```powershell
@@ -137,16 +137,20 @@ PowerShell scripts are provided at repository root to automate release outputs.
 ./tools/package_dist.ps1
 ```
 Outputs:
-- Portable folder: `dist/portable`
+- Staged layout: `dist/EngineDemo`
 - Zip archive: `dist/EngineDemo-portable.zip`
 
-### 3) Build Optional Windows Installer
+### 3) Build Windows Installer EXE (Inno Setup)
 ```powershell
-./build_installer.ps1
+./tools/build_installer.ps1 -AllowPortableOnly
 ```
-- Uses NSIS (`makensis`) when available.
-- If NSIS is not installed, writes a guidance note instead of failing hard.
+- Uses Inno Setup 6 (`ISCC.exe`) when available.
+- If Inno Setup is not installed, `-AllowPortableOnly` preserves portable artifacts and exits with a warning.
 
+### 4) Verify staged layout / artifacts
+```powershell
+./tools/verify_installer.ps1
+```
 
 See also: `docs/BuildAndRelease.md` for the scripted build/test/package pipeline.
 
@@ -186,3 +190,20 @@ Run performance check:
 ```powershell
 ./tools/ci_local.ps1
 ```
+
+## Audio prerequisites
+- SDL_mixer is fetched via CMake FetchContent as part of the default build graph.
+- Optional audio assets can be placed under `assets/audio/` (expected runtime names: `hit.wav`, `graze.wav`, `warning.wav`, `special.wav`). Missing files are handled gracefully and audio auto-disables per missing cue.
+
+
+## Windows installer pipeline
+```powershell
+./tools/package_dist.ps1
+./tools/build_installer.ps1 -AllowPortableOnly
+./tools/verify_installer.ps1
+```
+
+Expected artifacts:
+- `dist/EngineDemo/` (staged install layout)
+- `dist/EngineDemo-portable.zip` (portable distribution)
+- `dist/EngineDemoInstaller.exe` (if Inno Setup is installed)

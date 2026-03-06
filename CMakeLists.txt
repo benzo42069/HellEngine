@@ -50,6 +50,12 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
+  SDL2_mixer
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+  GIT_TAG release-2.8.0
+)
+
+FetchContent_Declare(
   imgui
   GIT_REPOSITORY https://github.com/ocornut/imgui.git
   GIT_TAG v1.91.0
@@ -61,7 +67,16 @@ FetchContent_Declare(
   GIT_TAG v3.11.3
 )
 
-FetchContent_MakeAvailable(SDL2 imgui nlohmann_json)
+set(SDL2MIXER_VENDORED ON CACHE BOOL "" FORCE)
+set(SDL2MIXER_OPUS OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_FLAC OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MOD OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MIDI OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MP3 OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_VORBIS "STB" CACHE STRING "" FORCE)
+
+FetchContent_MakeAvailable(SDL2 SDL2_mixer imgui nlohmann_json)
 
 if(TARGET SDL2::SDL2)
   set(ENGINEDEMO_SDL_TARGET SDL2::SDL2)
@@ -93,8 +108,12 @@ target_link_libraries(imgui_sdl2 PUBLIC ${ENGINEDEMO_SDL_TARGET})
 add_library(engine_core STATIC
   src/engine/archetypes.cpp
   src/engine/config.cpp
+  src/engine/content_watcher.cpp
   src/engine/crash_handler.cpp
+  src/engine/audio_system.cpp
+  src/engine/deterministic_math.cpp
   src/engine/diagnostics.cpp
+  src/engine/gameplay_session.cpp
   src/engine/content_pipeline.cpp
   src/engine/deterministic_rng.cpp
   src/engine/defensive_special.cpp
@@ -103,6 +122,7 @@ add_library(engine_core STATIC
   src/engine/editor_tools.cpp
   src/engine/entities.cpp
   src/engine/gpu_bullets.cpp
+  src/engine/input_system.cpp
   src/engine/job_system.cpp
   src/engine/logging.cpp
   src/engine/memory.cpp
@@ -117,6 +137,7 @@ add_library(engine_core STATIC
   src/engine/palette_fx_templates.cpp
   src/engine/projectiles.cpp
   src/engine/replay.cpp
+  src/engine/render_pipeline.cpp
   src/engine/render2d.cpp
   src/engine/run_structure.cpp
   src/engine/runtime.cpp
@@ -141,7 +162,23 @@ target_link_libraries(engine_core
     nlohmann_json::nlohmann_json
 )
 
+if(TARGET SDL2_mixer::SDL2_mixer)
+  target_link_libraries(engine_core PUBLIC SDL2_mixer::SDL2_mixer)
+elseif(TARGET SDL2_mixer::SDL2_mixer-static)
+  target_link_libraries(engine_core PUBLIC SDL2_mixer::SDL2_mixer-static)
+elseif(TARGET SDL2_mixer)
+  target_link_libraries(engine_core PUBLIC SDL2_mixer)
+else()
+  message(FATAL_ERROR "No SDL2_mixer target found")
+endif()
+
 target_compile_definitions(engine_core PUBLIC HELLEngine_ENABLE_MODERN_RENDERER=$<BOOL:${HELLEngine_ENABLE_MODERN_RENDERER}>)
+
+if(MSVC)
+  target_compile_options(engine_core PRIVATE /fp:strict)
+else()
+  target_compile_options(engine_core PRIVATE -ffp-contract=off -fno-fast-math)
+endif()
 
 
 add_executable(ContentPacker
@@ -298,3 +335,11 @@ add_test(NAME defensive_special_tests COMMAND defensive_special_tests)
 add_executable(standards_tests tests/standards_tests.cpp)
 target_link_libraries(standards_tests PRIVATE engine_core)
 add_test(NAME standards_tests COMMAND standards_tests)
+
+add_executable(collision_correctness_tests tests/collision_correctness_tests.cpp)
+target_link_libraries(collision_correctness_tests PRIVATE engine_core)
+add_test(NAME collision_correctness_tests COMMAND collision_correctness_tests)
+
+add_executable(determinism_cross_config_test tests/determinism_cross_config_test.cpp)
+target_link_libraries(determinism_cross_config_test PRIVATE engine_core)
+add_test(NAME determinism_cross_config_test COMMAND determinism_cross_config_test)

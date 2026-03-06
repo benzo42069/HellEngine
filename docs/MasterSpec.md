@@ -74,6 +74,15 @@ Responsibilities:
 Rule: tooling integrates through stable Editor API.
 
 ## 4. Deterministic Simulation Contract
+
+### 4.x Floating-Point Determinism Policy (Phase 3)
+- `engine_core` is compiled with strict FP determinism flags:
+  - MSVC: `/fp:strict`
+  - GCC/Clang: `-ffp-contract=off -fno-fast-math`
+- Simulation trig/root math routes through `engine::dmath` wrappers (`deterministic_math.h`) instead of direct `std::sin/cos/atan2/sqrt` calls in hot simulation code.
+- Wrapper indirection exists as a deterministic choke-point for future fixed-precision or polynomial replacement without broad call-site churn.
+- A cross-config determinism test (`determinism_cross_config_test`) runs 300 deterministic ticks and verifies a hard-coded hash to detect configuration drift.
+
 ### 4.1 Time and Tick Model
 - 2D simulation with fixed timestep `Δt` (typical `1/60` or `1/120`).
 - Integer tick index `n`; simulation time is `t = n·Δt`.
@@ -248,6 +257,12 @@ Typical designer parameters: `N, Δ, Ω, I, S, A, L, a, ωturn, phase` and varia
 - Sim emits compact render instance buffers.
 - Optional particle bridge allowed for non-critical VFX.
 - Render remains presentation-only.
+
+
+### 15.x GpuBulletSystem Runtime Note (Phase 4)
+- `GpuBulletSystem` remains a CPU-updated simulation/render data path (not GPU compute simulation).
+- Slot management uses a free-list and cached active count for O(1) `emit()` and O(1) `activeCount()`.
+- This removes prior linear scans and improves high-count hybrid rendering throughput predictability.
 
 ## 16. Replay, Debugging, and Introspection
 - Replay record/playback uses authoritative per-tick input stream and deterministic settings.
@@ -1400,3 +1415,28 @@ Current repository implementation now includes:
 
 Headless mode contract:
 - `EngineDemo --headless --ticks <N> --seed <S>` runs deterministic simulation ticks without opening a window.
+
+
+### Runtime decomposition update (Phase 1 refactor)
+- Runtime orchestration now delegates to three focused modules:
+  - `InputSystem` (`input_system.h/.cpp`) for frame input polling, event processing, and replay input plumbing.
+  - `GameplaySession` (`gameplay_session.h/.cpp`) for deterministic gameplay simulation state updates and upgrade-screen state.
+  - `RenderPipeline` (`render_pipeline.h/.cpp`) for render-context lifecycle and frame rendering.
+- `SimSnapshot` defines the explicit sim->render contract used by the render pipeline.
+
+
+### 23.17 Implemented Collision Runtime Contract (Phase 2)
+- `CollisionTarget` contains `{ pos, radius, id, team }` where `id` is a stable deterministic key and `team` filters friendly-fire.
+- `CollisionEvent` contains `{ bulletIndex, targetId, graze }`; events are sorted by `(targetId, bulletIndex)` before processing.
+- Runtime collision pipeline is now three-stage:
+  1. `updateMotion(dt, enemyTimeScale, playerTimeScale)`
+  2. `buildGrid()`
+  3. `resolveCollisions(targets, outEvents)`
+- `resolveCollisions()` performs target AABB -> grid-cell range query, traverses linked lists in overlapping cells, runs circle-circle narrowphase, and enforces one-hit-per-bullet per tick.
+
+### Deterministic Math Note (Phase 8)
+Simulation trig/sqrt calls route through `engine::dmath` deterministic wrappers implemented in `deterministic_math.cpp` (fixed polynomial / iterative approximations), avoiding direct hot-path dependence on platform `std::` transcendental behavior.
+
+### Runtime Baseline Additions (Phase 9/10)
+- Audio system (SDL_mixer) is integrated as presentation-only runtime plumbing.
+- Content hot-reload is generalized via `ContentWatcher` across patterns, entities, traits, and difficulty profiles.

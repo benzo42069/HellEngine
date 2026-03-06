@@ -20,3 +20,8 @@ To keep the feature safe and shippable without backend rewrite, this patch imple
 ## Limits
 - Targeted for high bullet counts (100k+ hardware permitting).
 - Final throughput depends on renderer driver and hardware.
+
+## Slot Management Update (Phase 4)
+- Emission no longer linearly scans for inactive entries.
+- Runtime uses free-list slot allocation and cached active count in `GpuBulletSystem`.
+- Complexity: `emit()` O(1), `activeCount()` O(1), expiry reclaim in `update()` O(k) over bullets processed that frame.

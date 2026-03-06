@@ -7,15 +7,15 @@
    - applies CLI overrides
    - installs crash handlers (Release)
 
-2. **Content pipeline** (`content_pipeline.*`, `tools_content_packer.cpp`)
-   - migrates/validates pack schema
-   - merges assets by GUID
-   - computes `contentHash`
+2. **Simulation core** (`runtime.cpp`, `gameplay_session.*`, `input_system.*`)
+   - fixed-step deterministic loop orchestration in `Runtime`
+   - gameplay simulation update and progression orchestration in `GameplaySession`
+   - input polling/event processing + replay input injection/recording in `InputSystem`
 
-3. **Simulation core** (`runtime.cpp`)
-   - fixed-step deterministic loop
-   - pattern emission (legacy PatternPlayer or compiled PatternGraph VM)
-   - entity updates, collisions, progression systems
+3. **Render pipeline** (`render_pipeline.*`, `render2d.*`, `modern_renderer.*`)
+   - render-context lifecycle (init/recreate/shutdown)
+   - scene overlay composition through `SimSnapshot` sim->render contract
+   - sprite/debug draw + tool HUD composition
 
 4. **Diagnostics/replay** (`diagnostics.*`, `replay.*`, `logging.*`)
    - structured error reports (`code/context/stack`)
@@ -33,6 +33,7 @@
 - Pack with `ContentPacker` -> `content.pak`.
 - Runtime loads pack(s) and caches pattern/entity databases.
 - Deterministic systems run from seed + fixed dt.
+- Collision pipeline executes in three explicit stages: `updateMotion` -> `buildGrid` -> `resolveCollisions` (targets queried per overlapping grid cell, then deterministic event sort).
 
 ## Safety model
 
@@ -48,3 +49,7 @@
 - Add authoring UI in `editor_tools.cpp`.
 - Add deterministic verifier probes in `runtime.cpp` + `replay.cpp`.
 
+
+## Added Runtime Services
+- **AudioSystem**: presentation-layer sound playback service (SDL_mixer-backed), fed by frame-level event cues and never mutating simulation state.
+- **ContentWatcher**: filesystem timestamp polling utility that detects content changes for patterns, entities, traits, and difficulty profiles, with reload application at deterministic tick boundaries.

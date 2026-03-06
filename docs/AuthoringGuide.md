@@ -165,3 +165,10 @@ Archetypes define base stat profile + flavor labels (weapon/active ability) and 
 
 If JSON is malformed, runtime logs structured errors and falls back rather than crashing.
 
+
+## Live hot-reload authoring flow
+During runtime/editor sessions, content file edits are detected by `ContentWatcher`. Valid edits are swapped at deterministic tick boundaries; invalid edits are rejected with error logging and the previous content remains active. Supported live-reload domains:
+- Patterns
+- Entities
+- Traits
+- Difficulty profiles

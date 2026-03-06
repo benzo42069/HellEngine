@@ -1,5 +1,9 @@
 #include <engine/traits.h>
 
+#include <nlohmann/json.hpp>
+
+#include <fstream>
+
 #include <algorithm>
 
 namespace engine {
@@ -116,6 +120,40 @@ void TraitSystem::initialize(const std::uint64_t seed) {
     nextRerollTick_ = 0;
     currentTick_ = 0;
     validationCache_ = validateCatalog();
+}
+
+bool TraitSystem::loadFromFile(const std::string& path) {
+    std::ifstream f(path);
+    if (!f.is_open()) return false;
+
+    nlohmann::json j;
+    try {
+        f >> j;
+    } catch (...) {
+        return false;
+    }
+    if (!j.contains("traits") || !j["traits"].is_array()) return false;
+
+    std::vector<Trait> loaded;
+    for (const auto& item : j["traits"]) {
+        if (!item.is_object()) continue;
+        Trait t;
+        t.id = item.value("guid", item.value("id", std::string {}));
+        t.name = item.value("name", std::string {});
+        t.description = item.value("description", std::string("Loaded from traits.json"));
+        t.iconToken = item.value("iconToken", std::string("ico_trait"));
+        const std::string rarity = item.value("rarity", std::string("common"));
+        t.rarity = rarity == "relic" ? TraitRarity::Relic : (rarity == "rare" ? TraitRarity::Rare : TraitRarity::Common);
+        if (!t.id.empty() && !t.name.empty()) loaded.push_back(std::move(t));
+    }
+
+    if (loaded.empty()) return false;
+    catalog_ = std::move(loaded);
+    active_.clear();
+    aggregate_ = {};
+    hasPending_ = false;
+    validationCache_ = validateCatalog();
+    return true;
 }
 
 const Trait& TraitSystem::rollOne() {

@@ -277,3 +277,63 @@
 - **Decision**: Add `timing_tests` and `config_tests` as CTest targets, and include headless simulation command validation in build docs.
 - **Rationale**: Provides immediate regression coverage for deterministic timing and runtime configuration parsing.
 - **Status**: Implemented.
+
+## 2026-03-05 — Runtime Decomposition (Phase 1)
+- **Decision**: Decomposed runtime responsibilities into `InputSystem`, `RenderPipeline`, and `GameplaySession`.
+- **Rationale**: Reduce god-object coupling and establish clearer ownership boundaries while retaining deterministic fixed-step orchestration.
+- **Status**: Accepted.
+
+## 2026-03-05 — SimSnapshot Contract
+- **Decision**: Introduced `SimSnapshot` as a simulation-to-render read contract consumed by `RenderPipeline`.
+- **Rationale**: Prevent render-side back-channel mutation and make frame composition boundaries explicit.
+- **Status**: Accepted.
+
+## 2026-03-05 — Collision Pipeline Stage Split (Phase 2)
+- **Decision**: Split projectile collision pipeline into `updateMotion()`, `buildGrid()`, and `resolveCollisions()` stages.
+- **Rationale**: Separate deterministic motion integration from broadphase construction and narrowphase resolution to support multi-target collision queries.
+- **Status**: Accepted.
+
+## 2026-03-05 — Deterministic Collision Event Ordering
+- **Decision**: Sort `CollisionEvent` output by `(targetId, bulletIndex)` before processing.
+- **Rationale**: Enforces deterministic event ordering independent of grid bucket traversal order.
+- **Status**: Accepted.
+
+## 2026-03-05 — Grid-query Collision Replaces Inline Single-target Checks
+- **Decision**: Use overlapping-grid-cell queries against `CollisionTarget` AABBs in `resolveCollisions()` instead of inline player-only distance checks inside projectile update.
+- **Rationale**: Enables multi-target collision support with existing spatial partitioning data.
+- **Status**: Accepted.
+
+## 2026-03-05 — Golden Replay Hash Note
+- **Decision**: No golden replay hash updates were applied in this phase.
+- **Rationale**: Collision ordering was made deterministic and validated in targeted tests; golden replay target was not modified here.
+- **Status**: Recorded.
+
+## 2026-03-05 — FP Determinism Hardened
+- **Decision**: Added deterministic floating-point compilation policy (`/fp:strict` on MSVC, `-ffp-contract=off -fno-fast-math` on GCC/Clang) for `engine_core`, introduced `engine::dmath` wrappers, and added cross-config determinism test coverage.
+- **Rationale**: Centralizes simulation transcendental math through a single choke-point and reduces build-configuration drift risks for replay/hash determinism.
+- **Status**: Accepted.
+
+## 2026-03-05 — GpuBulletSystem O(1) Slot Management
+- **Decision**: Replaced O(N) linear-scan slot allocation/counting in `GpuBulletSystem` with free-list allocation and cached `activeCount_`.
+- **Rationale**: Stabilizes hybrid mass-bullet mode under very high emit rates and removes per-call full-buffer scans from hot paths.
+- **Status**: Accepted.
+
+## 2026-03-05 — Compact Active-List Iteration for ProjectileSystem
+- **Decision**: Replaced O(capacity) loops with skip-branches by O(active) iteration using `activeIndices_` and cached `activeCount_`.
+- **Rationale**: Reduces hot-path iteration cost in update/render/debug/graze/hash paths while preserving deterministic order via sort-on-removal at tick end.
+- **Status**: Accepted.
+
+## 2026-03-06 — Platform-stable trig wrappers use deterministic polynomial path
+- **Decision**: `engine::dmath` wrapper bodies now live in `deterministic_math.cpp` using deterministic approximation routines instead of direct `std::` forwarding.
+- **Rationale**: Keeps simulation math behavior stable across build configurations and toolchains via fixed algorithmic paths.
+- **Status**: Accepted.
+
+## 2026-03-06 — Audio system added as presentation-only
+- **Decision**: Added `AudioSystem` (SDL_mixer) and event-triggered SFX playback in frame/present flow only.
+- **Rationale**: Provides baseline feedback (hit/graze/warning/special) without coupling audio to simulation determinism.
+- **Status**: Accepted.
+
+## 2026-03-06 — Generalized content hot-reload via ContentWatcher
+- **Decision**: Added `ContentWatcher` polling patterns/entities/traits/difficulty files and applying validated swaps at tick boundaries.
+- **Rationale**: Extends live authoring support beyond patterns while preserving deterministic simulation ordering.
+- **Status**: Accepted.

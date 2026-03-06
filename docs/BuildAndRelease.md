@@ -31,8 +31,24 @@ This repo provides one-command PowerShell scripts in `tools/` for build, test, a
 ./tools/package_dist.ps1
 ```
 Outputs:
-- Portable folder: `dist/portable`
+- Portable folder: `dist/EngineDemo`
 - Archive: `dist/EngineDemo-portable.zip`
+
+
+### 5) Stage distribution + build installer
+```powershell
+./tools/package_dist.ps1
+./tools/build_installer.ps1 -AllowPortableOnly
+./tools/verify_installer.ps1
+```
+Outputs:
+- staged layout: `dist/EngineDemo/`
+- portable zip: `dist/EngineDemo-portable.zip`
+- installer (when Inno Setup is installed): `dist/EngineDemoInstaller.exe`
+
+Installer toolchain:
+- Preferred installer system: **Inno Setup 6** (`ISCC.exe`).
+- If Inno Setup is unavailable, `build_installer.ps1 -AllowPortableOnly` succeeds with clear warnings and keeps the portable artifacts.
 
 ## Deterministic clean build mode
 Use `-Clean -Deterministic` on `build_debug.ps1`, `build_release.ps1`, or `package_dist.ps1`.

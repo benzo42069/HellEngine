@@ -1,79 +1,141 @@
 Param(
+    [string]$SourceDir = ".",
     [string]$BuildDir = "build-release",
+    [string]$Config = "Release",
     [string]$DistRoot = "dist",
-    [string]$PortableDirName = "portable",
-    [string]$ArchiveName = "EngineDemo-portable.zip",
+    [string]$AppName = "EngineDemo",
     [switch]$Clean,
-    [switch]$Deterministic
+    [switch]$Deterministic,
+    [switch]$SkipBuild,
+    [switch]$SkipPackBuild
 )
 
 $ErrorActionPreference = "Stop"
 
-$distDir = Join-Path $DistRoot $PortableDirName
-$archivePath = Join-Path $DistRoot $ArchiveName
+function Resolve-BinaryPath {
+    param(
+        [string]$BuildDir,
+        [string]$Config,
+        [string]$BaseName
+    )
 
-if (-not (Test-Path (Join-Path $BuildDir "Release/EngineDemo.exe")) -and -not (Test-Path (Join-Path $BuildDir "EngineDemo.exe"))) {
-    Write-Host "[package_dist] Release build not found. Running build_release.ps1 first."
-    & "$PSScriptRoot/build_release.ps1" -BuildDir $BuildDir -Clean:$Clean -Deterministic:$Deterministic
+    $candidates = @(
+        (Join-Path $BuildDir "$Config/$BaseName.exe"),
+        (Join-Path $BuildDir "$BaseName.exe")
+    )
+
+    foreach ($candidate in $candidates) {
+        if (Test-Path $candidate) {
+            return (Resolve-Path $candidate).Path
+        }
+    }
+
+    throw "Could not find $BaseName.exe in '$BuildDir' (config '$Config')."
 }
+
+function Copy-IfExists {
+    param(
+        [string]$From,
+        [string]$To
+    )
+
+    if (Test-Path $From) {
+        Copy-Item $From $To -Recurse -Force
+        return $true
+    }
+
+    return $false
+}
+
+$repoRoot = (Resolve-Path $SourceDir).Path
+$stageDir = Join-Path $DistRoot $AppName
+$portableZip = Join-Path $DistRoot "$AppName-portable.zip"
+
+if (-not $SkipBuild) {
+    Write-Host "[package_dist] Ensuring release build exists"
+    & "$PSScriptRoot/build_release.ps1" -SourceDir $repoRoot -BuildDir $BuildDir -Clean:$Clean -Deterministic:$Deterministic -SkipTests
+    if ($LASTEXITCODE -ne 0) {
+        throw "Release build failed; cannot package distribution."
+    }
+}
+
+$engineExe = Resolve-BinaryPath -BuildDir $BuildDir -Config $Config -BaseName "EngineDemo"
+$contentPackerExe = Resolve-BinaryPath -BuildDir $BuildDir -Config $Config -BaseName "ContentPacker"
+$exeDir = Split-Path -Parent $engineExe
 
 if ($Clean -and (Test-Path $DistRoot)) {
     Write-Host "[package_dist] Removing existing dist root: $DistRoot"
     Remove-Item -Recurse -Force $DistRoot
 }
 
-Write-Host "[package_dist] Preparing portable folder: $distDir"
-if (Test-Path $distDir) {
-    Remove-Item -Recurse -Force $distDir
+if (Test-Path $stageDir) {
+    Remove-Item -Recurse -Force $stageDir
 }
-New-Item -ItemType Directory -Path $distDir | Out-Null
 
-$engineExeCandidates = @(
-    (Join-Path $BuildDir "Release/EngineDemo.exe"),
-    (Join-Path $BuildDir "EngineDemo.exe")
-)
-foreach ($candidate in $engineExeCandidates) {
-    if (Test-Path $candidate) {
-        Copy-Item $candidate (Join-Path $distDir "EngineDemo.exe")
-        break
+$null = New-Item -ItemType Directory -Path $stageDir -Force
+$null = New-Item -ItemType Directory -Path (Join-Path $stageDir "assets") -Force
+$null = New-Item -ItemType Directory -Path (Join-Path $stageDir "data") -Force
+$null = New-Item -ItemType Directory -Path (Join-Path $stageDir "packs") -Force
+$null = New-Item -ItemType Directory -Path (Join-Path $stageDir "config") -Force
+
+Write-Host "[package_dist] Staging binaries"
+Copy-Item $engineExe (Join-Path $stageDir "EngineDemo.exe") -Force
+Copy-Item $contentPackerExe (Join-Path $stageDir "ContentPacker.exe") -Force
+
+Get-ChildItem $exeDir -Filter "*.dll" -File -ErrorAction SilentlyContinue | ForEach-Object {
+    Copy-Item $_.FullName (Join-Path $stageDir $_.Name) -Force
+}
+
+if (Test-Path (Join-Path $repoRoot "assets")) {
+    Copy-Item (Join-Path $repoRoot "assets/*") (Join-Path $stageDir "assets") -Recurse -Force
+}
+if (Test-Path (Join-Path $repoRoot "data")) {
+    Copy-Item (Join-Path $repoRoot "data/*") (Join-Path $stageDir "data") -Recurse -Force
+}
+if (Test-Path (Join-Path $repoRoot "shaders")) {
+    $null = New-Item -ItemType Directory -Path (Join-Path $stageDir "shaders") -Force
+    Copy-Item (Join-Path $repoRoot "shaders/*") (Join-Path $stageDir "shaders") -Recurse -Force
+}
+
+if (Test-Path (Join-Path $repoRoot "engine_config.json")) {
+    Copy-Item (Join-Path $repoRoot "engine_config.json") (Join-Path $stageDir "config/engine_config.json") -Force
+}
+
+if (-not $SkipPackBuild -and (Test-Path (Join-Path $repoRoot "examples/content_packs"))) {
+    Write-Host "[package_dist] Building starter content pack"
+    & $contentPackerExe --input (Join-Path $repoRoot "examples/content_packs") --output (Join-Path $stageDir "packs/content.pak") --pack-id starter
+    if ($LASTEXITCODE -ne 0) {
+        throw "ContentPacker failed while generating packs/content.pak"
     }
 }
 
-$contentPackerCandidates = @(
-    (Join-Path $BuildDir "Release/ContentPacker.exe"),
-    (Join-Path $BuildDir "ContentPacker.exe")
-)
-foreach ($candidate in $contentPackerCandidates) {
-    if (Test-Path $candidate) {
-        Copy-Item $candidate (Join-Path $distDir "ContentPacker.exe")
-        break
-    }
+if (Test-Path (Join-Path $repoRoot "version/VERSION.txt")) {
+    Copy-Item (Join-Path $repoRoot "version/VERSION.txt") (Join-Path $stageDir "VERSION.txt") -Force
 }
 
-if (Test-Path "engine_config.json") {
-    Copy-Item "engine_config.json" (Join-Path $distDir "engine_config.json")
-}
-if (Test-Path "data") {
-    Copy-Item "data" (Join-Path $distDir "data") -Recurse
-}
-if (Test-Path "assets") {
-    Copy-Item "assets" (Join-Path $distDir "assets") -Recurse
-}
-if (Test-Path "docs/BuildAndRun.md") {
-    Copy-Item "docs/BuildAndRun.md" (Join-Path $distDir "BuildAndRun.md")
-}
-if (Test-Path "version/VERSION.txt") {
-    Copy-Item "version/VERSION.txt" (Join-Path $distDir "VERSION.txt")
+if (Test-Path (Join-Path $repoRoot "docs/BuildAndRun.md")) {
+    Copy-Item (Join-Path $repoRoot "docs/BuildAndRun.md") (Join-Path $stageDir "README.txt") -Force
 }
 
-if (-not (Test-Path $DistRoot)) {
-    New-Item -ItemType Directory -Path $DistRoot | Out-Null
-}
-if (Test-Path $archivePath) {
-    Remove-Item -Force $archivePath
+if (Test-Path (Join-Path $repoRoot "LICENSE")) {
+    Copy-Item (Join-Path $repoRoot "LICENSE") (Join-Path $stageDir "LICENSE.txt") -Force
 }
 
-Write-Host "[package_dist] Creating zip archive: $archivePath"
-Compress-Archive -Path "$distDir/*" -DestinationPath $archivePath
+$manifest = @{
+    appName = $AppName
+    buildDir = $BuildDir
+    config = $Config
+    generatedAt = (Get-Date).ToString("o")
+    files = (Get-ChildItem $stageDir -Recurse -File | ForEach-Object { $_.FullName.Substring($stageDir.Length + 1) })
+}
+$manifest | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $stageDir "dist_manifest.json") -Encoding UTF8
 
-Write-Host "[package_dist] Done"
+if (Test-Path $portableZip) {
+    Remove-Item -Force $portableZip
+}
+Write-Host "[package_dist] Creating portable zip: $portableZip"
+Compress-Archive -Path (Join-Path $stageDir "*") -DestinationPath $portableZip
+
+Write-Host "[package_dist] Portable staging complete"
+Write-Host "[package_dist] Stage: $stageDir"
+Write-Host "[package_dist] Zip:   $portableZip"
