@@ -37,6 +37,8 @@ struct ProjectileBehavior {
 
     std::uint8_t beamSegmentSamples {0};
     float beamDurationSeconds {0.0F};
+
+    bool enableTrails {false};
 };
 
 struct ProjectileSpawn {
@@ -47,6 +49,7 @@ struct ProjectileSpawn {
     ProjectileAllegiance allegiance {ProjectileAllegiance::Enemy};
     std::uint8_t paletteIndex {0};
     BulletShape shape {BulletShape::Circle};
+    bool enableTrails {false};
 };
 
 struct ProjectileStats {
@@ -73,6 +76,8 @@ struct CollisionEvent {
 
 class ProjectileSystem {
   public:
+    static constexpr std::uint8_t kTrailLength = 4;
+
     void initialize(std::uint32_t capacity, float worldHalfExtent, std::uint32_t gridX, std::uint32_t gridY);
     void clear();
 
@@ -116,6 +121,10 @@ class ProjectileSystem {
     std::vector<std::uint8_t> allegiance_;
     std::vector<std::uint8_t> paletteIndex_;
     std::vector<std::uint8_t> shape_;
+    std::vector<std::uint8_t> enableTrails_;
+    std::vector<float> trailX_;
+    std::vector<float> trailY_;
+    std::vector<std::uint8_t> trailHead_;
     std::vector<std::uint64_t> grazeAwardTick_;
 
     static constexpr std::uint32_t kMaxPendingSpawns = 4096;

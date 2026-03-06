@@ -335,3 +335,9 @@
 - **Decision**: Procedural bullet sprites are generated at render startup via SDFs from palette-derived colors, with six built-in shapes (circle, rice, star, diamond, ring, beam) and no required external bullet art.
 - **Rationale**: Eliminates sprite-sheet dependency while preserving palette identity and shape readability.
 - **Status**: Accepted.
+
+## 2026-03-06 — Projectile Trail System
+- **Context**: Fast-moving projectile archetypes benefit from motion readability, while deterministic simulation state must remain unchanged.
+- **Decision**: Add an opt-in visual-only projectile trail system using a fixed per-bullet ring buffer of 4 past positions and faded afterimage rendering before the main sprite.
+- **Rationale**: Improves legibility at low memory overhead (~32 bytes per bullet) without affecting replay hashes.
+- **Status**: Accepted.
