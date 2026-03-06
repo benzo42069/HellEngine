@@ -98,6 +98,7 @@ target_link_libraries(imgui_sdl2 PUBLIC ${ENGINEDEMO_SDL_TARGET})
 
 add_library(engine_core STATIC
   src/engine/archetypes.cpp
+  src/engine/bullet_palette.cpp
   src/engine/config.cpp
   src/engine/crash_handler.cpp
   src/engine/diagnostics.cpp

@@ -430,6 +430,7 @@ void PatternPlayer::emitLayer(
             .vel = velocityFromDeg(jitteredAngle(angleDeg), layer.bulletSpeed * speedScale * speedMultiplier),
             .radius = layer.projectileRadius,
             .behavior = layer.projectileBehavior,
+            .paletteIndex = 0,
         });
     };
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engine/archetypes.h>
+#include <engine/bullet_palette.h>
 #include <engine/config.h>
 #include <engine/defensive_special.h>
 #include <engine/deterministic_rng.h>
@@ -59,6 +60,8 @@ class GameplaySession {
     double simClock_ {0.0};
 
     ProjectileSystem projectiles_;
+    PaletteFxTemplateRegistry bulletPaletteRegistry_ {};
+    BulletPaletteTable bulletPaletteTable_ {};
     PatternBank patternBank_;
     PatternPlayer patternPlayer_;
     EntityDatabase entityDatabase_;

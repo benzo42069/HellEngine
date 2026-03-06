@@ -109,6 +109,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         auto emitWithRuntimeMods = [this, &tm, &archetype, &mb, &diffScalars](const ProjectileSpawn& spawn) {
             ProjectileSpawn mod = spawn;
             mod.allegiance = ProjectileAllegiance::Player;
+            mod.paletteIndex = static_cast<std::uint8_t>(std::min<std::size_t>(BulletPaletteTable::kMaxPalettes - 1U, archetypeSystem_.selectedIndex() + 1U));
             const float powerScale = 0.85F + (archetype.stats.power + mb.powerBonus) * 0.03F;
             mod.vel.x *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul * defensiveSpecial_.playerDamageMultiplier();
             mod.vel.y *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul * defensiveSpecial_.playerDamageMultiplier();
@@ -121,6 +122,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 [this, &tm, &archetype, &mb, &diffScalars](const ProjectileSpawn& spawn) {
                     ProjectileSpawn mod = spawn;
                     mod.allegiance = ProjectileAllegiance::Player;
+                    mod.paletteIndex = static_cast<std::uint8_t>(std::min<std::size_t>(BulletPaletteTable::kMaxPalettes - 1U, archetypeSystem_.selectedIndex() + 1U));
                     const float powerScale = 0.85F + (archetype.stats.power + mb.powerBonus) * 0.03F;
                     mod.vel.x *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul;
                     mod.vel.y *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul;

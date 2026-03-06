@@ -322,3 +322,10 @@
 - **Decision**: Replaced O(capacity) loops with skip-branches by O(active) iteration using `activeIndices_` and cached `activeCount_`.
 - **Rationale**: Reduces hot-path iteration cost in update/render/debug/graze/hash paths while preserving deterministic order via sort-on-removal at tick end.
 - **Status**: Accepted.
+
+
+## 2026-03-06 — Per-bullet palette colorization
+- **Context**: Projectile rendering used allegiance hardcoded colors while palette templates already define richer projectile colors.
+- **Decision**: Add visual-only `paletteIndex` projectile SoA data, route per-shot palette assignment through emission paths, and introduce `BulletPaletteTable` built from `PaletteFxTemplateRegistry`/`deriveProjectileFillFromCore`.
+- **Rationale**: Preserves deterministic simulation/replay hashes while enabling authored palette-driven projectile colors.
+- **Status**: Accepted.

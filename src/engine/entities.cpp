@@ -118,6 +118,7 @@ bool EntityDatabase::loadFromFile(const std::string& path) {
             t.attackPatternGuid = e.value("attackPatternGuid", "");
             t.attackPatternName = e.value("attackPatternName", "");
             t.attackIntervalSeconds = e.value("attackIntervalSeconds", 0.5F);
+            t.projectilePaletteIndex = e.value("projectilePaletteIndex", static_cast<std::uint8_t>(0));
 
             if (e.contains("boss") && e["boss"].is_object()) {
                 const auto& boss = e["boss"];
@@ -180,6 +181,7 @@ void EntityDatabase::loadFallbackDefaults() {
     enemy.attackPatternGuid = stableGuidForAsset("pattern", enemy.attackPatternName);
     enemy.attackIntervalSeconds = 0.35F;
     enemy.spawnRule = SpawnRule {.enabled = true, .initialDelaySeconds = 0.5F, .intervalSeconds = 2.5F, .maxAlive = 4};
+    enemy.projectilePaletteIndex = 2;
     templates_.push_back(enemy);
 
     EntityTemplate boss;
@@ -202,6 +204,7 @@ void EntityDatabase::loadFallbackDefaults() {
     };
     boss.boss.rewardDrop = ResourceYield {.upgradeCurrency = 100.0F, .healthRecovery = 20.0F, .buffDurationSeconds = 4.0F};
     boss.spawnRule = SpawnRule {.enabled = true, .initialDelaySeconds = 6.0F, .intervalSeconds = 20.0F, .maxAlive = 1};
+    boss.projectilePaletteIndex = 3;
     templates_.push_back(boss);
 }
 
@@ -291,7 +294,7 @@ void EntitySystem::emitPatternFromTemplate(
             const std::uint32_t bullets = std::max(1U, static_cast<std::uint32_t>(std::round(static_cast<float>(layer.bulletCount) * std::max(0.5F, difficultyScale))));
             for (std::uint32_t i = 0; i < bullets; ++i) {
                 const float a = 360.0F * static_cast<float>(i) / static_cast<float>(bullets);
-                projectiles.spawn({origin, velocityFromDeg(a, speed), layer.projectileRadius, ProjectileBehavior {}, ProjectileAllegiance::Enemy});
+                projectiles.spawn({origin, velocityFromDeg(a, speed), layer.projectileRadius, ProjectileBehavior {}, ProjectileAllegiance::Enemy, t.projectilePaletteIndex});
             }
             break;
         }
@@ -304,7 +307,7 @@ void EntitySystem::emitPatternFromTemplate(
                 const float t01 = bullets > 1 ? static_cast<float>(i) / static_cast<float>(bullets - 1) : 0.5F;
                 const float jitter = (rng_.nextFloat01() * 2.0F - 1.0F) * layer.modifiers.deterministicJitterDeg;
                 const float a = base - spread * 0.5F + spread * t01 + jitter;
-                projectiles.spawn({origin, velocityFromDeg(a, speed), layer.projectileRadius, ProjectileBehavior {}, ProjectileAllegiance::Enemy});
+                projectiles.spawn({origin, velocityFromDeg(a, speed), layer.projectileRadius, ProjectileBehavior {}, ProjectileAllegiance::Enemy, t.projectilePaletteIndex});
             }
             break;
         }

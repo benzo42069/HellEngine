@@ -97,6 +97,7 @@ struct PaletteFillResult {
     PaletteColor core {};
     PaletteColor highlight {};
     PaletteColor glow {};
+    PaletteColor trail {};
 };
 
 class PaletteFxTemplateRegistry {
@@ -127,4 +128,3 @@ bool parsePaletteFxTemplateDatabase(const nlohmann::json& json, PaletteFxTemplat
 nlohmann::json toJson(const PaletteFxTemplateDatabase& db);
 
 } // namespace engine
-

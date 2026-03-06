@@ -98,6 +98,13 @@ int Runtime::run() {
     (void)session_.difficultyModel_.loadProfilesFromFile("data/difficulty_profiles.json");
     session_.difficultyModel_.setProfile(difficultyProfileFromString(config_.difficultyProfile));
 
+    std::string paletteError;
+    if (session_.bulletPaletteRegistry_.loadFromJsonFile("data/palettes/palette_fx_templates.json", &paletteError)) {
+        session_.bulletPaletteTable_.buildFromRegistry(session_.bulletPaletteRegistry_);
+    } else {
+        logWarn("Bullet palette template load failed: " + paletteError);
+    }
+
     DefensiveSpecialConfig defensiveCfg;
     defensiveCfg.durationSeconds = config_.defensiveDurationSeconds;
     defensiveCfg.cooldownPerChargeSeconds = config_.defensiveCooldownSeconds;
