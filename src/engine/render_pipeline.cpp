@@ -32,6 +32,7 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
     toolSuite.initialize(window, renderer_);
     (void)debugText_.init(renderer_);
     debugText_.registerTexture(*textures_, "debug_font");
+    backgroundSystem_.initialize(renderer_, *textures_);
     renderContextReady_ = true;
     refreshDisplayMetrics(window);
     spriteBatch_.reserve(config_.projectileCapacity + 2048);
@@ -42,6 +43,7 @@ void RenderPipeline::shutdown(ControlCenterToolSuite& toolSuite) {
     if (!renderContextReady_ && !renderer_ && !textures_) return;
     toolSuite.shutdown();
     modernRenderer_.shutdown();
+    backgroundSystem_.clear();
     textures_.reset();
     if (renderer_) {
         SDL_DestroyRenderer(renderer_);
@@ -110,7 +112,6 @@ bool RenderPipeline::toggleFullscreen(SDL_Window* window) {
 }
 
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
-    camera_.update(static_cast<float>(frameDelta));
     const GameplaySession& s = snapshot.session;
     if (s.bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
         s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_);
@@ -127,7 +128,10 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     constexpr std::array<Uint8, 4> clearColor {20, 28, 40, 255};
     SDL_SetRenderDrawColor(renderer_, clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
     SDL_RenderClear(renderer_);
+    camera_.update(static_cast<float>(frameDelta));
+    backgroundSystem_.update(static_cast<float>(frameDelta));
     spriteBatch_.begin(camera_);
+    backgroundSystem_.render(spriteBatch_, camera_);
     buildSceneOverlay(snapshot, frameDelta);
     spriteBatch_.flush(renderer_, *textures_);
     debugDraw_.flush(renderer_, camera_);

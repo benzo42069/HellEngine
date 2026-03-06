@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-06 — Parallax background layering
+- **Context**: The runtime renderer used a flat clear color with no depth cues behind gameplay actors.
+- **Decision**: Add `BackgroundSystem` with three startup-generated procedural layers (hash-noise deep space, low-alpha grid, and sparse particle dust) using bounded parallax tiling.
+- **Rationale**: Improves spatial readability and scene depth while keeping rendering presentation-only and deterministic-sim independent.
+- **Status**: Accepted.
+
 ## 2026-03-04 — Phase 1 Scope Enforcement
 - **Context**: Phase requires documentation ingestion only.
 - **Decision**: Restrict outputs to `docs/MasterSpec.md`, `docs/DecisionLog.md`, and `docs/ImplementationPlan.md`.

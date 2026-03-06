@@ -36,6 +36,8 @@ class Camera2D {
     [[nodiscard]] Vec2 worldToScreen(Vec2 world) const;
     [[nodiscard]] float zoom() const;
     [[nodiscard]] Vec2 center() const;
+    [[nodiscard]] int viewportWidth() const;
+    [[nodiscard]] int viewportHeight() const;
 
   private:
     int viewportWidth_ {1280};
