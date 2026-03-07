@@ -209,7 +209,12 @@ add_executable(ContentPacker
 )
 
 target_include_directories(ContentPacker PRIVATE include ${SDL2_SOURCE_DIR}/include ${SDL2_BINARY_DIR}/include)
-target_link_libraries(ContentPacker PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(ContentPacker
+  PRIVATE
+    ${ENGINEDEMO_SDL_TARGET}
+    SDL2_mixer::SDL2_mixer
+    nlohmann_json::nlohmann_json
+)
 
 add_executable(EngineDemo
   src/main.cpp

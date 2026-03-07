@@ -1,5 +1,9 @@
 # MasterSpec
 
+## Build Notes
+- 2026-03-07: `ContentPacker` now explicitly links `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` because it compiles content pipeline sources that include audio headers; this fixes Visual Studio/Ninja include failures for `SDL_mixer.h` without changing engine runtime behavior.
+
+
 ## 1. Scope and Authority
 This is the merged authoritative specification for a standalone Windows bullet-hell engine. All provided design documents are source-of-truth and must be integrated additively.
 
