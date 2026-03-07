@@ -71,8 +71,14 @@ void ProjectileSystem::initialize(const std::uint32_t capacity, const float worl
     pendingSpawnCount_ = 0;
     despawnEventCount_ = 0;
 
-    legacyCollisionEvents_.clear();
-    legacyCollisionEvents_.reserve(capacity_);
+    legacyCollisionEvents_.assign(capacity_, CollisionEvent {});
+
+    for (std::size_t palette = 0; palette < BulletPaletteTable::kMaxPalettes; ++palette) {
+        const auto paletteName = std::to_string(palette);
+        for (std::size_t shape = 0; shape < kBulletShapeCount; ++shape) {
+            proceduralTextureIds_[palette * kBulletShapeCount + shape] = bulletTextureId(paletteName, static_cast<BulletShape>(shape));
+        }
+    }
 
     stats_ = {};
     paletteAnimIds_.fill(GradientAnimator::kInvalidAnimId);
@@ -393,7 +399,6 @@ void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float 
     buildGrid();
     CollisionTarget playerTarget {.pos = playerPos, .radius = playerRadius, .id = 0U, .team = 0U};
     std::uint32_t eventCount = 0;
-    if (legacyCollisionEvents_.size() != capacity_) legacyCollisionEvents_.resize(capacity_);
     resolveCollisions(std::span<const CollisionTarget>(&playerTarget, 1), legacyCollisionEvents_, eventCount);
 }
 
@@ -497,9 +502,9 @@ void ProjectileSystem::renderProcedural(SpriteBatch& batch, const BulletPaletteT
     for (std::uint32_t j = 0; j < activeCount_; ++j) {
         const std::uint32_t i = activeIndices_[j];
         const float d = radius_[i] * 2.0F;
-        const BulletShape shape = static_cast<BulletShape>(shape_[i]);
-        const std::string textureId = bulletTextureId(std::to_string(paletteIndex_[i]), shape);
         const std::uint8_t paletteIndex = paletteIndex_[i];
+        const std::size_t shapeIndex = std::min<std::size_t>(shape_[i], kBulletShapeCount - 1U);
+        const std::string& textureId = proceduralTextureIds_[static_cast<std::size_t>(paletteIndex) * kBulletShapeCount + shapeIndex];
         Color bulletColor = paletteIndex == 0
             ? (allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
             : paletteTable.get(paletteIndex).core;
