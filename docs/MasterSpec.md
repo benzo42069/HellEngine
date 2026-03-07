@@ -1459,3 +1459,20 @@ Headless mode contract:
 - Reimport behavior is fingerprint-based and emits explicit dependency invalidation records.
 - Atlas build grouping is deterministic and represented in pack metadata for downstream consumers.
 - Runtime pack integration includes full source/import registries for tooling diagnostics and cache invalidation behavior.
+
+
+## Content Pipeline Addendum — Animation and Variant Import Workflow
+- Art import manifests support animation clip metadata and grouping:
+  - `animationSet`, `animationState`, `animationDirection`, `animationFrame`, `animationFps`
+  - optional filename-derived grouping using `animationSequenceFromFilename` + `animationNamingRegex`
+- Art import manifests support variant grouping for biome/themed/procedural swaps:
+  - `variantGroup`, `variantName`, `variantWeight`, `paletteTemplate`
+  - optional filename-derived grouping using `variantNamingRegex`
+- Build output includes:
+  - `animationBuild`: deterministic clip plans with ordered frame GUIDs and frame timing.
+  - `variantBuild`: deterministic variant groups/options with weights and palette-template compatibility metadata.
+- Validation requirements:
+  - detect malformed naming/group values, duplicate frame indices, duplicate variant names, invalid frame/fps/weight values, and inconsistent clip FPS within a clip.
+- Runtime expectations:
+  - runtime/editor consume `animationBuild` and `variantBuild` directly instead of requiring per-frame manual setup.
+  - procedural selection uses variant `weight` under deterministic RNG, with optional palette-template application where authored.

@@ -35,6 +35,15 @@ struct ArtImportSettings {
     std::string animationGroup;
     float animationFps {0.0F};
     bool animationSequenceFromFilename {false};
+    std::string animationNamingRegex;
+    std::string animationSet;
+    std::string animationState;
+    std::string animationDirection;
+    int animationFrame {-1};
+    std::string variantNamingRegex;
+    std::string variantName;
+    float variantWeight {1.0F};
+    std::string paletteTemplate;
 };
 
 struct SourceArtAssetRecord {
@@ -60,6 +69,26 @@ struct AtlasBuildPlan {
     std::string colorWorkflow;
 };
 
+struct AnimationClipBuildPlan {
+    std::string animationSet;
+    std::string state;
+    std::string direction;
+    float fps {0.0F};
+    std::vector<std::string> frameAssetGuids;
+};
+
+struct VariantOptionBuildPlan {
+    std::string assetGuid;
+    std::string variantName;
+    float weight {1.0F};
+    std::string paletteTemplate;
+};
+
+struct VariantGroupBuildPlan {
+    std::string group;
+    std::vector<VariantOptionBuildPlan> options;
+};
+
 struct ArtImportValidationError {
     std::string file;
     std::string message;
@@ -78,6 +107,10 @@ bool importSourceArtAssets(const std::vector<SourceArtAssetRecord>& sourceAssets
                            std::vector<ImportedArtAssetRecord>& imported,
                            std::vector<ArtImportValidationError>& errors);
 std::vector<AtlasBuildPlan> buildAtlasPlans(const std::vector<ImportedArtAssetRecord>& importedAssets);
+std::vector<AnimationClipBuildPlan> buildAnimationClipPlans(const std::vector<ImportedArtAssetRecord>& importedAssets,
+                                                            std::vector<ArtImportValidationError>& errors);
+std::vector<VariantGroupBuildPlan> buildVariantGroupPlans(const std::vector<ImportedArtAssetRecord>& importedAssets,
+                                                          std::vector<ArtImportValidationError>& errors);
 std::unordered_map<std::string, std::string> extractImportFingerprintByGuid(const nlohmann::json& pack);
 
 } // namespace engine

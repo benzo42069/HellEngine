@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-03-07 — Animation clip import + sprite variant workflow
+- Added data-driven animation clip grouping in the content pipeline with explicit metadata (`animationSet`, `animationState`, `animationDirection`, `animationFrame`) and optional filename parsing via configurable regex (`animationNamingRegex`).
+- Added sprite variant grouping metadata (`variantName`, `variantWeight`, `paletteTemplate`) with optional regex-based group/variant extraction (`variantNamingRegex`).
+- Added importer/build validation for malformed animation/variant group identifiers, invalid frame/fps/weights, duplicate frames, duplicate variant names, and inconsistent clip fps.
+- Added runtime pack build outputs: `animationBuild` and `variantBuild` in addition to existing `sourceAssetRegistry`, `importRegistry`, and `atlasBuild`.
+- Updated content packer and tests to validate animation/variant plan metadata generation and registry shape.
+
 ## 2026-03-07
 - Refactored `GameplaySession` into explicit state partitions: simulation, player combat, progression, presentation, debug/tool, and encounter runtime state.
 - Updated runtime integration to use partitioned tool/tick ownership without changing replay determinism behavior.

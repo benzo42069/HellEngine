@@ -349,3 +349,18 @@ Completed items:
   - `content_import_pipeline_tests` for parse/import/atlas/fingerprint behavior.
   - updated `content_packer_tests` to assert new import metadata fields in produced packs.
 - Added authored sample manifest and source art examples under `data/`.
+
+
+## 2026-03-07 — Asset Pipeline: Animation + Variant import completion
+- Extended art import schema to support animation clip identity and frame-level metadata:
+  - `animationSet`, `animationState`, `animationDirection`, `animationFrame`, `animationFps`
+  - `animationSequenceFromFilename` + configurable `animationNamingRegex`
+- Extended variant authoring metadata:
+  - `variantGroup`, `variantName`, `variantWeight`, `paletteTemplate`
+  - optional configurable `variantNamingRegex` for filename extraction
+- Added deterministic build plans emitted into packs:
+  - `animationBuild`: grouped clips + ordered frame asset GUIDs + clip FPS
+  - `variantBuild`: grouped variant options + weighted selection metadata + palette-template compatibility
+- Added validation guardrails:
+  - malformed naming/groups, invalid fps/frame/weights, duplicate frame indexes, duplicate variant names, inconsistent clip FPS.
+- Added tests to enforce parse/import/grouping output and pack metadata availability.

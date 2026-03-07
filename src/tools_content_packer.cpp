@@ -258,6 +258,21 @@ int main(int argc, char** argv) {
 
     const auto atlasPlans = engine::buildAtlasPlans(importedAssets);
 
+    std::vector<engine::ArtImportValidationError> groupingErrors;
+    const auto animationClipPlans = engine::buildAnimationClipPlans(importedAssets, groupingErrors);
+    const auto variantGroupPlans = engine::buildVariantGroupPlans(importedAssets, groupingErrors);
+    if (!groupingErrors.empty()) {
+        appendArtValidationErrors(groupingErrors, errors);
+    }
+
+    if (!errors.empty()) {
+        for (const auto& e : errors) {
+            std::cerr << "[schema] " << e.file << ": " << e.message << "\n";
+        }
+        std::cerr << "Validation failed; no pack generated.\n";
+        return 2;
+    }
+
     nlohmann::json pack;
     pack["packId"] = packId;
     pack["schemaVersion"] = 2;
@@ -316,6 +331,15 @@ int main(int argc, char** argv) {
                 {"animationGroup", imported.source.settings.animationGroup},
                 {"animationFps", imported.source.settings.animationFps},
                 {"animationSequenceFromFilename", imported.source.settings.animationSequenceFromFilename},
+                {"animationNamingRegex", imported.source.settings.animationNamingRegex},
+                {"animationSet", imported.source.settings.animationSet},
+                {"animationState", imported.source.settings.animationState},
+                {"animationDirection", imported.source.settings.animationDirection},
+                {"animationFrame", imported.source.settings.animationFrame},
+                {"variantNamingRegex", imported.source.settings.variantNamingRegex},
+                {"variantName", imported.source.settings.variantName},
+                {"variantWeight", imported.source.settings.variantWeight},
+                {"paletteTemplate", imported.source.settings.paletteTemplate},
             }},
         });
 
@@ -352,6 +376,34 @@ int main(int argc, char** argv) {
             {"atlasGroup", plan.group},
             {"colorWorkflow", plan.colorWorkflow},
             {"assetGuids", plan.assetGuids},
+        });
+    }
+
+    pack["animationBuild"] = nlohmann::json::array();
+    for (const auto& clip : animationClipPlans) {
+        pack["animationBuild"].push_back({
+            {"animationSet", clip.animationSet},
+            {"state", clip.state},
+            {"direction", clip.direction},
+            {"fps", clip.fps},
+            {"frameAssetGuids", clip.frameAssetGuids},
+        });
+    }
+
+    pack["variantBuild"] = nlohmann::json::array();
+    for (const auto& group : variantGroupPlans) {
+        nlohmann::json options = nlohmann::json::array();
+        for (const auto& option : group.options) {
+            options.push_back({
+                {"assetGuid", option.assetGuid},
+                {"variantName", option.variantName},
+                {"weight", option.weight},
+                {"paletteTemplate", option.paletteTemplate},
+            });
+        }
+        pack["variantBuild"].push_back({
+            {"group", group.group},
+            {"options", options},
         });
     }
 
@@ -401,6 +453,7 @@ int main(int argc, char** argv) {
     std::cout << "Packed patterns=" << mergedPatterns.size() << " entities=" << mergedEntities.size() << " traits=" << mergedTraits.size()
               << " archetypes=" << mergedArchetypes.size() << " encounters=" << mergedEncounters.size()
               << " palettes=" << mergedPaletteTemplates.size() << " gradients=" << mergedGradients.size() << " fxPresets=" << mergedFxPresets.size()
-              << " importedArt=" << importedAssets.size() << " atlasPlans=" << atlasPlans.size() << " -> " << outputPak << "\n";
+              << " importedArt=" << importedAssets.size() << " atlasPlans=" << atlasPlans.size()
+              << " animationClips=" << animationClipPlans.size() << " variantGroups=" << variantGroupPlans.size() << " -> " << outputPak << "\n";
     return 0;
 }

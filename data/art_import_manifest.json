@@ -2,7 +2,7 @@
   "assetManifestType": "art-import",
   "assets": [
     {
-      "name": "bullet_core",
+      "name": "bullet_core_idle_down_000",
       "kind": "sprite",
       "source": "data/art/bullet_core.png",
       "settings": {
@@ -14,9 +14,17 @@
         "filter": "linear",
         "mipPreference": "none",
         "variantGroup": "bullet_core_family",
-        "animationGroup": "",
-        "animationFps": 0.0,
-        "animationSequenceFromFilename": false
+        "variantName": "base",
+        "variantWeight": 1.0,
+        "paletteTemplate": "bullet_core_default",
+        "animationGroup": "bullet_core_idle",
+        "animationSet": "bullet_core",
+        "animationState": "idle",
+        "animationDirection": "down",
+        "animationFrame": 0,
+        "animationFps": 12.0,
+        "animationSequenceFromFilename": true,
+        "animationNamingRegex": "^([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)_([0-9]+)$"
       }
     },
     {
@@ -31,10 +39,13 @@
         "atlasGroup": "environment",
         "filter": "nearest",
         "mipPreference": "generate",
-        "variantGroup": "",
-        "animationGroup": "ambient_noise",
-        "animationFps": 8.0,
-        "animationSequenceFromFilename": true
+        "variantGroup": "environment_noise",
+        "variantNamingRegex": "^([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)$",
+        "variantWeight": 1.0,
+        "paletteTemplate": "environment_noise",
+        "animationGroup": "",
+        "animationFps": 0.0,
+        "animationSequenceFromFilename": false
       }
     }
   ]
