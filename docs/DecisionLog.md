@@ -401,3 +401,9 @@
 - **Decision**: Replace fake post overlays with shader-driven passes in `RendererModernPipeline`: half-resolution Kawase bloom (threshold + 4 blur iterations + additive composite), vignette pass, and final composite pass including tone mapping, exposure/contrast/saturation, chromatic aberration, film grain, and scanlines.
 - **Rationale**: Preserves presentation-only coupling while upgrading visual quality and making PostFx controls map directly to shader uniforms and palette FX presets.
 - **Status**: Accepted.
+
+## 2026-03-07 — GameplaySession responsibility split into runtime state partitions
+- **Context**: `GameplaySession` was carrying simulation orchestration, player combat state, progression UI flow, presentation effects, debug/tool wiring, and encounter collision scratch buffers in one undifferentiated object.
+- **Decision**: Introduce explicit state partitions (`SessionSimulationState`, `PlayerCombatState`, `ProgressionState`, `PresentationState`, `DebugToolState`, `EncounterRuntimeState`) as owned sub-objects inside `GameplaySession`, and route runtime/render integration through those boundaries.
+- **Rationale**: Preserves deterministic behavior while reducing responsibility overlap and making ownership and integration points testable.
+- **Status**: Accepted.

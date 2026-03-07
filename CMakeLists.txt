@@ -326,6 +326,11 @@ add_executable(defensive_special_tests tests/defensive_special_tests.cpp)
 target_link_libraries(defensive_special_tests PRIVATE engine_core)
 add_test(NAME defensive_special_tests COMMAND defensive_special_tests)
 
+
+add_executable(gameplay_session_state_tests tests/gameplay_session_state_tests.cpp)
+target_link_libraries(gameplay_session_state_tests PRIVATE engine_core)
+add_test(NAME gameplay_session_state_tests COMMAND gameplay_session_state_tests)
+
 add_executable(standards_tests tests/standards_tests.cpp)
 target_link_libraries(standards_tests PRIVATE engine_core)
 add_test(NAME standards_tests COMMAND standards_tests)

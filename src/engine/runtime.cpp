@@ -15,7 +15,7 @@ Runtime::Runtime(EngineConfig config)
       session_(config_) {}
 
 Runtime::~Runtime() {
-    renderPipeline_.shutdown(session_.toolSuite_);
+    renderPipeline_.shutdown(session_.debugTools_.toolSuite);
     if (window_) {
         SDL_DestroyWindow(window_);
         window_ = nullptr;
@@ -24,16 +24,16 @@ Runtime::~Runtime() {
 }
 
 void Runtime::simTick(const double dt) {
-    const std::uint32_t inputMask = input_.effectiveInputMask(session_.tickIndex_);
+    const std::uint32_t inputMask = input_.effectiveInputMask(session_.simulation_.tickIndex);
     if (!config_.replayRecordPath.empty()) {
         session_.replayRecorder_.recordTickInput(inputMask);
     }
     session_.updateGameplay(dt, inputMask);
 
     const std::uint32_t hashPeriod = session_.replayPlaybackMode_ ? session_.replayPlayer_.hashPeriodTicks() : std::max(1U, config_.replayHashPeriodTicks);
-    if ((session_.tickIndex_ % hashPeriod) == 0U) {
+    if ((session_.simulation_.tickIndex % hashPeriod) == 0U) {
         ReplayStateSample sample;
-        sample.tick = session_.tickIndex_;
+        sample.tick = session_.simulation_.tickIndex;
         sample.bulletsHash = session_.projectiles_.debugStateHash();
         sample.entitiesHash = static_cast<std::uint64_t>(session_.entitySystem_.stats().aliveTotal);
         sample.runStateHash = static_cast<std::uint64_t>(session_.runStructure_.stageIndex());
@@ -129,7 +129,7 @@ int Runtime::run() {
     if (!config_.headless) {
         window_ = SDL_CreateWindow(config_.windowTitle.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, config_.windowWidth, config_.windowHeight, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL);
         if (!window_) return 1;
-        if (!renderPipeline_.initialize(window_, config_, session_.toolSuite_)) return 1;
+        if (!renderPipeline_.initialize(window_, config_, session_.debugTools_.toolSuite)) return 1;
         if (renderPipeline_.renderer() && renderPipeline_.textures()) {
             session_.projectiles_.configurePaletteAnimations(renderPipeline_.renderer(), *renderPipeline_.textures(), session_.bulletPaletteRegistry_);
         }
@@ -155,11 +155,11 @@ int Runtime::run() {
         if (!config_.headless) {
             SDL_Event event;
             while (SDL_PollEvent(&event) != 0) {
-                session_.toolSuite_.processEvent(event);
+                session_.debugTools_.toolSuite.processEvent(event);
                 input_.processEvent(event);
                 if (event.type == SDL_QUIT) running_ = false;
                 if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_v && event.key.repeat == 0) {
-                    UpgradeDebugOptions& upgradeDebug = session_.toolSuite_.upgradeDebugOptionsMutable();
+                    UpgradeDebugOptions& upgradeDebug = session_.debugTools_.toolSuite.upgradeDebugOptionsMutable();
                     upgradeDebug.showDangerField = !upgradeDebug.showDangerField;
                     session_.setDangerFieldEnabled(upgradeDebug.showDangerField);
                 }
@@ -175,9 +175,9 @@ int Runtime::run() {
         for (std::uint32_t i = 0; i < stepResult.steps; ++i) simTick(config_.fixedDeltaSeconds);
         accumulator = stepResult.remainingAccumulator;
 
-        if (config_.targetTicks > 0 && static_cast<int>(session_.tickIndex_) >= config_.targetTicks) running_ = false;
+        if (config_.targetTicks > 0 && static_cast<int>(session_.simulation_.tickIndex) >= config_.targetTicks) running_ = false;
         if (!config_.headless) {
-            renderPipeline_.renderFrame({session_}, frameDelta, session_.toolSuite_);
+            renderPipeline_.renderFrame({session_}, frameDelta, session_.debugTools_.toolSuite);
             session_.drawUpgradeSelectionUi(frameDelta);
         }
     }

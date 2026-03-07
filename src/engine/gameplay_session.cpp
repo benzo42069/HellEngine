@@ -30,12 +30,9 @@ std::uint8_t paletteIndexFromName(const PaletteFxTemplateRegistry& registry, con
 } // namespace
 
 GameplaySession::GameplaySession(EngineConfig& config)
-    : frameAllocator_(1024 * 1024),
-      jobSystem_(),
-      rngStreams_(config.simulationSeed),
+    : simulation_(config.simulationSeed),
       config_(config) {
-    cameraShakeEvents_.reserve(16);
-    particleFx_.initialize(4096);
+    presentation_.particleFx.initialize(4096);
 }
 
 void GameplaySession::initializeContent(PatternBank& patternBank, PatternPlayer& patternPlayer) {
@@ -45,18 +42,18 @@ void GameplaySession::initializeContent(PatternBank& patternBank, PatternPlayer&
 
 void GameplaySession::onUpgradeNavigation(const UpgradeNavAction action) {
     if (action == UpgradeNavAction::ToggleScreen) {
-        upgradeScreenOpen_ = traitSystem_.hasPendingChoices() ? !upgradeScreenOpen_ : upgradeScreenOpen_;
+        progression_.upgradeScreenOpen = traitSystem_.hasPendingChoices() ? !progression_.upgradeScreenOpen : progression_.upgradeScreenOpen;
         return;
     }
-    if (!upgradeScreenOpen_ || !traitSystem_.hasPendingChoices()) return;
+    if (!progression_.upgradeScreenOpen || !traitSystem_.hasPendingChoices()) return;
 
-    if (action == UpgradeNavAction::MoveLeft) focusedUpgradeIndex_ = (focusedUpgradeIndex_ + TraitSystem::choiceCount - 1) % TraitSystem::choiceCount;
-    if (action == UpgradeNavAction::MoveRight) focusedUpgradeIndex_ = (focusedUpgradeIndex_ + 1) % TraitSystem::choiceCount;
-    if (action == UpgradeNavAction::SelectSlot1) focusedUpgradeIndex_ = 0;
-    if (action == UpgradeNavAction::SelectSlot2) focusedUpgradeIndex_ = 1;
-    if (action == UpgradeNavAction::SelectSlot3) focusedUpgradeIndex_ = 2;
+    if (action == UpgradeNavAction::MoveLeft) progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + TraitSystem::choiceCount - 1) % TraitSystem::choiceCount;
+    if (action == UpgradeNavAction::MoveRight) progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + 1) % TraitSystem::choiceCount;
+    if (action == UpgradeNavAction::SelectSlot1) progression_.focusedUpgradeIndex = 0;
+    if (action == UpgradeNavAction::SelectSlot2) progression_.focusedUpgradeIndex = 1;
+    if (action == UpgradeNavAction::SelectSlot3) progression_.focusedUpgradeIndex = 2;
     if (action == UpgradeNavAction::SelectSlot1 || action == UpgradeNavAction::SelectSlot2 || action == UpgradeNavAction::SelectSlot3 || action == UpgradeNavAction::Confirm) {
-        if (traitSystem_.choose(focusedUpgradeIndex_)) upgradeScreenOpen_ = false;
+        if (traitSystem_.choose(progression_.focusedUpgradeIndex)) progression_.upgradeScreenOpen = false;
     }
     if (action == UpgradeNavAction::Reroll) (void)traitSystem_.rerollChoices();
 }
@@ -64,15 +61,15 @@ void GameplaySession::onUpgradeNavigation(const UpgradeNavAction action) {
 void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputMask) {
     using Clock = std::chrono::steady_clock;
     const auto simStart = Clock::now();
-    gpuUpdateMsFrame_ = 0.0F;
+    debugTools_.gpuUpdateMsFrame = 0.0F;
 
-    frameAllocator_.reset();
-    auto* scratch = static_cast<std::uint64_t*>(frameAllocator_.allocate(sizeof(std::uint64_t), alignof(std::uint64_t)));
-    *scratch = tickIndex_;
+    simulation_.frameAllocator.reset();
+    auto* scratch = static_cast<std::uint64_t*>(simulation_.frameAllocator.allocate(sizeof(std::uint64_t), alignof(std::uint64_t)));
+    *scratch = simulation_.tickIndex;
 
     projectiles_.beginTick();
-    cameraShakeEvents_.clear();
-    traitSystem_.onTick(tickIndex_);
+    presentation_.cameraShakeEvents.clear();
+    traitSystem_.onTick(simulation_.tickIndex);
 
     auto emitDespawnParticles = [this]() {
         for (const ProjectileDespawnEvent& event : projectiles_.despawnEvents()) {
@@ -82,11 +79,11 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
             if (event.paletteIndex != 0 && impactColor.a == 0) {
                 impactColor = bulletPaletteTable_.get(event.paletteIndex).core;
             }
-            particleFx_.burst(event.pos, impactColor);
+            presentation_.particleFx.burst(event.pos, impactColor);
             if (event.explodeShards > 0) {
                 const float len = std::sqrt(event.pos.x * event.pos.x + event.pos.y * event.pos.y);
                 const Vec2 dir = len > 0.0001F ? Vec2 {event.pos.x / len, event.pos.y / len} : Vec2 {0.0F, -1.0F};
-                cameraShakeEvents_.push_back(ShakeParams {
+                presentation_.cameraShakeEvents.push_back(ShakeParams {
                     .profile = ShakeProfile::Explosion,
                     .amplitude = 4.0F,
                     .duration = 0.18F,
@@ -98,11 +95,11 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         }
     };
 
-    aimTarget_.x = 180.0F * std::cos(static_cast<float>(simClock_) * 0.9F);
-    aimTarget_.y = 120.0F * std::sin(static_cast<float>(simClock_) * 1.3F);
+    playerState_.aimTarget.x = 180.0F * std::cos(static_cast<float>(simulation_.simClock) * 0.9F);
+    playerState_.aimTarget.y = 120.0F * std::sin(static_cast<float>(simulation_.simClock) * 1.3F);
 
     if ((inputMask & InputDefensiveSpecial) != 0U && defensiveSpecial_.tryActivate()) {
-        cameraShakeEvents_.push_back(ShakeParams {
+        presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::SpecialPulse,
             .amplitude = 5.0F,
             .duration = 0.45F,
@@ -118,10 +115,10 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
 
     const ZoneDefinition* zoneBeforeUpdate = runStructure_.currentZone();
 
-    const std::uint32_t grazePoints = projectiles_.collectGrazePoints(playerPos_, playerRadius_, defensiveSpecial_.config().grazeBandInnerPadding, defensiveSpecial_.config().grazeBandOuterPadding, tickIndex_, defensiveSpecial_.config().grazeCooldownTicks);
+    const std::uint32_t grazePoints = projectiles_.collectGrazePoints(playerState_.playerPos, playerState_.playerRadius, defensiveSpecial_.config().grazeBandInnerPadding, defensiveSpecial_.config().grazeBandOuterPadding, simulation_.tickIndex, defensiveSpecial_.config().grazeCooldownTicks);
     if (grazePoints > 0) {
         defensiveSpecial_.addGrazePoints(grazePoints);
-        cameraShakeEvents_.push_back(ShakeParams {
+        presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::GrazeTremor,
             .amplitude = 0.8F,
             .duration = 0.10F,
@@ -132,12 +129,12 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     }
 
     const float moveStep = static_cast<float>(dt) * 120.0F;
-    if ((inputMask & InputMoveLeft) != 0U) playerPos_.x -= moveStep;
-    if ((inputMask & InputMoveRight) != 0U) playerPos_.x += moveStep;
-    if ((inputMask & InputMoveUp) != 0U) playerPos_.y -= moveStep;
-    if ((inputMask & InputMoveDown) != 0U) playerPos_.y += moveStep;
-    playerPos_.x = std::clamp(playerPos_.x, 0.0F, static_cast<float>(engineStandards().playfieldWidth));
-    playerPos_.y = std::clamp(playerPos_.y, 0.0F, static_cast<float>(engineStandards().playfieldHeight));
+    if ((inputMask & InputMoveLeft) != 0U) playerState_.playerPos.x -= moveStep;
+    if ((inputMask & InputMoveRight) != 0U) playerState_.playerPos.x += moveStep;
+    if ((inputMask & InputMoveUp) != 0U) playerState_.playerPos.y -= moveStep;
+    if ((inputMask & InputMoveDown) != 0U) playerState_.playerPos.y += moveStep;
+    playerState_.playerPos.x = std::clamp(playerState_.playerPos.x, 0.0F, static_cast<float>(engineStandards().playfieldWidth));
+    playerState_.playerPos.y = std::clamp(playerState_.playerPos.y, 0.0F, static_cast<float>(engineStandards().playfieldHeight));
 
     const auto patternStart = Clock::now();
     if (!config_.stress10k) {
@@ -145,16 +142,16 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         const MetaBonuses& mb = metaProgression_.bonuses();
         const auto rareChanceMultiplier = 1.0F + (archetype.stats.rareChance + mb.rarityBonus) * 0.06F;
         traitSystem_.setRareChanceMultiplier(rareChanceMultiplier);
-        if (tickIndex_ > 0 && tickIndex_ % 300 == 0 && !traitSystem_.hasPendingChoices()) {
+        if (simulation_.tickIndex > 0 && simulation_.tickIndex % 300 == 0 && !traitSystem_.hasPendingChoices()) {
             (void)traitSystem_.rollChoices();
-            upgradeScreenOpen_ = true;
+            progression_.upgradeScreenOpen = true;
         }
-        const UpgradeDebugOptions& upgradeDebug = toolSuite_.upgradeDebugOptions();
-        perfHudOpen_ = upgradeDebug.showPerfHud;
-        dangerFieldEnabled_ = upgradeDebug.showDangerField;
+        const UpgradeDebugOptions& upgradeDebug = debugTools_.toolSuite.upgradeDebugOptions();
+        debugTools_.perfHudOpen = upgradeDebug.showPerfHud;
+        presentation_.dangerFieldEnabled = upgradeDebug.showDangerField;
         if (upgradeDebug.spawnUpgradeScreen && !traitSystem_.hasPendingChoices()) {
             (void)traitSystem_.rollChoices();
-            upgradeScreenOpen_ = true;
+            progression_.upgradeScreenOpen = true;
         }
         if (upgradeDebug.forcedRarity >= 0 && traitSystem_.hasPendingChoices()) {
             traitSystem_.forcePendingRarity(static_cast<TraitRarity>(upgradeDebug.forcedRarity));
@@ -163,7 +160,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         const TraitModifiers& tm = traitSystem_.modifiers();
         if (zoneBeforeUpdate) difficultyModel_.setStageZone(runStructure_.stageIndex(), zoneBeforeUpdate->type);
         const DifficultyScalars diffScalars = difficultyModel_.scalars();
-        playerRadius_ = 10.0F + (archetype.stats.defense + mb.defenseBonus) * 0.45F + tm.playerRadiusAdd;
+        playerState_.playerRadius = 10.0F + (archetype.stats.defense + mb.defenseBonus) * 0.45F + tm.playerRadiusAdd;
         const float fireRateScale = 0.80F + (archetype.stats.fireRate + mb.fireRateBonus) * 0.05F;
         patternPlayer_.setRuntimeModifiers(tm.patternCooldownScale / fireRateScale, tm.patternExtraBullets, tm.patternJitterAddDeg);
 
@@ -182,7 +179,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         };
         if (useCompiledPatternGraph_ && !patternBank_.compiledGraphs().empty()) {
             graphVmState_.difficultyScalar = diffScalars.patternSpeed;
-            graphVm_.execute(patternBank_.compiledGraphs().front(), graphVmState_, static_cast<float>(dt), {0.0F, 0.0F}, aimTarget_,
+            graphVm_.execute(patternBank_.compiledGraphs().front(), graphVmState_, static_cast<float>(dt), {0.0F, 0.0F}, playerState_.aimTarget,
                 [this, &tm, &archetype, &mb, &diffScalars, playerPaletteIndex](const ProjectileSpawn& spawn) {
                     ProjectileSpawn mod = spawn;
                     mod.allegiance = ProjectileAllegiance::Player;
@@ -194,7 +191,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                     projectiles_.spawn(mod);
                 });
         } else {
-            patternPlayer_.update(static_cast<float>(dt), {0.0F, 0.0F}, aimTarget_, emitWithRuntimeMods);
+            patternPlayer_.update(static_cast<float>(dt), {0.0F, 0.0F}, playerState_.aimTarget, emitWithRuntimeMods);
         }
 
         EntityRuntimeModifiers em;
@@ -213,7 +210,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         }
         profiler_.addZoneTime(PerfZone::Patterns, std::chrono::duration<double, std::milli>(Clock::now() - patternStart).count());
         const auto bulletStart = Clock::now();
-        entitySystem_.update(static_cast<float>(dt) * dilation.enemyMovement, projectiles_, playerPos_, em);
+        entitySystem_.update(static_cast<float>(dt) * dilation.enemyMovement, projectiles_, playerState_.playerPos, em);
         profiler_.addZoneTime(PerfZone::Bullets, std::chrono::duration<double, std::milli>(Clock::now() - bulletStart).count());
     }
 
@@ -221,8 +218,8 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         projectiles_.updateMotion(static_cast<float>(dt), dilation.enemyProjectiles, dilation.playerProjectiles);
         emitDespawnParticles();
         projectiles_.buildGrid();
-        if (dangerFieldEnabled_) {
-            dangerField_.buildFromGrid(
+        if (presentation_.dangerFieldEnabled) {
+            presentation_.dangerField.buildFromGrid(
                 projectiles_.gridHead(),
                 projectiles_.gridNext(),
                 projectiles_.posX(),
@@ -233,22 +230,22 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 projectiles_.worldHalfExtent()
             );
         }
-        collisionTargetCount_ = 0;
-        collisionTargets_[collisionTargetCount_++] = CollisionTarget {.pos = playerPos_, .radius = playerRadius_, .id = 0U, .team = 0U};
-        entitySystem_.appendCollisionTargets(collisionTargets_, collisionTargetCount_);
-        collisionEventCount_ = 0;
+        encounter_.collisionTargetCount = 0;
+        encounter_.collisionTargets[encounter_.collisionTargetCount++] = CollisionTarget {.pos = playerState_.playerPos, .radius = playerState_.playerRadius, .id = 0U, .team = 0U};
+        entitySystem_.appendCollisionTargets(encounter_.collisionTargets, encounter_.collisionTargetCount);
+        encounter_.collisionEventCount = 0;
         projectiles_.resolveCollisions(
-            std::span<const CollisionTarget>(collisionTargets_.data(), collisionTargetCount_),
-            collisionEvents_,
-            collisionEventCount_
+            std::span<const CollisionTarget>(encounter_.collisionTargets.data(), encounter_.collisionTargetCount),
+            encounter_.collisionEvents,
+            encounter_.collisionEventCount
         );
         emitDespawnParticles();
-        for (std::uint32_t collisionIndex = 0; collisionIndex < collisionEventCount_; ++collisionIndex) {
-            const CollisionEvent& e = collisionEvents_[collisionIndex];
+        for (std::uint32_t collisionIndex = 0; collisionIndex < encounter_.collisionEventCount; ++collisionIndex) {
+            const CollisionEvent& e = encounter_.collisionEvents[collisionIndex];
             if (e.targetId != 0U || e.bulletIndex >= projectiles_.capacity()) continue;
             const Vec2 hitPos {projectiles_.posX()[e.bulletIndex], projectiles_.posY()[e.bulletIndex]};
-            const Vec2 dir = {playerPos_.x - hitPos.x, playerPos_.y - hitPos.y};
-            cameraShakeEvents_.push_back(ShakeParams {
+            const Vec2 dir = {playerState_.playerPos.x - hitPos.x, playerState_.playerPos.y - hitPos.y};
+            presentation_.cameraShakeEvents.push_back(ShakeParams {
                 .profile = ShakeProfile::Impact,
                 .amplitude = 3.5F,
                 .duration = 0.16F,
@@ -257,14 +254,14 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 .damping = 12.0F,
             });
         }
-        entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(collisionEvents_.data(), collisionEventCount_));
+        entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(encounter_.collisionEvents.data(), encounter_.collisionEventCount));
     }
 
-    particleFx_.update(static_cast<float>(dt));
-    runStructure_.update(static_cast<float>(dt), entitySystem_.stats().defeatedBosses, playerHealth_ > 0.0F);
+    presentation_.particleFx.update(static_cast<float>(dt));
+    runStructure_.update(static_cast<float>(dt), entitySystem_.stats().defeatedBosses, playerState_.playerHealth > 0.0F);
     const ZoneDefinition* zoneAfterUpdate = runStructure_.currentZone();
     if (zoneBeforeUpdate && zoneAfterUpdate && zoneBeforeUpdate->type != zoneAfterUpdate->type && zoneAfterUpdate->type == ZoneType::Boss) {
-        cameraShakeEvents_.push_back(ShakeParams {
+        presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::BossRumble,
             .amplitude = 7.5F,
             .duration = 1.2F,
@@ -274,7 +271,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         });
     }
     if (zoneAfterUpdate && (zoneAfterUpdate->type == ZoneType::Combat || zoneAfterUpdate->type == ZoneType::Elite || zoneAfterUpdate->type == ZoneType::Boss)) {
-        cameraShakeEvents_.push_back(ShakeParams {
+        presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::Ambient,
             .amplitude = 0.18F,
             .duration = 0.0F,
@@ -283,14 +280,14 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
             .damping = 0.0F,
         });
     }
-    simClock_ += dt;
-    ++tickIndex_;
+    simulation_.simClock += dt;
+    ++simulation_.tickIndex;
     profiler_.addZoneTime(PerfZone::Simulation, std::chrono::duration<double, std::milli>(Clock::now() - simStart).count());
 }
 
 std::vector<ShakeParams> GameplaySession::consumeCameraShakeEvents() const {
     std::vector<ShakeParams> out;
-    out.swap(cameraShakeEvents_);
+    out.swap(presentation_.cameraShakeEvents);
     return out;
 }
 
@@ -315,23 +312,23 @@ bool GameplaySession::hasSynergyWithActive(const Trait& trait) const {
 
 
 void GameplaySession::renderDangerFieldOverlay(SDL_Renderer* renderer, const Camera2D& camera, const float opacity) const {
-    if (!dangerFieldEnabled_) return;
-    dangerField_.render(renderer, camera, opacity);
+    if (!presentation_.dangerFieldEnabled) return;
+    presentation_.dangerField.render(renderer, camera, opacity);
 }
 void GameplaySession::drawUpgradeSelectionUi(const double frameDelta) {
-    if (!upgradeScreenOpen_ || !traitSystem_.hasPendingChoices()) return;
+    if (!progression_.upgradeScreenOpen || !traitSystem_.hasPendingChoices()) return;
     const ImVec2 viewport = ImGui::GetMainViewport()->Size;
     ImGui::SetNextWindowPos(ImVec2(20.0F, 40.0F), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(viewport.x - 40.0F, viewport.y - 80.0F), ImGuiCond_Always);
     ImGui::Begin("Upgrade Selection", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
     ImGui::TextUnformatted("Choose an upgrade");
     ImGui::SameLine();
-    ImGui::Text("Rerolls: %d (cooldown: %llut)", traitSystem_.rerollCharges(), static_cast<unsigned long long>(traitSystem_.rerollCooldownRemainingTicks(tickIndex_)));
+    ImGui::Text("Rerolls: %d (cooldown: %llut)", traitSystem_.rerollCharges(), static_cast<unsigned long long>(traitSystem_.rerollCooldownRemainingTicks(simulation_.tickIndex)));
     const auto& choices = traitSystem_.pendingChoices();
     for (std::size_t i = 0; i < choices.size(); ++i) {
         UpgradeCardAnimState& anim = cardAnim_[i];
         anim.appearT = std::min(1.0F, anim.appearT + static_cast<float>(frameDelta) * 3.0F);
-        anim.hoverT = (i == focusedUpgradeIndex_) ? std::min(1.0F, anim.hoverT + static_cast<float>(frameDelta) * 6.0F) : std::max(0.0F, anim.hoverT - static_cast<float>(frameDelta) * 6.0F);
+        anim.hoverT = (i == progression_.focusedUpgradeIndex) ? std::min(1.0F, anim.hoverT + static_cast<float>(frameDelta) * 6.0F) : std::max(0.0F, anim.hoverT - static_cast<float>(frameDelta) * 6.0F);
         const Trait& t = choices[i];
         ImGui::PushID(static_cast<int>(i));
         ImGui::BeginGroup();
@@ -344,7 +341,7 @@ void GameplaySession::drawUpgradeSelectionUi(const double frameDelta) {
         ImGui::Separator();
         ImGui::TextWrapped("%s", t.description.c_str());
         if (hasSynergyWithActive(t)) ImGui::TextColored(ImVec4(0.25F, 0.9F, 0.45F, 1.0F), "Synergy with current build");
-        if (i == focusedUpgradeIndex_) ImGui::TextColored(ImVec4(1.0F, 0.9F, 0.3F, 1.0F), "Focused (Enter / A to select)");
+        if (i == progression_.focusedUpgradeIndex) ImGui::TextColored(ImVec4(1.0F, 0.9F, 0.3F, 1.0F), "Focused (Enter / A to select)");
         ImGui::EndChild();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
@@ -352,7 +349,7 @@ void GameplaySession::drawUpgradeSelectionUi(const double frameDelta) {
         ImGui::EndGroup();
         ImGui::PopID();
     }
-    const Trait& focused = choices[focusedUpgradeIndex_];
+    const Trait& focused = choices[progression_.focusedUpgradeIndex];
     const UpgradeViewStats current = buildCurrentViewStats();
     const UpgradeViewStats projected = buildProjectedViewStats(focused);
     ImGui::Separator();
@@ -364,7 +361,7 @@ void GameplaySession::drawUpgradeSelectionUi(const double frameDelta) {
     if (ImGui::Button("Reroll [X]")) (void)traitSystem_.rerollChoices();
     ImGui::SameLine();
     if (ImGui::Button("Select Focused [Enter]")) {
-        if (traitSystem_.choose(focusedUpgradeIndex_)) upgradeScreenOpen_ = false;
+        if (traitSystem_.choose(progression_.focusedUpgradeIndex)) progression_.upgradeScreenOpen = false;
     }
     ImGui::End();
 }

@@ -300,3 +300,14 @@ Goal: A designer can build a complete boss encounter end-to-end in the editor.
 4. **Multiplayer / networking:** The spec mentions "optional deterministic co-op/networking" post-1.0. The current input system uses `SDL_GetKeyboardState` directly. If networking is planned, the input abstraction needs to be designed now (command buffer → deterministic dispatch) even if network transport comes later. The current replay system is a good foundation but the input model needs formalization.
 
 5. **Plugin ABI stability:** The public API headers (`api.h`, `plugins.h`) expose raw C++ interfaces. For binary plugin compatibility across compiler versions, a C ABI boundary is needed. Is the plugin system intended for source-level or binary-level extensibility?
+
+## Audit Follow-up (2026-03-07): GameplaySession Responsibility Overload Refactor
+
+Implemented architectural remediation for the previously identified overloaded `GameplaySession` responsibilities:
+- Separated simulation/session orchestration state from player combat state.
+- Isolated progression/upgrade UI runtime state from presentation event state.
+- Isolated camera-shake + danger-field visual hooks in a dedicated presentation partition.
+- Isolated debug/tool consumption state in a dedicated debug partition.
+- Isolated encounter collision/danger-field-adjacent runtime scratch data in a dedicated encounter partition.
+
+Result: ownership boundaries are now explicit and testable while preserving deterministic replay behavior.
