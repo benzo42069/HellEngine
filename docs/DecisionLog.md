@@ -481,3 +481,9 @@
 - **Decision**: Added compact `activeSlots_` + `slotToActiveIndex_` bookkeeping so update/render loops iterate only live bullets.
 - **Rationale**: Improves scaling behavior and profiling clarity at high bullet counts while preserving deterministic update order within active set transitions.
 - **Status**: Accepted.
+
+## 2026-03-07 — GlBulletRenderer single-draw-call OpenGL bullet rendering with SpriteBatch fallback
+- **Context**: Shader cache, grayscale sprite atlas, and palette ramp texture pipeline were available but runtime bullets still defaulted to CPU SpriteBatch quads.
+- **Decision**: Wire `GlBulletRenderer` into `RenderPipeline` to rebuild one CPU vertex/index stream each frame and submit bullets + trails in a single OpenGL draw call when GL is available; keep existing `renderProcedural` fallback for non-GL/runtime-failure paths.
+- **Rationale**: Preserves deterministic simulation ownership and replay/hash boundaries while unlocking GPU-side presentation throughput and reducing draw-call overhead.
+- **Status**: Accepted.

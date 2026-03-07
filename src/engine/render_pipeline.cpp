@@ -111,7 +111,7 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
     if (glReady_) {
         const bool rampOk = paletteRamp_.generate(PaletteFxTemplateRegistry {}, BulletPaletteTable {}, 64);
         std::string bulletError;
-        if (!rampOk || !glBulletRenderer_.initialize(shaderCache_, spriteAtlas_, paletteRamp_, config_.projectileCapacity, &bulletError)) {
+        if (!rampOk || !glBulletRenderer_.initialize(shaderCache_, config_.projectileCapacity, &bulletError)) {
             logWarn("OpenGL bullet renderer init failed: " + bulletError + " Falling back to SpriteBatch bullets.");
             glBulletRenderer_.shutdown();
         }
@@ -258,7 +258,7 @@ void RenderPipeline::ensureZoneBackground(const GameplaySession& session) {
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
     const GameplaySession& s = snapshot.session;
     if (s.bulletSimMode_ == BulletSimulationMode::CpuCollisionDeterministic) {
-        const bool canUseGlBullets = glReady_ && paletteRamp_.valid();
+        const bool canUseGlBullets = glReady_ && glBulletRenderer_.initialized() && paletteRamp_.valid();
         if (canUseGlBullets) {
             const auto& posX = s.projectiles_.posX();
             const auto& posY = s.projectiles_.posY();
@@ -267,7 +267,13 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
             const auto& radius = s.projectiles_.radius();
             const auto& life = s.projectiles_.life();
             const auto& paletteIndex = s.projectiles_.paletteIndex();
+            const auto& shape = s.projectiles_.shape();
             const auto& active = s.projectiles_.active();
+            const auto& allegiance = s.projectiles_.allegiance();
+            const auto& enableTrails = s.projectiles_.enableTrails();
+            const auto& trailX = s.projectiles_.trailX();
+            const auto& trailY = s.projectiles_.trailY();
+            const auto& trailHead = s.projectiles_.trailHead();
             const auto& activeIndices = s.projectiles_.activeIndices();
             glBulletRenderer_.buildVertexBuffer(
                 posX.data(),
@@ -277,14 +283,25 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
                 radius.data(),
                 life.data(),
                 paletteIndex.data(),
+                shape.data(),
                 active.data(),
+                allegiance.data(),
+                enableTrails.data(),
+                trailX.data(),
+                trailY.data(),
+                trailHead.data(),
+                ProjectileSystem::kTrailLength,
                 activeIndices.data(),
                 s.projectiles_.activeCount(),
-                s.projectiles_.capacity(),
-                BulletShape::Circle
+                camera_,
+                spriteAtlas_,
+                paletteRamp_,
+                s.bulletPaletteTable_,
+                s.projectiles_.gradientAnimator(),
+                static_cast<float>(s.simulation_.simClock)
             );
         } else {
-            s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_, static_cast<float>(s.simClock_));
+            s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_, static_cast<float>(s.simulation_.simClock));
         }
         s.particleFx_.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
         s.projectiles_.debugDraw(debugDraw_, true, true);
@@ -319,7 +336,7 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     buildSceneOverlay(snapshot, frameDelta);
     spriteBatch_.flush(renderer_, *textures_);
     if (glReady_ && paletteRamp_.valid()) {
-        glBulletRenderer_.render(camera_, static_cast<float>(snapshot.session.simClock_), paletteRamp_, camera_.viewportWidth(), camera_.viewportHeight());
+        glBulletRenderer_.render(camera_, static_cast<float>(snapshot.session.simulation_.simClock), spriteAtlas_, paletteRamp_, camera_.viewportWidth(), camera_.viewportHeight());
     }
     debugDraw_.flush(renderer_, camera_);
     snapshot.session.renderDangerFieldOverlay(renderer_, camera_);
