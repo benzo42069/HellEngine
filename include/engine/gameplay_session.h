@@ -28,6 +28,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace engine {
 
@@ -46,6 +47,7 @@ class GameplaySession {
     void updateGameplay(double dt, std::uint32_t inputMask);
     void drawUpgradeSelectionUi(double frameDelta);
     void renderDangerFieldOverlay(SDL_Renderer* renderer, const Camera2D& camera, float opacity = 0.25F) const;
+    [[nodiscard]] std::vector<ShakeParams> consumeCameraShakeEvents() const;
 
     [[nodiscard]] Vec2 playerPos() const { return playerPos_; }
     [[nodiscard]] Vec2 aimTarget() const { return aimTarget_; }
@@ -99,6 +101,7 @@ class GameplaySession {
     std::string difficultyProfileLabelCache_ {"Normal"};
     std::vector<CollisionTarget> collisionTargets_ {};
     std::vector<CollisionEvent> collisionEvents_ {};
+    mutable std::vector<ShakeParams> cameraShakeEvents_ {};
 
   private:
     UpgradeViewStats buildCurrentViewStats() const;

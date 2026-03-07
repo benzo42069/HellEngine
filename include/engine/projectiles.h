@@ -79,6 +79,7 @@ struct ProjectileDespawnEvent {
     Vec2 pos;
     std::uint8_t paletteIndex {0};
     ProjectileAllegiance allegiance {ProjectileAllegiance::Enemy};
+    std::uint8_t explodeShards {0};
 };
 
 class ProjectileSystem {
