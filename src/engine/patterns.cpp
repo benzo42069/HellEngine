@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
+#include <filesystem>
 #include <numbers>
 #include <unordered_map>
 
@@ -182,9 +183,9 @@ bool PatternBank::loadFromFile(const std::string& filePath) {
             logError("Pattern pack metadata error: " + metaError + " path=" + packPath);
             return false;
         }
-        constexpr int kRuntimePackVersion = 3;
-        if (kRuntimePackVersion < metadata.minRuntimePackVersion || kRuntimePackVersion > metadata.maxRuntimePackVersion) {
-            logError("Pattern pack compatibility mismatch for pack=" + metadata.packId + " path=" + packPath + " runtimeVersion=" + std::to_string(kRuntimePackVersion));
+        const int runtimePackVersion = kRuntimePackVersion;
+        if (runtimePackVersion < metadata.minRuntimePackVersion || runtimePackVersion > metadata.maxRuntimePackVersion) {
+            logError("Pattern pack compatibility mismatch for pack=" + metadata.packId + " path=" + packPath + " runtimeVersion=" + std::to_string(runtimePackVersion));
             return false;
         }
 
@@ -224,6 +225,28 @@ bool PatternBank::loadFromFile(const std::string& filePath) {
     }
 
     return !patterns_.empty();
+}
+
+
+bool PatternBank::loadFromString(const std::string& jsonText) {
+    const auto tempRoot = std::filesystem::temp_directory_path();
+    const auto tempPath = tempRoot / ("hellengine_patterns_" + std::to_string(stableHash64(jsonText)) + ".json");
+
+    {
+        std::ofstream out(tempPath, std::ios::binary | std::ios::trunc);
+        if (!out) {
+            return false;
+        }
+        out.write(jsonText.data(), static_cast<std::streamsize>(jsonText.size()));
+        if (!out) {
+            return false;
+        }
+    }
+
+    const bool loaded = loadFromFile(tempPath.string());
+    std::error_code ec;
+    std::filesystem::remove(tempPath, ec);
+    return loaded;
 }
 
 std::size_t PatternBank::findPatternIndexByGuidOrName(const std::string& ref) const {

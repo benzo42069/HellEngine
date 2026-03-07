@@ -191,3 +191,11 @@ Run performance check:
 ## Audio prerequisites
 - Build now fetches `SDL_mixer` via CMake `FetchContent`.
 - Optional audio assets expected under `data/audio/` (e.g. `hit.wav`, `graze.wav`, `phase_warn.wav`, `special.wav`). Missing files are tolerated and runtime continues silently.
+## Catch2 test usage
+- Catch2 v3.5.2 is integrated through CMake `FetchContent` for selected test binaries.
+- CTest still runs the full suite (both Catch2-discovered and legacy add_test targets):
+  - `ctest --test-dir build --output-on-failure`
+- Run deterministic-tagged Catch2 cases through CTest regex filtering:
+  - `ctest --test-dir build --output-on-failure -R "\[determinism\]"`
+- Use verbose CTest output when debugging failures:
+  - `ctest --test-dir build --output-on-failure -V`

@@ -43,6 +43,24 @@ int main(int argc, char** argv) {
         std::cerr << "generated pak missing importRegistry\n";
         return EXIT_FAILURE;
     }
+    if (!pakJson.contains("schemaVersion") || pakJson["schemaVersion"].get<int>() != 2) {
+        std::cerr << "generated pak missing expected schemaVersion=2\n";
+        return EXIT_FAILURE;
+    }
+    if (!pakJson.contains("packVersion") || pakJson["packVersion"].get<int>() != 4) {
+        std::cerr << "generated pak missing expected packVersion=4\n";
+        return EXIT_FAILURE;
+    }
+    if (!pakJson.contains("compatibility") || !pakJson["compatibility"].is_object()) {
+        std::cerr << "generated pak missing compatibility metadata\n";
+        return EXIT_FAILURE;
+    }
+    const auto& compatibility = pakJson["compatibility"];
+    if (!compatibility.contains("minRuntimePackVersion") || compatibility["minRuntimePackVersion"].get<int>() != 2 ||
+        !compatibility.contains("maxRuntimePackVersion") || compatibility["maxRuntimePackVersion"].get<int>() != 4) {
+        std::cerr << "generated pak compatibility range mismatch\n";
+        return EXIT_FAILURE;
+    }
     if (!pakJson.contains("atlasBuild") || !pakJson["atlasBuild"].is_array()) {
         std::cerr << "generated pak missing atlasBuild metadata\n";
         return EXIT_FAILURE;

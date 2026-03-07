@@ -2,6 +2,7 @@
 
 #include <engine/archetypes.h>
 #include <engine/bullet_palette.h>
+#include <engine/camera_shake.h>
 #include <engine/config.h>
 #include <engine/danger_field.h>
 #include <engine/defensive_special.h>
@@ -35,7 +36,7 @@ namespace engine {
 struct SessionSimulationState {
     FrameAllocator frameAllocator {1024 * 1024};
     JobSystem jobSystem {};
-    RngStreams rngStreams {};
+    RngStreams rngStreams;
     std::uint64_t tickIndex {0};
     double simClock {0.0};
 

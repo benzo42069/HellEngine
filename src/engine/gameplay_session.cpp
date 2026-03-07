@@ -86,7 +86,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 const Vec2 dir = len > 0.0001F ? Vec2 {event.pos.x / len, event.pos.y / len} : Vec2 {0.0F, -1.0F};
                 presentation_.cameraShakeEvents.push_back(ShakeParams {
                     .profile = ShakeProfile::Explosion,
-                    .amplitude = 4.0F,
+                    .amplitude = 3.0F,
                     .duration = 0.18F,
                     .direction = dir,
                     .frequency = 36.0F,
@@ -102,7 +102,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     if ((inputMask & InputDefensiveSpecial) != 0U && defensiveSpecial_.tryActivate()) {
         presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::SpecialPulse,
-            .amplitude = 5.0F,
+            .amplitude = 2.0F,
             .duration = 0.45F,
             .direction = {0.0F, 0.0F},
             .frequency = 12.0F,
@@ -122,7 +122,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         defensiveSpecial_.addGrazePoints(grazePoints);
         presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::GrazeTremor,
-            .amplitude = 0.8F,
+            .amplitude = 0.5F,
             .duration = 0.10F,
             .direction = {0.0F, 0.0F},
             .frequency = 110.0F,
@@ -295,8 +295,8 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     if (zoneBeforeUpdate && zoneAfterUpdate && zoneBeforeUpdate->type != zoneAfterUpdate->type && zoneAfterUpdate->type == ZoneType::Boss) {
         presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::BossRumble,
-            .amplitude = 7.5F,
-            .duration = 1.2F,
+            .amplitude = 4.0F,
+            .duration = 0.4F,
             .direction = {0.0F, 0.0F},
             .frequency = 8.0F,
             .damping = 2.0F,
@@ -306,7 +306,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     if (zoneAfterUpdate && (zoneAfterUpdate->type == ZoneType::Combat || zoneAfterUpdate->type == ZoneType::Elite || zoneAfterUpdate->type == ZoneType::Boss)) {
         presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::Ambient,
-            .amplitude = 0.18F,
+            .amplitude = 0.12F,
             .duration = 0.0F,
             .direction = {0.0F, 0.0F},
             .frequency = 2.0F,
