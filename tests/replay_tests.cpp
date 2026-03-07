@@ -1,11 +1,11 @@
 #include <engine/replay.h>
 #include <engine/deterministic_rng.h>
 
-#include <filesystem>
-#include <cstdlib>
-#include <iostream>
+#include <catch2/catch_test_macros.hpp>
 
-int main() {
+#include <filesystem>
+
+TEST_CASE("Replay record load and verify", "[replay]") {
     engine::ReplayRecorder rec;
     rec.begin(777, engine::buildContentVersionTag("content.pak"), engine::buildContentHashTag("content.pak"), 30);
     rec.recordTickInput(engine::InputMoveLeft | engine::InputMoveUp);
@@ -28,60 +28,30 @@ int main() {
     rec.recordStateSample(s1);
 
     const std::string path = "replay_test.json";
-    if (!rec.save(path)) {
-        std::cerr << "failed to save replay\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(rec.save(path));
 
     engine::ReplayPlayer player;
-    if (!player.load(path)) {
-        std::cerr << "failed to load replay\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(player.load(path));
 
-    if (!player.validFor(777, engine::buildContentVersionTag("content.pak"), engine::buildContentHashTag("content.pak"))) {
-        std::cerr << "replay header validation failed\n";
-        return EXIT_FAILURE;
-    }
-
-    if (player.hashPeriodTicks() != 30) {
-        std::cerr << "hash period mismatch\n";
-        return EXIT_FAILURE;
-    }
-
-    if (player.inputForTick(0) != (engine::InputMoveLeft | engine::InputMoveUp)) {
-        std::cerr << "tick0 input mismatch\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(player.validFor(777, engine::buildContentVersionTag("content.pak"), engine::buildContentHashTag("content.pak")));
+    REQUIRE(player.hashPeriodTicks() == 30);
+    REQUIRE(player.inputForTick(0) == (engine::InputMoveLeft | engine::InputMoveUp));
 
     engine::ReplayMismatch mismatch;
-    if (!player.verifyStateSample(s1, &mismatch)) {
-        std::cerr << "state sample should match\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(player.verifyStateSample(s1, &mismatch));
 
     engine::ReplayStateSample bad = s1;
     bad.bulletsHash += 1;
     bad.totalHash = engine::computeReplayStateHash(bad.tick, bad.bulletsHash, bad.entitiesHash, bad.runStateHash);
-    if (player.verifyStateSample(bad, &mismatch) || mismatch.subsystem != engine::ReplaySubsystem::Bullets) {
-        std::cerr << "state mismatch classification failed\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE_FALSE(player.verifyStateSample(bad, &mismatch));
+    REQUIRE(mismatch.subsystem == engine::ReplaySubsystem::Bullets);
 
-
-    if (engine::stableHash64("sim") != 0x82489E195CECBF94ULL || engine::stableHash64("gpu-bullets") != 0xD206C4205F96CCB1ULL) {
-        std::cerr << "stableHash64 regression\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(engine::stableHash64("sim") == 0x82489E195CECBF94ULL);
+    REQUIRE(engine::stableHash64("gpu-bullets") == 0xD206C4205F96CCB1ULL);
 
     const auto h1 = engine::computeReplayStateHash(12, 9, 3, 145);
     const auto h2 = engine::computeReplayStateHash(12, 9, 3, 145);
-    if (h1 != h2) {
-        std::cerr << "hash function not deterministic\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(h1 == h2);
 
     std::filesystem::remove(path);
-    std::cout << "replay_tests passed\n";
-    return EXIT_SUCCESS;
 }

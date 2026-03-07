@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
+#include <filesystem>
 #include <numbers>
 #include <unordered_map>
 
@@ -224,6 +225,28 @@ bool PatternBank::loadFromFile(const std::string& filePath) {
     }
 
     return !patterns_.empty();
+}
+
+
+bool PatternBank::loadFromString(const std::string& jsonText) {
+    const auto tempRoot = std::filesystem::temp_directory_path();
+    const auto tempPath = tempRoot / ("hellengine_patterns_" + std::to_string(stableHash64(jsonText)) + ".json");
+
+    {
+        std::ofstream out(tempPath, std::ios::binary | std::ios::trunc);
+        if (!out) {
+            return false;
+        }
+        out.write(jsonText.data(), static_cast<std::streamsize>(jsonText.size()));
+        if (!out) {
+            return false;
+        }
+    }
+
+    const bool loaded = loadFromFile(tempPath.string());
+    std::error_code ec;
+    std::filesystem::remove(tempPath, ec);
+    return loaded;
 }
 
 std::size_t PatternBank::findPatternIndexByGuidOrName(const std::string& ref) const {

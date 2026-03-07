@@ -411,6 +411,13 @@ Completed items:
 - Validation:
   - Updated `gpu_bullets_tests` to cover renamed class usage and clear/reset bookkeeping checks.
 
+## Phase 7 — Testing framework modernization (Completed)
+### Completed items
+- Integrated Catch2 v3.5.2 in CMake with `FetchContent` and `catch_discover_tests` support.
+- Migrated five core tests to Catch2 while preserving all existing assertions/validation intent.
+- Added determinism property tests (`[determinism][property]`) for seed/hash stability checks.
+- Added malformed-content fuzz test (`[fuzz]`) for pattern loader crash resilience.
+- Kept the remaining legacy test executables unchanged.
 ## 2026-03-07 — Camera shake vocabulary rollout (Completed)
 - Added a dedicated `CameraShakeSystem` module (`camera_shake.h/.cpp`) with six profiles, additive blending, max 4 simultaneous instances, and ±20 px clamped aggregate offsets.
 - Updated render integration so frame-time camera updates consume emitted shake events through profile-based `ShakeParams` instead of single-mode shake usage.
