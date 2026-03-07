@@ -21,6 +21,7 @@ GameplaySession::GameplaySession(EngineConfig& config)
       config_(config) {
     collisionTargets_.reserve(1024);
     collisionEvents_.reserve(16384);
+    cameraShakeEvents_.reserve(16);
     particleFx_.initialize(4096);
 }
 
@@ -57,6 +58,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     *scratch = tickIndex_;
 
     projectiles_.beginTick();
+    cameraShakeEvents_.clear();
     traitSystem_.onTick(tickIndex_);
 
     auto emitDespawnParticles = [this]() {
@@ -68,20 +70,53 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 impactColor = bulletPaletteTable_.get(event.paletteIndex).core;
             }
             particleFx_.burst(event.pos, impactColor);
+            if (event.explodeShards > 0) {
+                const float len = std::sqrt(event.pos.x * event.pos.x + event.pos.y * event.pos.y);
+                const Vec2 dir = len > 0.0001F ? Vec2 {event.pos.x / len, event.pos.y / len} : Vec2 {0.0F, -1.0F};
+                cameraShakeEvents_.push_back(ShakeParams {
+                    .profile = ShakeProfile::Explosion,
+                    .amplitude = 4.0F,
+                    .duration = 0.18F,
+                    .direction = dir,
+                    .frequency = 36.0F,
+                    .damping = 11.0F,
+                });
+            }
         }
     };
 
     aimTarget_.x = 180.0F * std::cos(static_cast<float>(simClock_) * 0.9F);
     aimTarget_.y = 120.0F * std::sin(static_cast<float>(simClock_) * 1.3F);
 
-    if ((inputMask & InputDefensiveSpecial) != 0U) (void)defensiveSpecial_.tryActivate();
+    if ((inputMask & InputDefensiveSpecial) != 0U && defensiveSpecial_.tryActivate()) {
+        cameraShakeEvents_.push_back(ShakeParams {
+            .profile = ShakeProfile::SpecialPulse,
+            .amplitude = 5.0F,
+            .duration = 0.45F,
+            .direction = {0.0F, 0.0F},
+            .frequency = 12.0F,
+            .damping = 3.5F,
+        });
+    }
 
     const TraitModifiers& traitModsForSpecial = traitSystem_.modifiers();
     defensiveSpecial_.update(static_cast<float>(dt), traitModsForSpecial);
     const TimeDilationScales dilation = defensiveSpecial_.dilationScales();
 
+    const ZoneDefinition* zoneBeforeUpdate = runStructure_.currentZone();
+
     const std::uint32_t grazePoints = projectiles_.collectGrazePoints(playerPos_, playerRadius_, defensiveSpecial_.config().grazeBandInnerPadding, defensiveSpecial_.config().grazeBandOuterPadding, tickIndex_, defensiveSpecial_.config().grazeCooldownTicks);
-    if (grazePoints > 0) defensiveSpecial_.addGrazePoints(grazePoints);
+    if (grazePoints > 0) {
+        defensiveSpecial_.addGrazePoints(grazePoints);
+        cameraShakeEvents_.push_back(ShakeParams {
+            .profile = ShakeProfile::GrazeTremor,
+            .amplitude = 0.8F,
+            .duration = 0.10F,
+            .direction = {0.0F, 0.0F},
+            .frequency = 110.0F,
+            .damping = 22.0F,
+        });
+    }
 
     const float moveStep = static_cast<float>(dt) * 120.0F;
     if ((inputMask & InputMoveLeft) != 0U) playerPos_.x -= moveStep;
@@ -113,8 +148,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         }
 
         const TraitModifiers& tm = traitSystem_.modifiers();
-        const ZoneDefinition* zone = runStructure_.currentZone();
-        if (zone) difficultyModel_.setStageZone(runStructure_.stageIndex(), zone->type);
+        if (zoneBeforeUpdate) difficultyModel_.setStageZone(runStructure_.stageIndex(), zoneBeforeUpdate->type);
         const DifficultyScalars diffScalars = difficultyModel_.scalars();
         playerRadius_ = 10.0F + (archetype.stats.defense + mb.defenseBonus) * 0.45F + tm.playerRadiusAdd;
         const float fireRateScale = 0.80F + (archetype.stats.fireRate + mb.fireRateBonus) * 0.05F;
@@ -153,8 +187,8 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         em.harvestYieldMultiplier = tm.playerHarvestMultiplier * (0.70F + archetype.stats.resourceGain * 0.06F);
         em.enemyHealthScale = diffScalars.enemyHp;
 
-        if (zone) {
-            switch (zone->type) {
+        if (zoneBeforeUpdate) {
+            switch (zoneBeforeUpdate->type) {
                 case ZoneType::Combat: break;
                 case ZoneType::Elite: em.enemyFireRateScale *= 1.25F; em.enemyProjectileSpeedScale *= 1.20F; break;
                 case ZoneType::Event: em.enemyFireRateScale *= 0.80F; em.harvestYieldMultiplier *= 1.50F; break;
@@ -189,14 +223,54 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         collisionEvents_.clear();
         projectiles_.resolveCollisions(std::span<const CollisionTarget>(collisionTargets_.data(), collisionTargets_.size()), collisionEvents_);
         emitDespawnParticles();
+        for (const CollisionEvent& e : collisionEvents_) {
+            if (e.targetId != 0U || e.bulletIndex >= projectiles_.capacity()) continue;
+            const Vec2 hitPos {projectiles_.posX()[e.bulletIndex], projectiles_.posY()[e.bulletIndex]};
+            const Vec2 dir = {playerPos_.x - hitPos.x, playerPos_.y - hitPos.y};
+            cameraShakeEvents_.push_back(ShakeParams {
+                .profile = ShakeProfile::Impact,
+                .amplitude = 3.5F,
+                .duration = 0.16F,
+                .direction = dir,
+                .frequency = 32.0F,
+                .damping = 12.0F,
+            });
+        }
         entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(collisionEvents_.data(), collisionEvents_.size()));
     }
 
     particleFx_.update(static_cast<float>(dt));
     runStructure_.update(static_cast<float>(dt), entitySystem_.stats().defeatedBosses, playerHealth_ > 0.0F);
+    const ZoneDefinition* zoneAfterUpdate = runStructure_.currentZone();
+    if (zoneBeforeUpdate && zoneAfterUpdate && zoneBeforeUpdate->type != zoneAfterUpdate->type && zoneAfterUpdate->type == ZoneType::Boss) {
+        cameraShakeEvents_.push_back(ShakeParams {
+            .profile = ShakeProfile::BossRumble,
+            .amplitude = 7.5F,
+            .duration = 1.2F,
+            .direction = {0.0F, 0.0F},
+            .frequency = 8.0F,
+            .damping = 2.0F,
+        });
+    }
+    if (zoneAfterUpdate && (zoneAfterUpdate->type == ZoneType::Combat || zoneAfterUpdate->type == ZoneType::Elite || zoneAfterUpdate->type == ZoneType::Boss)) {
+        cameraShakeEvents_.push_back(ShakeParams {
+            .profile = ShakeProfile::Ambient,
+            .amplitude = 0.18F,
+            .duration = 0.0F,
+            .direction = {0.0F, 0.0F},
+            .frequency = 2.0F,
+            .damping = 0.0F,
+        });
+    }
     simClock_ += dt;
     ++tickIndex_;
     profiler_.addZoneTime(PerfZone::Simulation, std::chrono::duration<double, std::milli>(Clock::now() - simStart).count());
+}
+
+std::vector<ShakeParams> GameplaySession::consumeCameraShakeEvents() const {
+    std::vector<ShakeParams> out;
+    out.swap(cameraShakeEvents_);
+    return out;
 }
 
 UpgradeViewStats GameplaySession::buildCurrentViewStats() const {

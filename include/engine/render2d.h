@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <array>
 
 namespace engine {
 
@@ -23,6 +24,48 @@ struct Color {
     Uint8 a {255};
 };
 
+enum class ShakeProfile : std::uint8_t {
+    Impact,
+    BossRumble,
+    GrazeTremor,
+    SpecialPulse,
+    Explosion,
+    Ambient,
+};
+
+struct ShakeParams {
+    ShakeProfile profile {ShakeProfile::Impact};
+    float amplitude {2.0F};
+    float duration {0.15F};
+    Vec2 direction {0.0F, 0.0F};
+    float frequency {30.0F};
+    float damping {8.0F};
+};
+
+class CameraShakeSystem {
+  public:
+    void trigger(const ShakeParams& params);
+    void update(float dt);
+    [[nodiscard]] Vec2 offset() const;
+    void clear();
+
+  private:
+    static constexpr int kMaxActive = 4;
+    struct ActiveShake {
+        ShakeParams params;
+        float elapsed {0.0F};
+        bool active {false};
+    };
+
+    [[nodiscard]] static Vec2 normalized(Vec2 v);
+    [[nodiscard]] static float noise(float value);
+    [[nodiscard]] static Vec2 profileOffset(const ActiveShake& shake);
+
+    std::array<ActiveShake, kMaxActive> shakes_ {};
+    std::size_t nextReplaceIndex_ {0};
+    Vec2 currentOffset_ {0.0F, 0.0F};
+};
+
 class Camera2D {
   public:
     void setViewport(int width, int height);
@@ -32,6 +75,8 @@ class Camera2D {
     void addZoom(float delta);
     void setShake(float amplitude, float seconds);
     void update(float dt);
+    CameraShakeSystem& shakeSystem();
+    [[nodiscard]] const CameraShakeSystem& shakeSystem() const;
 
     [[nodiscard]] Vec2 worldToScreen(Vec2 world) const;
     [[nodiscard]] float zoom() const;
@@ -44,8 +89,7 @@ class Camera2D {
     int viewportHeight_ {720};
     Vec2 center_ {0.0F, 0.0F};
     float zoom_ {1.0F};
-    float shakeAmplitude_ {0.0F};
-    float shakeTimeRemaining_ {0.0F};
+    CameraShakeSystem shakeSystem_ {};
     Vec2 shakeOffset_ {0.0F, 0.0F};
 };
 

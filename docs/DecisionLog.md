@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-07 — Camera shake vocabulary
+- **Context**: A single sine-wave shake mode could not convey distinct gameplay feedback for hits, grazes, boss transitions, specials, and explosions.
+- **Decision**: Introduce a six-profile camera shake vocabulary (`Impact`, `BossRumble`, `GrazeTremor`, `SpecialPulse`, `Explosion`, `Ambient`) implemented with additive blending, max 4 simultaneous active shakes, and ±20px clamp.
+- **Rationale**: Improves feedback clarity while keeping shake logic presentation-only, frame-delta-driven, and decoupled from deterministic simulation state.
+- **Status**: Accepted.
+
 ## 2026-03-07 — Pattern signature textures
 - **Context**: Graph-authored patterns needed a compact visual fingerprint for editor/library browsing and optional per-pattern projectile identity.
 - **Decision**: Generate a 64×64 signature texture per compiled pattern graph at load time by running a short throwaway VM simulation and rasterizing emitted projectile trajectories into a blurred radial density map.

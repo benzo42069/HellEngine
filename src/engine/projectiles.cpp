@@ -172,6 +172,7 @@ void ProjectileSystem::updateMotion(const float dt, const float enemyTimeScale, 
             .pos = {posX_[bulletIndex], posY_[bulletIndex]},
             .paletteIndex = paletteIndex_[bulletIndex],
             .allegiance = static_cast<ProjectileAllegiance>(allegiance_[bulletIndex]),
+            .explodeShards = behavior_[bulletIndex].explodeShards,
         });
         active_[bulletIndex] = 0;
         freeList_.push_back(bulletIndex);
@@ -373,6 +374,7 @@ void ProjectileSystem::resolveCollisions(const std::span<const CollisionTarget> 
             .pos = {posX_[e.bulletIndex], posY_[e.bulletIndex]},
             .paletteIndex = paletteIndex_[e.bulletIndex],
             .allegiance = static_cast<ProjectileAllegiance>(allegiance_[e.bulletIndex]),
+            .explodeShards = behavior_[e.bulletIndex].explodeShards,
         });
     }
 }

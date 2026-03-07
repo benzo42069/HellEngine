@@ -138,6 +138,10 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     constexpr std::array<Uint8, 4> clearColor {20, 28, 40, 255};
     SDL_SetRenderDrawColor(renderer_, clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
     SDL_RenderClear(renderer_);
+    camera_.setCenter(snapshot.session.playerPos());
+    for (const ShakeParams& shake : snapshot.session.consumeCameraShakeEvents()) {
+        camera_.shakeSystem().trigger(shake);
+    }
     camera_.update(static_cast<float>(frameDelta));
     backgroundSystem_.update(static_cast<float>(frameDelta));
     spriteBatch_.begin(camera_);
