@@ -79,6 +79,11 @@
   - `FxPreset` values are mapped 1:1 into `PostFxSettings`.
   - `RenderPipeline` resolves archetype/zone-driven `autoFxPreset` names and applies the resolved settings each frame through `RendererModernPipeline::setPostFx`.
 
+## Audio subsystem (presentation-only)
+- `AudioSystem` now uses SDL_mixer and is owned by `Runtime`.
+- `GameplaySession` emits lightweight `AudioEvent` records during simulation, but playback dispatch is performed by `Runtime` outside `simTick()`.
+- Missing `.wav` assets or mixer initialization failure degrade to silent no-op playback and do not alter simulation state or replay determinism.
+
 ## Rendering Pipeline Update — GL Bullet Path
 - `RenderPipeline::buildSceneOverlay` now routes projectile presentation through `GlBulletRenderer` when OpenGL is ready and the renderer is initialized.
 - `GlBulletRenderer` consumes Projectile SoA data (including trails) each frame, resolves palette/gradient color on CPU, builds preallocated quad buffers, and submits one indexed draw.

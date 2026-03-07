@@ -1541,6 +1541,10 @@ Documentation policy:
   - Meta progression snapshot (`progressionPoints`, purchased node IDs) for cross-run progression continuity.
   - Extension-ready counters for run-level lifetime stats (started/cleared) for future progression systems.
 
+
+### Section 27 — Implemented Runtime Baseline (Update)
+- Added presentation-only SDL_mixer audio runtime with graceful fallback when device init or `.wav` loading fails.
+- Gameplay simulation emits audio events only; `Runtime` dispatches playback outside `simTick()` to preserve deterministic state/replay parity.
 ## Section 15 (Rendering Strategy) — Runtime baseline amendment
 - Bullet presentation now supports a single-draw-call OpenGL path (`GlBulletRenderer`) using grayscale SDF atlas sampling plus palette ramp-compatible pipeline integration.
 - CPU simulation remains authoritative; GL bullet buffers are rebuilt from projectile SoA each frame with no persistent GPU gameplay state.

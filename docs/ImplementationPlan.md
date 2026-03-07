@@ -411,6 +411,17 @@ Completed items:
 - Validation:
   - Updated `gpu_bullets_tests` to cover renamed class usage and clear/reset bookkeeping checks.
 
+
+## Phase 9 — Audio System Integration (Complete)
+### What changed
+- Added SDL_mixer dependency through CMake `FetchContent` and linked it into `engine_core`.
+- Replaced prior audio path with SDL_mixer `AudioSystem` (`loadSound`, `playSound`, positional playback, graceful shutdown/failure behavior).
+- Added presentation-only gameplay audio event queue consumed by `Runtime` outside `simTick()`.
+
+### Verification
+- Engine builds with fetched SDL_mixer.
+- Runtime tolerates missing audio files and audio init failures as no-op playback.
+- Replay hash path remains simulation-only (audio dispatch is outside deterministic tick).
 ## Phase 7 — Testing framework modernization (Completed)
 ### Completed items
 - Integrated Catch2 v3.5.2 in CMake with `FetchContent` and `catch_discover_tests` support.

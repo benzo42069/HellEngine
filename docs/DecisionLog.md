@@ -482,6 +482,12 @@
 - **Rationale**: Improves scaling behavior and profiling clarity at high bullet counts while preserving deterministic update order within active set transitions.
 - **Status**: Accepted.
 
+
+## 2026-03-07 — Audio system fallback boundary
+- **Context**: Runtime feedback needed basic SFX without introducing deterministic simulation coupling or hard failures when audio assets/devices are missing.
+- **Decision**: Use SDL_mixer-based `AudioSystem` owned by `Runtime`, feed it from a presentation-only `GameplaySession` audio-event queue, and dispatch sounds outside `simTick()`.
+- **Rationale**: Keeps replay hashes and simulation state independent from audio timing/device state while allowing graceful silence when init/load fails.
+- **Status**: Accepted.
 ## 2026-03-07 — Catch2 v3.5.2 test framework adoption and targeted migration
 - **Context**: Test infrastructure mixed many standalone `main()` executables with manual assertions, limiting discovery/tag filtering and making property/fuzz style tests harder to scale.
 - **Decision**: Adopt Catch2 v3.5.2 via CMake `FetchContent`, migrate five core test binaries (`projectile`, `projectile_behavior`, `pattern_graph`, `replay`, `collision_correctness`) to `TEST_CASE`/`REQUIRE`, and add determinism property and content fuzz test targets.

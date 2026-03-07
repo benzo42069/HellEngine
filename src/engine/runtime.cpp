@@ -1,6 +1,5 @@
 #include <engine/runtime.h>
 
-#include <engine/content_pipeline.h>
 #include <engine/logging.h>
 #include <engine/persistence.h>
 #include <engine/public/plugins.h>
@@ -9,9 +8,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <fstream>
-
-#include <nlohmann/json.hpp>
 
 namespace engine {
 
@@ -21,11 +17,34 @@ Runtime::Runtime(EngineConfig config)
 
 Runtime::~Runtime() {
     renderPipeline_.shutdown(session_.debugTools_.toolSuite);
+    audio_.shutdown();
     if (window_) {
         SDL_DestroyWindow(window_);
         window_ = nullptr;
     }
     SDL_Quit();
+}
+
+void Runtime::dispatchAudioEvents() {
+    if (!audio_.available()) return;
+    const Vec2 listener = session_.playerPos();
+    for (const AudioEvent& event : session_.consumeAudioEvents()) {
+        switch (event.type) {
+        case AudioEventType::Hit:
+            audio_.playSoundPositional(hitSoundId_, event.position, listener);
+            break;
+        case AudioEventType::Graze:
+            audio_.playSound(grazeSoundId_, 0.85F);
+            break;
+        case AudioEventType::BossPhaseTransition:
+            audio_.playSound(phaseWarnSoundId_, 1.0F);
+            break;
+        case AudioEventType::DefensiveSpecialActivated:
+            audio_.playSound(specialSoundId_, 0.95F);
+            break;
+        }
+    }
+    audio_.update();
 }
 
 void Runtime::simTick(const double dt) {
@@ -34,9 +53,6 @@ void Runtime::simTick(const double dt) {
         session_.replayRecorder_.recordTickInput(inputMask);
     }
     session_.updateGameplay(dt, inputMask);
-    for (const AudioEventId event : session_.consumeAudioEvents()) audio_.queueEvent(event);
-    audio_.flushQueuedEvents();
-
     const std::uint32_t hashPeriod = session_.replayPlaybackMode_ ? session_.replayPlayer_.hashPeriodTicks() : std::max(1U, config_.replayHashPeriodTicks);
     if ((session_.simulation_.tickIndex % hashPeriod) == 0U) {
         ReplayStateSample sample;
@@ -84,47 +100,11 @@ int Runtime::run() {
         logWarn("Profile fallback applied: " + profilesLoad.error);
     }
 
-    audio_.initialize(!config_.headless);
-    audio_.setBusVolume(AudioBus::Master, config_.audioMasterVolume);
-    audio_.setBusVolume(AudioBus::Music, config_.audioMusicVolume);
-    audio_.setBusVolume(AudioBus::Sfx, config_.audioSfxVolume);
-
-    AudioContentDatabase audioContent;
-    {
-        std::ifstream packIn(config_.contentPackPath);
-        if (packIn.good()) {
-            nlohmann::json packJson;
-            packIn >> packJson;
-            std::string audioError;
-            if (!parseAudioContentDatabase(packJson, audioContent, audioError)) {
-                logWarn("Audio content parse failed: " + audioError);
-            }
-        }
-    }
-    if (audioContent.clips.empty()) {
-        audioContent.clips = {
-            AudioClipRecord {.id = "sfx_hit", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.9F},
-            AudioClipRecord {.id = "sfx_graze", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.6F},
-            AudioClipRecord {.id = "sfx_player_damage", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 1.0F},
-            AudioClipRecord {.id = "sfx_enemy_death", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.95F},
-            AudioClipRecord {.id = "sfx_boss_warning", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 1.0F},
-            AudioClipRecord {.id = "ui_click", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.65F},
-            AudioClipRecord {.id = "ui_confirm", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.7F},
-            AudioClipRecord {.id = "music_main", .path = "", .bus = AudioBus::Music, .loop = true, .baseGain = 0.4F},
-        };
-        audioContent.events = {
-            AudioEventBinding {.event = AudioEventId::Hit, .clipId = "sfx_hit", .gain = 1.0F},
-            AudioEventBinding {.event = AudioEventId::Graze, .clipId = "sfx_graze", .gain = 1.0F},
-            AudioEventBinding {.event = AudioEventId::PlayerDamage, .clipId = "sfx_player_damage", .gain = 1.0F},
-            AudioEventBinding {.event = AudioEventId::EnemyDeath, .clipId = "sfx_enemy_death", .gain = 1.0F},
-            AudioEventBinding {.event = AudioEventId::BossWarning, .clipId = "sfx_boss_warning", .gain = 1.0F},
-            AudioEventBinding {.event = AudioEventId::UiClick, .clipId = "ui_click", .gain = 1.0F},
-            AudioEventBinding {.event = AudioEventId::UiConfirm, .clipId = "ui_confirm", .gain = 1.0F},
-        };
-        audioContent.musicClipId = "music_main";
-    }
-    audio_.loadContent(audioContent, "data/audio");
-    audio_.playMusic();
+    (void)audio_.initialize();
+    hitSoundId_ = audio_.loadSound("data/audio/hit.wav");
+    grazeSoundId_ = audio_.loadSound("data/audio/graze.wav");
+    phaseWarnSoundId_ = audio_.loadSound("data/audio/phase_warn.wav");
+    specialSoundId_ = audio_.loadSound("data/audio/special.wav");
 
     session_.projectiles_.initialize(config_.projectileCapacity, 420.0F, 32, 18);
     session_.cpuMassBullets_.initialize(std::max<std::uint32_t>(config_.projectileCapacity, 500000U), 420.0F);
@@ -249,7 +229,10 @@ int Runtime::run() {
 
         session_.profiler_.beginFrame();
         const StepResult stepResult = consumeFixedSteps(accumulator, config_.fixedDeltaSeconds, config_.maxFrameSteps);
-        for (std::uint32_t i = 0; i < stepResult.steps; ++i) simTick(config_.fixedDeltaSeconds);
+        for (std::uint32_t i = 0; i < stepResult.steps; ++i) {
+            simTick(config_.fixedDeltaSeconds);
+            dispatchAudioEvents();
+        }
         accumulator = stepResult.remainingAccumulator;
 
         if (config_.targetTicks > 0 && static_cast<int>(session_.simulation_.tickIndex) >= config_.targetTicks) running_ = false;
