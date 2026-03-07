@@ -55,6 +55,16 @@ FetchContent_Declare(
   GIT_TAG release-2.30.5
 )
 
+# Keep SDL_mixer self-contained in CI/dev environments without system codec dev packages.
+set(SDL2MIXER_VENDORED ON CACHE BOOL "Use vendored dependencies for SDL2_mixer" FORCE)
+set(SDL2MIXER_SAMPLES OFF CACHE BOOL "Disable SDL2_mixer sample binaries" FORCE)
+
+FetchContent_Declare(
+  SDL2_mixer
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+  GIT_TAG release-2.8.1
+)
+
 FetchContent_Declare(
   imgui
   GIT_REPOSITORY https://github.com/ocornut/imgui.git
@@ -67,7 +77,7 @@ FetchContent_Declare(
   GIT_TAG v3.11.3
 )
 
-FetchContent_MakeAvailable(SDL2 imgui nlohmann_json)
+FetchContent_MakeAvailable(SDL2 SDL2_mixer imgui nlohmann_json)
 
 find_package(OpenGL REQUIRED)
 
@@ -164,6 +174,7 @@ target_include_directories(engine_core
 target_link_libraries(engine_core
   PUBLIC
     ${ENGINEDEMO_SDL_TARGET}
+    SDL2_mixer::SDL2_mixer
     imgui_sdl2
     nlohmann_json::nlohmann_json
     OpenGL::GL

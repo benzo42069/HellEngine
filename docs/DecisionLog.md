@@ -481,3 +481,10 @@
 - **Decision**: Added compact `activeSlots_` + `slotToActiveIndex_` bookkeeping so update/render loops iterate only live bullets.
 - **Rationale**: Improves scaling behavior and profiling clarity at high bullet counts while preserving deterministic update order within active set transitions.
 - **Status**: Accepted.
+
+
+## 2026-03-07 — Audio system fallback boundary
+- **Context**: Runtime feedback needed basic SFX without introducing deterministic simulation coupling or hard failures when audio assets/devices are missing.
+- **Decision**: Use SDL_mixer-based `AudioSystem` owned by `Runtime`, feed it from a presentation-only `GameplaySession` audio-event queue, and dispatch sounds outside `simTick()`.
+- **Rationale**: Keeps replay hashes and simulation state independent from audio timing/device state while allowing graceful silence when init/load fails.
+- **Status**: Accepted.

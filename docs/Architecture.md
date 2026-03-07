@@ -78,3 +78,9 @@
 - PostFx data flow:
   - `FxPreset` values are mapped 1:1 into `PostFxSettings`.
   - `RenderPipeline` resolves archetype/zone-driven `autoFxPreset` names and applies the resolved settings each frame through `RendererModernPipeline::setPostFx`.
+
+## Audio subsystem (presentation-only)
+- `AudioSystem` now uses SDL_mixer and is owned by `Runtime`.
+- `GameplaySession` emits lightweight `AudioEvent` records during simulation, but playback dispatch is performed by `Runtime` outside `simTick()`.
+- Missing `.wav` assets or mixer initialization failure degrade to silent no-op playback and do not alter simulation state or replay determinism.
+

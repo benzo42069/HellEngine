@@ -1,8 +1,9 @@
 #pragma once
 
-#include <SDL.h>
+#include <engine/render2d.h>
 
-#include <cstddef>
+#include <SDL_mixer.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -47,66 +48,22 @@ struct AudioContentDatabase {
 
 class AudioSystem {
   public:
-    AudioSystem() = default;
-    ~AudioSystem();
+    using SoundId = std::uint16_t;
+    static constexpr SoundId kInvalidSound = 0xFFFF;
 
-    bool initialize(bool enableDevice);
+    bool initialize();
     void shutdown();
 
-    bool loadContent(const AudioContentDatabase& content, const std::string& contentRoot);
+    SoundId loadSound(const std::string& path);
+    void playSound(SoundId id, float volume = 1.0F);
+    void playSoundPositional(SoundId id, Vec2 position, Vec2 listener, float maxDist = 400.0F);
 
-    void queueEvent(AudioEventId event);
-    void flushQueuedEvents();
-
-    void setBusVolume(AudioBus bus, float volume);
-    [[nodiscard]] float busVolume(AudioBus bus) const;
-
-    void playMusic();
-    void stopMusic();
-
-    [[nodiscard]] bool initialized() const { return initialized_; }
+    void update();
+    [[nodiscard]] bool available() const;
 
   private:
-    struct ClipData {
-        std::string id;
-        AudioBus bus {AudioBus::Sfx};
-        bool loop {false};
-        float baseGain {1.0F};
-        std::vector<float> samples;
-        std::uint32_t frameCount {0};
-    };
-
-    struct Voice {
-        std::size_t clipIndex {0};
-        std::uint32_t frameCursor {0};
-        float gain {1.0F};
-        bool loop {false};
-    };
-
-    struct EventRoute {
-        AudioEventId event {AudioEventId::Hit};
-        std::size_t clipIndex {0};
-        float gain {1.0F};
-    };
-
-    static void audioCallback(void* userdata, Uint8* stream, int len);
-    void mixAudio(float* out, int frameCount);
-    static std::vector<float> makeFallbackTone(AudioBus bus);
-
-    SDL_AudioDeviceID device_ {0};
-    SDL_AudioSpec obtained_ {};
     bool initialized_ {false};
-    bool outputEnabled_ {false};
-
-    float masterVolume_ {1.0F};
-    float musicVolume_ {0.75F};
-    float sfxVolume_ {0.9F};
-
-    std::vector<ClipData> clips_;
-    std::vector<EventRoute> routes_;
-    std::vector<Voice> activeVoices_;
-    std::vector<AudioEventId> queuedEvents_;
-    std::size_t musicClipIndex_ {static_cast<std::size_t>(-1)};
+    std::vector<Mix_Chunk*> sounds_;
 };
 
 } // namespace engine

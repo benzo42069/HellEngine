@@ -186,3 +186,8 @@ Run performance check:
 ```powershell
 ./tools/ci_local.ps1
 ```
+
+
+## Audio prerequisites
+- Build now fetches `SDL_mixer` via CMake `FetchContent`.
+- Optional audio assets expected under `data/audio/` (e.g. `hit.wav`, `graze.wav`, `phase_warn.wav`, `special.wav`). Missing files are tolerated and runtime continues silently.
