@@ -1443,3 +1443,11 @@ Headless mode contract:
   - `DebugToolState`: debug/perf/tool integration state.
   - `EncounterRuntimeState`: deterministic encounter collision scratch buffers/counters.
 - Deterministic simulation behavior is preserved; partitioning is architectural/ownership-focused and keeps replay/hash flow intact.
+
+
+## Editor Tooling Modular Panel Architecture (Update)
+- `ControlCenterToolSuite` now composes focused panel methods instead of a single monolithic draw body.
+- Panel ownership is grouped into: workspace shell/content browser, pattern graph editor, encounter/wave editor, projectile+trait tooling, palette/FX editor, and validation diagnostics.
+- Shared editor service helpers are explicit (`buildEncounterAsset`, `ensurePatternGraphSeeded`, `ensureEncounterNodesSeeded`) to keep deterministic runtime state separate from persistent UI authoring state.
+- Runtime/editor boundaries remain telemetry-driven: panel rendering consumes `ToolRuntimeSnapshot` and mutation hand-off fields (`UpgradeDebugOptions`, `ProjectileDebugOptions`, `PatternGeneratorDebugState`) without embedding simulation execution into panel code.
+- Extension point: future tools should add one panel method + one state/service surface instead of growing `drawControlCenter`.

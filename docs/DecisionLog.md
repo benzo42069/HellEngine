@@ -411,3 +411,15 @@
 - **Decision**: Introduce explicit state partitions (`SessionSimulationState`, `PlayerCombatState`, `ProgressionState`, `PresentationState`, `DebugToolState`, `EncounterRuntimeState`) as owned sub-objects inside `GameplaySession`, and route runtime/render integration through those boundaries.
 - **Rationale**: Preserves deterministic behavior while reducing responsibility overlap and making ownership and integration points testable.
 - **Status**: Accepted.
+
+
+## 2026-03-07 — Modularized ControlCenter tool panels
+**Context:** `src/engine/editor_tools.cpp` had grown into a high-coupling editor monolith where menu shelling, authoring state initialization, validation, and all panel UI were interleaved in one function.
+
+**Decision:** Split editor rendering into dedicated panel methods (`drawWorkspaceShell`, `drawPatternGraphEditorPanel`, `drawEncounterWaveEditorPanel`, `drawPaletteFxEditorPanel`, `drawValidationDiagnosticsPanel`, etc.) and extracted shared editor service helpers (`buildEncounterAsset`, panel state seeding helpers).
+
+**Consequences:**
+- Reduced edit blast radius for tool changes.
+- Clearer ownership boundaries between panel UI and shared editor services.
+- Preserved user-visible behavior while preparing plugin and panel expansion.
+- Runtime/editor split is cleaner because panel methods consume immutable runtime snapshots and mutate only editor-scoped state.
