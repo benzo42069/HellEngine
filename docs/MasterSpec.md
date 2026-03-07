@@ -233,6 +233,17 @@ Typical designer parameters: `N, Δ, Ω, I, S, A, L, a, ωturn, phase` and varia
 - Preallocated command buffers and free-list reuse.
 - No per-bullet dynamic allocations in hot path.
 
+### 12.x Runtime SoA and Spawn Queue Baseline (Phase 7)
+- `ProjectileSystem` hot-path iteration uses a compact active-index list (`activeIndices_` + `indexInActive_`) over free-list slots to avoid full-capacity scans during update/render/debug traversal.
+- Split/spawn deferrals use a fixed-capacity pending spawn queue (`kMaxPendingSpawns = 4096`), flushed at deterministic tick boundaries.
+- Pending-spawn overflow policy is deterministic: additional requests beyond 4096 in a tick are dropped in-order (first 4096 retained), preserving replay parity.
+- Current SoA additions used by rendering/FX include:
+  - `paletteIndex_`
+  - `shape_`
+  - `trailX_` / `trailY_`
+  - `enableTrails_`
+  - `trailHead_`
+
 ### 12.3 Collision and Spatial Optimization
 - Uniform grid/spatial hash broadphase.
 - Narrowphase checks for circle/capsule/OBB; stable deterministic resolution ordering.
@@ -252,11 +263,33 @@ Typical designer parameters: `N, Δ, Ω, I, S, A, L, a, ωturn, phase` and varia
 - Pre-size pools by budgets; growth allowed in editor/loading only.
 - Degradation strategy preserves sim correctness first (reduce visuals/effects before sim fidelity).
 
+### 14.x Implemented Sim-Tick Allocation Contract (Phase 7)
+- `Runtime::simTick()`/`GameplaySession::simulateTick()` deterministic-path execution is zero-allocation by contract.
+- Fixed-capacity arrays/queues in hot simulation include (non-exhaustive):
+  - projectile pending spawns (`4096`),
+  - projectile despawn events (`4096`),
+  - gameplay collision targets (`512`),
+  - gameplay collision events (`8192`).
+- Overflow behavior must remain deterministic and non-allocating:
+  - cap writes at fixed buffer capacity,
+  - increment diagnostics counters/logging hooks,
+  - continue simulation without heap fallback.
+- Any overflow-induced drops are treated as authoring/perf-budget violations, not runtime reasons to allocate.
+
 ## 15. Rendering Strategy
 - OpenGL bullet renderer (`gl_bullet_renderer`) is the primary high-throughput path for gameplay-authoritative projectiles.
 - CPU collision/determinism path (`CpuCollisionDeterministic`) remains replay-authoritative.
 - CPU mass bullet render path (`CpuMassBulletRenderSystem`) is a presentation-oriented mass-quad path, not GPU compute simulation.
 - Render remains presentation-only.
+
+### 15.x Implemented GL Bullet Colorization Pipeline (Phase 7)
+- Bullet visuals follow a deterministic authoring-to-render pipeline:
+  1. `GrayscaleSpriteAtlas` generates grayscale SDF-like bullet shape atlas pages.
+  2. `PaletteRampTexture` uploads per-palette ramp rows to GPU LUT texture.
+  3. GLSL bullet shader samples atlas intensity + palette ramp row and applies runtime colorization/animation.
+  4. `GlBulletRenderer` emits one indexed draw call for all active bullets in the frame (`glDrawElements`).
+- CPU builds dynamic vertex/index data from projectile SoA each frame into preallocated GPU buffers.
+- Hard fallback path remains available: if GL context/shader resources are unavailable, projectile rendering routes through `SpriteBatch::renderProcedural`.
 
 ### 15.x CPU Mass Bullet Render Runtime Note (Phase 5)
 - `CpuMassBulletRenderSystem` replaces ambiguous naming previously implying GPU simulation.
@@ -880,6 +913,17 @@ Stage 4: emit collision/graze/shield events into preallocated buffers.
 
 Stage 5: deterministic resolution apply pass with stable ordering and one-hit-per-bullet rules as configured.
 
+### 23.x Implemented Deterministic Collision Runtime Contract (Phase 7)
+- Runtime pipeline execution is three-stage in `ProjectileSystem` API:
+  1. `updateMotion(dt, enemyTimeScale, playerTimeScale)`
+  2. `buildGrid()`
+  3. `resolveCollisions(targets, outEvents)`
+- `CollisionTarget` and `CollisionEvent` are explicit deterministic interchange types between entity/runtime ownership boundaries.
+- `CollisionEvent` output is deterministically sorted by `(targetId, bulletIndex)` before resolution.
+- Stamp-based deduplication is used in collision traversal:
+  - `collisionVisitedStamp_` prevents duplicate narrowphase checks for the same bullet/target query window.
+  - `collisionHitStamp_` enforces one-hit-per-bullet-per-tick semantics.
+
 ### 23.9 Deterministic Event and Resolution Rules
 Event buffers are preallocated ring arrays (`hitEvents`, `grazeEvents`, etc.).
 
@@ -1412,6 +1456,27 @@ Current repository implementation now includes:
   - thread-pool job system,
   - frame allocator and object-pool helpers.
 - Automated unit tests for timing-step consumption and configuration parsing.
+
+### 27.x Current module inventory snapshot (Phase 7)
+Implemented runtime/tooling modules currently present in repository:
+- `InputSystem`
+- `GameplaySession`
+- `RenderPipeline`
+- `GlBulletRenderer`
+- `ShaderCache`
+- `GrayscaleSpriteAtlas`
+- `PaletteRampTexture`
+- `BulletPaletteTable`
+- `BulletSpriteGenerator`
+- `GradientAnimator`
+- `ParticleFxSystem`
+- `BackgroundSystem`
+- `DangerFieldOverlay`
+- `LevelTileGenerator`
+- `PatternSignatureGenerator`
+- `CameraShakeSystem` (session-owned presentation event channel)
+- `AudioSystem`
+- `ContentWatcher` (hot-reload responsibility currently integrated through content/shader/palette reload flows; dedicated watcher module is roadmap-tracked)
 
 Headless mode contract:
 - `EngineDemo --headless --ticks <N> --seed <S>` runs deterministic simulation ticks without opening a window.

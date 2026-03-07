@@ -79,6 +79,75 @@
   - `FxPreset` values are mapped 1:1 into `PostFxSettings`.
   - `RenderPipeline` resolves archetype/zone-driven `autoFxPreset` names and applies the resolved settings each frame through `RendererModernPipeline::setPostFx`.
 
+
+## Module map (current implementation baseline)
+
+### Engine Core
+- `Runtime`
+- `InputSystem`
+- `Config`
+- `Timing`
+- `Memory`
+- `JobSystem`
+- `Logging`
+- `CrashHandler`
+- `Diagnostics`
+- `DeterministicRng`
+- `Standards`
+
+### Simulation
+- `ProjectileSystem`
+- `EntitySystem`
+- `PatternPlayer` (`patterns.*` runtime playback)
+- `PatternGraphVM` (`pattern_graph.*` compiler/runtime)
+- `EncounterGraph`
+- `RunStructure`
+- `DifficultyModel` (`difficulty_scaling.*`)
+
+### Gameplay
+- `TraitSystem`
+- `ArchetypeSystem`
+- `MetaProgression`
+- `DefensiveSpecial`
+- `GameplaySession`
+
+### Rendering
+- `RenderPipeline`
+- `GlBulletRenderer`
+- `ModernRenderer`
+- `SpriteBatch`
+- `Camera`
+- `DebugDraw`
+- `DebugText`
+- `BackgroundSystem`
+- `DangerField` (`DangerFieldOverlay`)
+- `ParticleFx`
+- `BulletSpriteGen`
+- `GradientAnimator`
+- `LevelTileGen`
+- `PatternSignature`
+- `ShaderCache`
+- `SpriteAtlas` (`GrayscaleSpriteAtlas`)
+- `PaletteRamp` (`PaletteRampTexture`)
+- `CameraShake` (session presentation event queue)
+
+### Content Pipeline
+- `ContentPipeline`
+- `PaletteFxTemplates`
+- `ContentPacker`
+- `ContentWatcher` (hot-reload/watch responsibility is currently integrated across runtime/editor reload paths)
+
+### Audio
+- `AudioSystem`
+
+### Tooling
+- `EditorTools`
+- `PublicAPI`
+- `PluginRegistry`
+
+### Replay
+- `ReplayRecorder`
+- `ReplayPlayer`
 ### ContentWatcher in the content pipeline
 - `GameplaySession` owns `ContentWatcher` and registers deterministic watch paths for pattern, entity, trait, difficulty, and palette JSON files.
 - Reload checks run on fixed tick boundaries (~1 second cadence at 60 ticks) so replay hash behavior is not affected by wall-clock jitter.

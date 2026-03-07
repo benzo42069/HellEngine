@@ -239,6 +239,57 @@ For content authors:
 - `projectilePalette` on entity JSON can reference a palette template by name, and runtime resolves it to the internal `paletteIndex` used by projectile SoA.
 - Archetypes also resolve their configured palette template name to runtime `paletteIndex` at spawn time.
 
+
+---
+
+## Entity authoring (enemy, boss, resource definitions)
+
+Entity templates are authored in `data/entities.json` under `entities`.
+
+Recommended coverage per authored pack:
+- **Enemy** definitions: movement/attack cadence/collision radii/hp/contact damage.
+- **Boss** definitions: phased pattern sequences (`boss.phases`, `patternSequence`, cadence fields).
+- **Resource** definitions: collectible/harvestable nodes and reward descriptors used by progression/economy systems.
+
+Authoring rule: entity references to patterns should use GUIDs where possible for stable cross-pack merges.
+
+---
+
+## Palette authoring (template -> shader colorization)
+
+Palette templates are authored in `data/palettes/palette_fx_templates.json` and compiled to runtime palette rows.
+
+Pipeline:
+1. Author template layers/gradient/animation in palette JSON.
+2. Runtime builds palette LUT rows (`PaletteRampTexture`).
+3. `GlBulletRenderer` shader samples grayscale atlas + palette row and colorizes projectiles in GPU.
+
+This keeps gameplay bullets sprite-light while preserving rich per-palette visual identity.
+
+---
+
+## Hot-reload workflow
+
+Current workflow for iterative authoring:
+1. Edit content JSON (`patterns`, `graphs`, `entities`, `traits`, palettes, etc.).
+2. Repack with `ContentPacker` (optionally with `--previous-pack` for reimport invalidation tracking).
+3. Reload in runtime/editor at safe boundaries (pattern/palette/shader reload paths are integrated).
+4. Re-run deterministic/replay checks when gameplay-affecting data changes.
+
+Hot-reload latency targets are documented in `docs/PerfTargets.md`.
+
+---
+
+## FX presets authoring
+
+Post-processing FX presets are authored as data and resolved into runtime `PostFxSettings`.
+
+Authoring expectations:
+- Define named presets for zone/archetype-driven looks.
+- Keep bloom/vignette/composite settings within readability/perf constraints.
+- Validate in both modern renderer path and fallback path.
+
+Palette FX templates and post-FX presets should be reviewed together so projectile palette motion and scene grading remain visually coherent.
 ## Editing JSON while the engine is running
 - You can safely edit `data/patterns.json`, `assets/patterns/sandbox_patterns.json`, `data/entities.json`, `data/traits.json`, `data/difficulty_profiles.json`, and `data/palettes/palette_fx_templates.json` while runtime is active.
 - The engine polls these files once per ~1 second (60 ticks) and hot-reloads changes at deterministic tick boundaries.
