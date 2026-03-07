@@ -1498,6 +1498,12 @@ Headless mode contract:
 - Encounter synchronization hooks:
   - authored encounter schedule now supports `telegraph`, `hazardSync`, and `phaseGate` node types.
   - compiled encounter events carry `owner` domain metadata (`encounter`, `boss`, `hazards`) for orchestration routing.
+## Release Engineering Contract (Packaging + Distribution)
+- Canonical release validation entrypoint is `tools/release_validate.ps1`.
+- Release artifacts MUST include: runtime binaries (`EngineDemo`, `ContentPacker`), built content packs (`content.pak`, `sample-content.pak`), runtime data/assets/examples, version stamp file, and release docs.
+- Portable packaging executes in-bundle validation (sample pack rebuild + engine headless smoke run) before archive generation.
+- Runtime content compatibility is enforced by a centralized `kRuntimePackVersion` and pack compatibility bounds.
+- Deterministic release mode (`ENGINE_DETERMINISTIC_BUILD=ON`) is mandatory for candidate builds.
 
 ## External Documentation Baseline (2026-03-07)
 

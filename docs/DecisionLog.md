@@ -487,3 +487,16 @@
 - **Decision**: Establish a dedicated external documentation set covering getting started, asset import, pattern authoring, boss/encounter authoring, replay/debug, plugin/mod extension overview, creator performance guidance, and troubleshooting.
 - **Rationale**: Improves product readiness for creators/integrators while keeping documentation aligned to implemented runtime and content-pipeline behavior.
 - **Status**: Accepted.
+## 2026-03-07 — Release gating moved into build/package scripts
+- **Decision**: promote release scripts from convenience wrappers to required gates.
+- **Rationale**: audit identified productization gaps where tests/content/replay checks could be skipped by default.
+- **Implementation**:
+  - `tools/build_release.ps1` now runs tests, benchmarks, content pack build (default + sample), and replay verification by default.
+  - `tools/package_dist.ps1` now performs portable self-validation before zip creation.
+  - `tools/release_validate.ps1` added as end-to-end release gate.
+- **Consequence**: slower release build command but substantially stronger confidence and failure diagnostics.
+
+## 2026-03-07 — Centralized runtime pack compatibility version
+- **Decision**: define runtime content compatibility as shared constant `engine::kRuntimePackVersion = 4`.
+- **Rationale**: avoid drift from duplicated hardcoded values in entity/pattern loaders and packer outputs.
+- **Consequence**: pack-version enforcement becomes explicit and aligned with generated pack metadata.

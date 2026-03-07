@@ -20,6 +20,8 @@ struct PackMetadata {
     int maxRuntimePackVersion {9999};
 };
 
+inline constexpr int kRuntimePackVersion = 4;
+
 enum class ArtAssetKind {
     Sprite,
     Texture,

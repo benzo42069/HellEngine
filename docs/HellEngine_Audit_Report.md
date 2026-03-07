@@ -365,3 +365,14 @@ This addresses the prior audit gap where authored art handling was underdevelope
   - creator performance guidance
   - troubleshooting
 - Updated governance logs/spec references (`MasterSpec`, `DecisionLog`, `ImplementationPlan`, `CHANGELOG`) to keep documentation-state traceability aligned with runtime workflows.
+## Release Engineering Follow-up (2026-03-07)
+Status: **Addressed** for packaging/release workflow closure.
+
+Implemented closures:
+- Build release script now performs end-to-end release checks (tests, benchmarks, content pack build, replay verify).
+- Packaging script now validates portable output by running bundled binaries in-place.
+- New orchestration script (`tools/release_validate.ps1`) enforces artifact presence and archive output.
+- Runtime pack-version enforcement was centralized to remove duplicated compatibility constants.
+
+Residual risk:
+- Installer generation still depends on external NSIS tooling; workflow now degrades with explicit diagnostics when unavailable.

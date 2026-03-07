@@ -421,3 +421,10 @@ Completed items:
 ### Validation intent
 - All published commands and workflows are aligned with current binaries (`EngineDemo`, `ContentPacker`) and existing runtime behavior.
 - Documentation logs/spec are synchronized in this same change-set (`MasterSpec`, `DecisionLog`, `CHANGELOG`, audit report).
+## Phase 10 — Release hardening closure update
+Completed release-engineering closure work:
+- Upgraded `build_release` flow from compile-only to full gate (tests, benchmark thresholds, content build, replay verify).
+- Upgraded `package_dist` flow with dependency/content bundling and in-bundle executable validation.
+- Added `release_validate` orchestration script for deterministic clean release checks.
+- Centralized runtime pack version enforcement to prevent compatibility drift.
+- Added release documentation for packaging assumptions and artifact expectations.
