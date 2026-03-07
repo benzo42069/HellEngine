@@ -383,3 +383,9 @@
 - **Decision**: Add `LevelTileGenerator` to create deterministic, tileable 256x256 background textures at zone transitions using wrapped cellular automata/value-noise and zone-type-to-rule mapping.
 - **Rationale**: Preserves deterministic replay behavior while giving each stage/zone distinct palette-driven presentation from run seed alone.
 - **Status**: Accepted.
+
+## 2026-03-07 — OpenGL 3.3 Core hybrid context alongside SDL_Renderer
+- **Context**: SDL_Renderer fixed-function path cannot run custom bullet shaders.
+- **Decision**: Add an OpenGL 3.3 Core context plus GLAD loader at render initialization while retaining SDL_Renderer for ImGui + debug/UI drawing.
+- **Rationale**: Enables custom shader pipeline and generated sprite-atlas textures with graceful fallback to SDL_Renderer-only when GL context/loader init fails.
+- **Status**: Accepted.

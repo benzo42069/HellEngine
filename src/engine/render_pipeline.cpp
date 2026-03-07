@@ -5,6 +5,7 @@
 #include <engine/logging.h>
 #include <engine/pattern_signature.h>
 
+#include <glad/glad.h>
 #include <imgui.h>
 
 #include <algorithm>
@@ -15,12 +16,42 @@
 
 namespace engine {
 
+namespace {
+constexpr const char* kBulletShaderName = "bullet";
+constexpr const char* kBulletVertPath = "assets/shaders/bullet_vs.glsl";
+constexpr const char* kBulletFragPath = "assets/shaders/bullet_fs.glsl";
+}
+
 bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, ControlCenterToolSuite& toolSuite) {
     config_ = config;
     if (!window) {
         logError("Renderer initialization failed: window handle is null.");
         return false;
     }
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+    glContext_ = SDL_GL_CreateContext(window);
+    if (glContext_) {
+        if (SDL_GL_MakeCurrent(window, glContext_) == 0) {
+            if (gladLoadGLLoader(reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress)) != 0) {
+                glReady_ = true;
+                SDL_GL_SetSwapInterval(1);
+                logInfo(std::string("OpenGL initialized: ") + reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+                (void)shaderCache_.compileFromFiles(kBulletShaderName, kBulletVertPath, kBulletFragPath);
+                (void)spriteAtlas_.generate(32);
+            } else {
+                logWarn("GLAD initialization failed. Falling back to SDL_Renderer-only path.");
+            }
+        } else {
+            logWarn("Unable to make GL context current. Falling back to SDL_Renderer-only path.");
+        }
+    } else {
+        logWarn("Unable to create OpenGL context. Falling back to SDL_Renderer-only path.");
+    }
+
     const std::array<Uint32, 3> rendererFlags = {SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC, SDL_RENDERER_ACCELERATED, SDL_RENDERER_SOFTWARE};
     for (const Uint32 flags : rendererFlags) {
         renderer_ = SDL_CreateRenderer(window, -1, flags);
@@ -47,12 +78,19 @@ void RenderPipeline::shutdown(ControlCenterToolSuite& toolSuite) {
     if (!renderContextReady_ && !renderer_ && !textures_) return;
     toolSuite.shutdown();
     modernRenderer_.shutdown();
+    shaderCache_.shutdown();
+    spriteAtlas_.shutdown();
     backgroundSystem_.clear();
     textures_.reset();
     if (renderer_) {
         SDL_DestroyRenderer(renderer_);
         renderer_ = nullptr;
     }
+    if (glContext_) {
+        SDL_GL_DeleteContext(glContext_);
+        glContext_ = nullptr;
+    }
+    glReady_ = false;
     lastBgStageIndex_ = std::numeric_limits<std::size_t>::max();
     lastBgZoneIndex_ = std::numeric_limits<std::size_t>::max();
     renderContextReady_ = false;

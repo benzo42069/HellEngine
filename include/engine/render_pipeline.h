@@ -8,6 +8,8 @@
 #include <engine/modern_renderer.h>
 #include <engine/palette_fx_templates.h>
 #include <engine/render2d.h>
+#include <engine/shader_cache.h>
+#include <engine/sprite_atlas_gen.h>
 #include <engine/patterns.h>
 
 #include <SDL.h>
@@ -44,6 +46,8 @@ class RenderPipeline {
     void ensureZoneBackground(const GameplaySession& session);
 
     SDL_Renderer* renderer_ {nullptr};
+    SDL_GLContext glContext_ {nullptr};
+    bool glReady_ {false};
     bool renderContextReady_ {false};
     bool fullscreen_ {false};
     float dpiScaleX_ {1.0F};
@@ -62,6 +66,8 @@ class RenderPipeline {
     std::size_t lastBgStageIndex_ {std::numeric_limits<std::size_t>::max()};
     std::size_t lastBgZoneIndex_ {std::numeric_limits<std::size_t>::max()};
     EngineConfig config_ {};
+    ShaderCache shaderCache_ {};
+    GrayscaleSpriteAtlas spriteAtlas_ {};
 };
 
 } // namespace engine
