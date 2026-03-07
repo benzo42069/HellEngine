@@ -8,7 +8,7 @@
 
 namespace engine {
 
-void GpuBulletSystem::initialize(const std::uint32_t capacity, const float worldHalfExtent) {
+void CpuMassBulletRenderSystem::initialize(const std::uint32_t capacity, const float worldHalfExtent) {
     capacity_ = capacity;
     worldHalfExtent_ = worldHalfExtent;
     bullets_.assign(capacity_, GpuBullet {});
@@ -19,25 +19,32 @@ void GpuBulletSystem::initialize(const std::uint32_t capacity, const float world
     indices_.reserve(static_cast<std::size_t>(capacity_) * 6U);
     freeList_.clear();
     freeList_.reserve(capacity_);
+    activeSlots_.clear();
+    activeSlots_.reserve(capacity_);
+    slotToActiveIndex_.assign(capacity_, capacity_);
     for (std::uint32_t i = 0; i < capacity_; ++i) {
         freeList_.push_back(capacity_ - 1U - i);
     }
     activeCount_ = 0;
+    preparedQuadCount_ = 0;
 }
 
-void GpuBulletSystem::clear() {
+void CpuMassBulletRenderSystem::clear() {
     for (GpuBullet& b : bullets_) b.flags = 0U;
     vertices_.clear();
     indices_.clear();
     freeList_.clear();
     freeList_.reserve(capacity_);
+    activeSlots_.clear();
+    std::fill(slotToActiveIndex_.begin(), slotToActiveIndex_.end(), capacity_);
     for (std::uint32_t i = 0; i < capacity_; ++i) {
         freeList_.push_back(capacity_ - 1U - i);
     }
     activeCount_ = 0;
+    preparedQuadCount_ = 0;
 }
 
-bool GpuBulletSystem::emit(const GpuBullet& bullet) {
+bool CpuMassBulletRenderSystem::emit(const GpuBullet& bullet) {
     if (freeList_.empty()) return false;
     const std::uint32_t slot = freeList_.back();
     freeList_.pop_back();
@@ -45,19 +52,38 @@ bool GpuBulletSystem::emit(const GpuBullet& bullet) {
     GpuBullet& b = bullets_[slot];
     b = bullet;
     b.flags |= 1U;
+
+    slotToActiveIndex_[slot] = static_cast<std::uint32_t>(activeSlots_.size());
+    activeSlots_.push_back(slot);
     ++activeCount_;
     return true;
 }
 
-void GpuBulletSystem::update(const float dt) {
+void CpuMassBulletRenderSystem::releaseSlot(const std::uint32_t slot) {
+    GpuBullet& b = bullets_[slot];
+    if ((b.flags & 1U) == 0U) return;
+    b.flags = 0U;
+
+    const std::uint32_t activeIndex = slotToActiveIndex_[slot];
+    const std::uint32_t lastSlot = activeSlots_.back();
+    activeSlots_[activeIndex] = lastSlot;
+    slotToActiveIndex_[lastSlot] = activeIndex;
+    activeSlots_.pop_back();
+    slotToActiveIndex_[slot] = capacity_;
+
+    freeList_.push_back(slot);
+    --activeCount_;
+}
+
+void CpuMassBulletRenderSystem::update(const float dt) {
     const float clampedDt = std::max(0.0F, dt);
-    for (GpuBullet& b : bullets_) {
-        if ((b.flags & 1U) == 0U) continue;
+    std::size_t i = 0;
+    while (i < activeSlots_.size()) {
+        const std::uint32_t slot = activeSlots_[i];
+        GpuBullet& b = bullets_[slot];
         b.lifetime -= clampedDt;
         if (b.lifetime <= 0.0F) {
-            b.flags = 0U;
-            freeList_.push_back(static_cast<std::uint32_t>(&b - bullets_.data()));
-            --activeCount_;
+            releaseSlot(slot);
             continue;
         }
 
@@ -74,26 +100,27 @@ void GpuBulletSystem::update(const float dt) {
         b.posX += b.velX * clampedDt;
         b.posY += b.velY * clampedDt;
         if (std::fabs(b.posX) > worldHalfExtent_ || std::fabs(b.posY) > worldHalfExtent_) {
-            b.flags = 0U;
-            freeList_.push_back(static_cast<std::uint32_t>(&b - bullets_.data()));
-            --activeCount_;
+            releaseSlot(slot);
+            continue;
         }
+        ++i;
     }
 }
 
-void GpuBulletSystem::render(SDL_Renderer* renderer, const Camera2D& camera, const TextureResource* texture) {
+void CpuMassBulletRenderSystem::render(SDL_Renderer* renderer, const Camera2D& camera, const TextureResource* texture) {
     if (!renderer || !texture || !texture->texture) return;
 
     vertices_.clear();
     indices_.clear();
+    preparedQuadCount_ = 0;
 
     const std::array<SDL_FPoint, 4> uvs = {
         SDL_FPoint {0.0F, 0.0F}, SDL_FPoint {1.0F, 0.0F}, SDL_FPoint {1.0F, 1.0F}, SDL_FPoint {0.0F, 1.0F}
     };
 
     int base = 0;
-    for (const GpuBullet& b : bullets_) {
-        if ((b.flags & 1U) == 0U) continue;
+    for (const std::uint32_t slot : activeSlots_) {
+        const GpuBullet& b = bullets_[slot];
 
         const float r = std::max(0.5F, b.radius);
         const std::array<Vec2, 4> corners = {
@@ -114,6 +141,7 @@ void GpuBulletSystem::render(SDL_Renderer* renderer, const Camera2D& camera, con
 
         indices_.insert(indices_.end(), {base + 0, base + 1, base + 2, base + 2, base + 3, base + 0});
         base += 4;
+        ++preparedQuadCount_;
     }
 
     if (!vertices_.empty() && !indices_.empty()) {
@@ -121,8 +149,10 @@ void GpuBulletSystem::render(SDL_Renderer* renderer, const Camera2D& camera, con
     }
 }
 
-std::uint32_t GpuBulletSystem::activeCount() const { return activeCount_; }
+std::uint32_t CpuMassBulletRenderSystem::activeCount() const { return activeCount_; }
 
-std::uint32_t GpuBulletSystem::capacity() const { return capacity_; }
+std::uint32_t CpuMassBulletRenderSystem::capacity() const { return capacity_; }
+
+std::uint32_t CpuMassBulletRenderSystem::preparedQuadCount() const { return preparedQuadCount_; }
 
 } // namespace engine

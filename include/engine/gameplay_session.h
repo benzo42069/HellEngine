@@ -156,8 +156,8 @@ class GameplaySession {
     std::string replayContentVersion_;
     std::string replayContentHash_;
     bool useCompiledPatternGraph_ {false};
-    BulletSimulationMode bulletSimMode_ {BulletSimulationMode::CpuDeterministic};
-    GpuBulletSystem gpuBullets_ {};
+    BulletSimulationMode bulletSimMode_ {BulletSimulationMode::CpuCollisionDeterministic};
+    CpuMassBulletRenderSystem cpuMassBullets_ {};
     PerfProfiler profiler_ {};
     PatternGraphVm graphVm_ {};
     PatternGraphVm::RuntimeState graphVmState_ {};

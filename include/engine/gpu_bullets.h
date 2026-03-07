@@ -10,8 +10,8 @@
 namespace engine {
 
 enum class BulletSimulationMode {
-    CpuDeterministic,
-    GpuMassHybrid,
+    CpuCollisionDeterministic,
+    CpuMassRender,
 };
 
 struct GpuBullet {
@@ -26,7 +26,7 @@ struct GpuBullet {
     float angularVelocityDegPerSec {0.0F};
 };
 
-class GpuBulletSystem {
+class CpuMassBulletRenderSystem {
   public:
     void initialize(std::uint32_t capacity, float worldHalfExtent);
     void clear();
@@ -37,15 +37,23 @@ class GpuBulletSystem {
 
     [[nodiscard]] std::uint32_t activeCount() const;
     [[nodiscard]] std::uint32_t capacity() const;
+    [[nodiscard]] std::uint32_t preparedQuadCount() const;
 
   private:
+    void releaseSlot(std::uint32_t slot);
+
     std::uint32_t capacity_ {0};
     float worldHalfExtent_ {400.0F};
     std::vector<GpuBullet> bullets_ {};
     std::vector<SDL_Vertex> vertices_ {};
     std::vector<int> indices_ {};
     std::vector<std::uint32_t> freeList_ {};
+    std::vector<std::uint32_t> activeSlots_ {};
+    std::vector<std::uint32_t> slotToActiveIndex_ {};
     std::uint32_t activeCount_ {0};
+    std::uint32_t preparedQuadCount_ {0};
 };
+
+using GpuBulletSystem = CpuMassBulletRenderSystem;
 
 } // namespace engine

@@ -1,27 +1,27 @@
-# ASSUMPTIONS: GPU-Driven Bullets (Upgrade 9)
+# ASSUMPTIONS: CPU Mass Bullet Render Path
 
 ## Scope Choice
-Chosen scope: **Option 2 (Hybrid)** adapted to the current backend.
+Chosen scope: **Reposition (Path B)**.
 
-The current engine backend is SDL2 + `SDL_RenderGeometry` and does not expose D3D11/D3D12 compute shaders directly in this codebase.
-To keep the feature safe and shippable without backend rewrite, this patch implements a **GPU-mass hybrid mode**:
+The previous "GPU bullet" naming implied GPU-side simulation architecture that is not present in this codebase.
+The runtime path is now explicitly documented as **CPU mass bullet render**:
 
-- CPU deterministic path remains unchanged and is replay reference.
-- GPU-hybrid path uses packed bullet buffers and bulk geometry rendering for very high visual bullet counts.
+- CPU simulation/update and quad generation.
+- SDL geometry submission for batching.
+- No compute-shader projectile simulation in this path.
 
 ## Determinism
-- **CPU mode**: fully deterministic (unchanged).
-- **GPU-hybrid mode**: best-effort deterministic visual simulation only; not replay-authoritative.
+- `CpuCollisionDeterministic` mode remains replay-authoritative and deterministic.
+- `CpuMassRender` is currently a mass-render-oriented mode boundary and not wired as gameplay-authoritative collision logic.
 
 ## Collision Model
-- GPU-hybrid bullets are currently **visual-only** (no per-bullet collision participation in gameplay logic).
-- This is intentional for safety/performance in mass-scale mode.
+- CPU mass render bullets should be treated as presentation-path bullets unless explicitly integrated into collision ownership paths.
 
 ## Limits
-- Targeted for high bullet counts (100k+ hardware permitting).
-- Final throughput depends on renderer driver and hardware.
+- Capacity and preallocation support 100k+ bullets in stress tests (hardware/perf budget dependent).
+- Update/render traversal now iterates compact active slots, avoiding full-capacity scan cost in hot loops.
 
-## Slot Management Update (Phase 4)
-- Emission no longer linearly scans for inactive entries.
-- Runtime uses free-list slot allocation and cached active count in `GpuBulletSystem`.
-- Complexity: `emit()` O(1), `activeCount()` O(1), expiry reclaim in `update()` O(k) over bullets processed that frame.
+## Slot Management Update
+- Emission is O(1) via free-list.
+- Active traversal is O(k) over active slots.
+- Prepared quads are tracked for profiling via `preparedQuadCount()`.

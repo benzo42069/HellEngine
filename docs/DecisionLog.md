@@ -463,3 +463,14 @@
   - Cleaner ownership boundary between simulation behavior and combat presentation.
   - Better future tooling integration: timeline/encounter editors can target explicit phase and hazard sync hooks.
   - Determinism preserved via deterministic sequence cursoring and per-tick event flush.
+
+
+## 2026-03-07 — Reposition GPU Bullet Path as CPU Mass Render
+- **Decision**: Repositioned the prior `GpuBulletSystem` terminology to `CpuMassBulletRenderSystem` and renamed mode labels to `CpuCollisionDeterministic`/`CpuMassRender`.
+- **Rationale**: Audit required removal of naming ambiguity; current path is CPU-driven sim/prep with batched SDL geometry submission, not GPU compute simulation.
+- **Status**: Accepted.
+
+## 2026-03-07 — Active-slot iteration for CPU Mass Bullet Render
+- **Decision**: Added compact `activeSlots_` + `slotToActiveIndex_` bookkeeping so update/render loops iterate only live bullets.
+- **Rationale**: Improves scaling behavior and profiling clarity at high bullet counts while preserving deterministic update order within active set transitions.
+- **Status**: Accepted.

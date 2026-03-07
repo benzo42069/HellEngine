@@ -108,7 +108,7 @@ int Runtime::run() {
     audio_.playMusic();
 
     session_.projectiles_.initialize(config_.projectileCapacity, 420.0F, 32, 18);
-    session_.gpuBullets_.initialize(std::max<std::uint32_t>(config_.projectileCapacity, 500000U), 420.0F);
+    session_.cpuMassBullets_.initialize(std::max<std::uint32_t>(config_.projectileCapacity, 500000U), 420.0F);
 
     std::string packSearchPath = config_.contentPackPath;
     for (const auto* plugin : engine::public_api::contentPackPlugins()) {

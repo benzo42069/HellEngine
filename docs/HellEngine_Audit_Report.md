@@ -346,3 +346,9 @@ This addresses the prior audit gap where authored art handling was underdevelope
 - Implemented production baseline audio runtime with deterministic event-queue integration and content-driven routing.
 - Added bus volumes (master/music/sfx), music loop support, and gameplay/UI audio trigger hooks.
 - Added content pipeline support for `audio` metadata in packs plus runtime parsing and fallback behavior.
+
+## Audit Follow-up (2026-03-07): GPU Bullet Path Repositioned to CPU Mass Render
+- Closed the naming/expectation gap by renaming the implementation to `CpuMassBulletRenderSystem` and explicit mode labels (`CpuCollisionDeterministic`, `CpuMassRender`).
+- Clarified that this path is CPU-driven update + quad preparation with batched submission, not GPU compute projectile simulation.
+- Improved scalability by switching update/render traversal to compact active-slot iteration (`activeSlots_`) while keeping O(1) free-list emission.
+- Added explicit render-prep telemetry surface (`preparedQuadCount`) and refreshed benchmark/render-path documentation.

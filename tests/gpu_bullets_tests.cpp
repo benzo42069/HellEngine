@@ -4,8 +4,8 @@
 #include <iostream>
 
 int main() {
-    engine::GpuBulletSystem gpu;
-    gpu.initialize(1000, 400.0F);
+    engine::CpuMassBulletRenderSystem cpuMass;
+    cpuMass.initialize(1000, 400.0F);
 
     engine::GpuBullet b;
     b.flags = 1U;
@@ -14,25 +14,24 @@ int main() {
     b.velY = 0.0F;
     b.radius = 2.0F;
 
-    if (!gpu.emit(b)) {
+    if (!cpuMass.emit(b)) {
         std::cerr << "emit failed\n";
         return EXIT_FAILURE;
     }
 
-    gpu.update(0.5F);
-    if (gpu.activeCount() != 1) {
+    cpuMass.update(0.5F);
+    if (cpuMass.activeCount() != 1) {
         std::cerr << "bullet should still be active\n";
         return EXIT_FAILURE;
     }
 
-    gpu.update(0.6F);
-    if (gpu.activeCount() != 0) {
+    cpuMass.update(0.6F);
+    if (cpuMass.activeCount() != 0) {
         std::cerr << "bullet should be culled after lifetime expiry\n";
         return EXIT_FAILURE;
     }
 
-
-    engine::GpuBulletSystem mass;
+    engine::CpuMassBulletRenderSystem mass;
     mass.initialize(100000, 400.0F);
     engine::GpuBullet m;
     m.flags = 1U;
@@ -61,6 +60,11 @@ int main() {
             std::cerr << "free list refill failed\n";
             return EXIT_FAILURE;
         }
+    }
+    mass.clear();
+    if (mass.activeCount() != 0U || mass.preparedQuadCount() != 0U) {
+        std::cerr << "clear did not reset mass renderer bookkeeping\n";
+        return EXIT_FAILURE;
     }
 
     std::cout << "gpu_bullets_tests passed\n";
