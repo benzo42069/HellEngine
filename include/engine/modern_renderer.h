@@ -3,6 +3,8 @@
 #include <engine/palette_fx_templates.h>
 #include <engine/render2d.h>
 
+#include <glad/glad.h>
+
 #include <SDL.h>
 #include <nlohmann/json_fwd.hpp>
 
@@ -42,12 +44,20 @@ struct PostFxSettings {
     bool vignetteEnabled {true};
     bool colorGradingEnabled {true};
     float bloomIntensity {0.0F};
+    float bloomThreshold {1.0F};
     float bloomRadius {0.0F};
     float vignetteIntensity {0.0F};
+    float vignetteRoundness {1.0F};
     float exposure {1.0F};
     float contrast {1.0F};
     float saturation {1.0F};
+    float gamma {1.0F};
+    float chromaticAberration {0.0F};
+    float filmGrain {0.0F};
+    float scanlineIntensity {0.0F};
 };
+
+PostFxSettings postFxFromPreset(const FxPreset& preset);
 
 nlohmann::json toJson(const MaterialParamBlock& block);
 bool materialParamBlockFromJson(const nlohmann::json& json, MaterialParamBlock& out, std::string& error);
@@ -69,17 +79,47 @@ class RendererModernPipeline {
     [[nodiscard]] const PostFxSettings& postFx() const;
 
   private:
+    struct RenderTarget {
+        GLuint fbo {0};
+        GLuint colorTex {0};
+        int width {1};
+        int height {1};
+    };
+
     bool createTargets(int width, int height, std::string* error);
     void releaseTargets();
-    void drawBloomLite();
-    void drawVignette();
-    void drawColorGrade();
+    bool createTarget(RenderTarget& target, int width, int height, std::string* error);
+    void releaseTarget(RenderTarget& target);
+    bool initializeGlResources(std::string* error);
+    void releaseGlResources();
+    bool compileProgram(GLuint& program, const char* fragShaderPath, std::string* error);
+    bool checkFramebuffer(GLuint fbo, std::string* error) const;
+    void ensureQuadGeometry();
+    void drawFullscreenQuad() const;
+    void runBloomPass();
+    void runVignettePass(GLuint inputTex, GLuint outputFbo);
+    void runCompositePass(GLuint inputTex, GLuint outputFbo);
+    void drawBloomLiteFallback();
+    void drawVignetteFallback();
+    void drawColorGradeFallback();
 
     SDL_Renderer* renderer_ {nullptr};
-    SDL_Texture* sceneTarget_ {nullptr};
-    SDL_Texture* bloomTarget_ {nullptr};
+    bool glAvailable_ {false};
+    GLuint postVertShader_ {0};
+    GLuint bloomProgram_ {0};
+    GLuint vignetteProgram_ {0};
+    GLuint compositeProgram_ {0};
+    GLuint quadVao_ {0};
+    GLuint quadVbo_ {0};
+    RenderTarget sceneBuffer_ {};
+    RenderTarget bloomBuffer_ {};
+    RenderTarget outputBuffer_ {};
+
+    SDL_Texture* sceneTargetFallback_ {nullptr};
+    SDL_Texture* bloomTargetFallback_ {nullptr};
     int width_ {1};
     int height_ {1};
+    float timeSeconds_ {0.0F};
     PostFxSettings fx_ {};
 };
 

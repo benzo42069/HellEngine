@@ -395,3 +395,9 @@
 - **Decision**: Add `PaletteRampTexture` that builds a 64px-wide RGBA ramp per palette row from the palette template registry, supporting Band3 and GradientRamp generation plus `glTexSubImage2D` single-row hot-reload.
 - **Rationale**: Keeps palette lookup deterministic, tiny in memory footprint (~16KB), and fast to patch when JSON palette definitions change.
 - **Status**: Accepted.
+
+## 2026-03-07 — Real post-processing shaders: Kawase bloom, vignette, tone mapping, chromatic aberration, film grain, scanlines
+- **Context**: Existing post-FX path used fake SDL overlays, so editor controls could not drive physically plausible bloom, tone mapping, or camera-style post passes.
+- **Decision**: Replace fake post overlays with shader-driven passes in `RendererModernPipeline`: half-resolution Kawase bloom (threshold + 4 blur iterations + additive composite), vignette pass, and final composite pass including tone mapping, exposure/contrast/saturation, chromatic aberration, film grain, and scanlines.
+- **Rationale**: Preserves presentation-only coupling while upgrading visual quality and making PostFx controls map directly to shader uniforms and palette FX presets.
+- **Status**: Accepted.
