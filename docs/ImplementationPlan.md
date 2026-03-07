@@ -410,3 +410,15 @@ Completed items:
   - Added explicit `preparedQuadCount()` metric for render-prep profiling.
 - Validation:
   - Updated `gpu_bullets_tests` to cover renamed class usage and clear/reset bookkeeping checks.
+
+## 2026-03-07 — Camera shake vocabulary rollout (Completed)
+- Added a dedicated `CameraShakeSystem` module (`camera_shake.h/.cpp`) with six profiles, additive blending, max 4 simultaneous instances, and ±20 px clamped aggregate offsets.
+- Updated render integration so frame-time camera updates consume emitted shake events through profile-based `ShakeParams` instead of single-mode shake usage.
+- Wired gameplay event mappings to the new shake vocabulary:
+  - Player hit → `Impact`
+  - Graze → `GrazeTremor` (`amplitude = 0.5`)
+  - Boss transition → `BossRumble` (`amplitude = 4.0`, `duration = 0.4`)
+  - Defensive special → `SpecialPulse` (`amplitude = 2.0`)
+  - Bullet explosion shards → `Explosion` (`amplitude = 3.0`)
+  - Ambient periodic shake remains low-amplitude `Ambient` profile.
+- Deprecated legacy `Camera2D::setShake()` in favor of profile-driven `shakeSystem().trigger()` usage.

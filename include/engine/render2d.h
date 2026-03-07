@@ -2,6 +2,9 @@
 
 #include <SDL.h>
 
+#include <engine/camera_shake.h>
+#include <engine/math_types.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -12,58 +15,11 @@
 
 namespace engine {
 
-struct Vec2 {
-    float x {0.0F};
-    float y {0.0F};
-};
-
 struct Color {
     Uint8 r {255};
     Uint8 g {255};
     Uint8 b {255};
     Uint8 a {255};
-};
-
-enum class ShakeProfile : std::uint8_t {
-    Impact,
-    BossRumble,
-    GrazeTremor,
-    SpecialPulse,
-    Explosion,
-    Ambient,
-};
-
-struct ShakeParams {
-    ShakeProfile profile {ShakeProfile::Impact};
-    float amplitude {2.0F};
-    float duration {0.15F};
-    Vec2 direction {0.0F, 0.0F};
-    float frequency {30.0F};
-    float damping {8.0F};
-};
-
-class CameraShakeSystem {
-  public:
-    void trigger(const ShakeParams& params);
-    void update(float dt);
-    [[nodiscard]] Vec2 offset() const;
-    void clear();
-
-  private:
-    static constexpr int kMaxActive = 4;
-    struct ActiveShake {
-        ShakeParams params;
-        float elapsed {0.0F};
-        bool active {false};
-    };
-
-    [[nodiscard]] static Vec2 normalized(Vec2 v);
-    [[nodiscard]] static float noise(float value);
-    [[nodiscard]] static Vec2 profileOffset(const ActiveShake& shake);
-
-    std::array<ActiveShake, kMaxActive> shakes_ {};
-    std::size_t nextReplaceIndex_ {0};
-    Vec2 currentOffset_ {0.0F, 0.0F};
 };
 
 class Camera2D {
@@ -73,7 +29,7 @@ class Camera2D {
     void pan(Vec2 delta);
     void setZoom(float zoom);
     void addZoom(float delta);
-    void setShake(float amplitude, float seconds);
+    [[deprecated("Use shakeSystem().trigger() with ShakeParams profiles")]] void setShake(float amplitude, float seconds);
     void update(float dt);
     CameraShakeSystem& shakeSystem();
     [[nodiscard]] const CameraShakeSystem& shakeSystem() const;

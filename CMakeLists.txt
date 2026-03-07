@@ -104,6 +104,7 @@ add_library(engine_core STATIC
   src/engine/audio_system.cpp
   src/engine/bullet_palette.cpp
   src/engine/bullet_sprite_gen.cpp
+  src/engine/camera_shake.cpp
   src/engine/config.cpp
   src/engine/crash_handler.cpp
   src/engine/diagnostics.cpp

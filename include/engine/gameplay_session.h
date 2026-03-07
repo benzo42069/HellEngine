@@ -3,6 +3,7 @@
 #include <engine/archetypes.h>
 #include <engine/audio_system.h>
 #include <engine/bullet_palette.h>
+#include <engine/camera_shake.h>
 #include <engine/config.h>
 #include <engine/danger_field.h>
 #include <engine/defensive_special.h>
