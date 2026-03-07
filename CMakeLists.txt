@@ -135,6 +135,8 @@ add_library(engine_core STATIC
   src/engine/replay.cpp
   src/engine/render_pipeline.cpp
   src/engine/render2d.cpp
+  src/engine/shader_cache.cpp
+  src/engine/sprite_atlas_gen.cpp
   src/engine/run_structure.cpp
   src/engine/runtime.cpp
   src/engine/standards.cpp
@@ -142,12 +144,14 @@ add_library(engine_core STATIC
   src/engine/traits.cpp
   src/engine/upgrade_ui_model.cpp
   src/stb_impl.cpp
+  third_party/glad/src/glad.cpp
 )
 
 target_include_directories(engine_core
   PUBLIC
     include
     third_party/stb
+    third_party/glad/include
     "${CMAKE_BINARY_DIR}/generated"
 )
 

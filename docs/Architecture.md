@@ -52,3 +52,11 @@
 - Add authoring UI in `editor_tools.cpp`.
 - Add deterministic verifier probes in `runtime.cpp` + `replay.cpp`.
 
+
+## Rendering pipeline additions (OpenGL hybrid)
+
+- `RenderPipeline` now attempts to initialize an OpenGL 3.3 Core context (`SDL_WINDOW_OPENGL`) and GLAD loader.
+- `ShaderCache` compiles/links GLSL programs from `assets/shaders/` (disk-loaded for hot-reload workflows).
+- `GrayscaleSpriteAtlas` generates a procedural grayscale SDF atlas texture for six bullet archetype shapes (circle/rice/star/diamond/ring/beam).
+- Hybrid rendering model: OpenGL resources are initialized for shader-driven bullets while `SDL_Renderer` remains active for ImGui, debug draw, and existing 2D batching path.
+- If OpenGL init fails, renderer startup continues in SDL_Renderer-only mode.
