@@ -62,3 +62,13 @@
 - Boss phase transitions now emit explicit runtime events and counters for tool/runtime observability.
 - Sample boss entries in `data/entities.json` now demonstrate sequence/cadence phase authoring flow.
 - Encounter compiler now emits duration and owner data per schedule event to support hazard/telegraph orchestration.
+## Unreleased
+### Added
+- Added `tools/release_validate.ps1` to run a full release gate (build, test, benchmark, content pack generation, replay verify, packaging, artifact checks).
+
+### Changed
+- Hardened `tools/build_release.ps1` to run release validation gates by default instead of only configuring/building.
+- Hardened `tools/package_dist.ps1` to bundle generated content packs and run portable self-validation before creating archives.
+- Improved `build_installer.ps1` diagnostics and output handling around NSIS availability and path resolution.
+- Centralized runtime content compatibility version (`kRuntimePackVersion = 4`) and aligned loader enforcement.
+- Extended `content_packer_tests` with pack metadata compatibility assertions.
