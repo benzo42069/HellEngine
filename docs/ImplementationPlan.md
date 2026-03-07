@@ -490,3 +490,9 @@ Completed release-engineering closure work:
 - Added `release_validate` orchestration script for deterministic clean release checks.
 - Centralized runtime pack version enforcement to prevent compatibility drift.
 - Added release documentation for packaging assumptions and artifact expectations.
+
+## 2026-03-07 — Surgical compile unblocking: palette ramp + GL bullet renderer (Completed)
+- Removed duplicate/conflicting `PaletteRampTexture` declarations/definitions in `include/engine/palette_ramp.h` and aligned implementation in `src/engine/palette_ramp.cpp`.
+- Kept `animationFor` available to renderer call sites by moving it to the public API surface.
+- Fixed `ProjectileAllegiance::Enemy` resolution in `src/engine/gl_bullet_renderer.cpp` via explicit canonical enum header include.
+- Verified `engine_core` builds past the previously failing files.

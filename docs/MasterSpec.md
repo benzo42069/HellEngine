@@ -1624,3 +1624,8 @@ Documentation policy:
 ## Section 27 (Implemented Runtime Baseline) — Runtime feature amendment
 - Integrated `GlBulletRenderer` into `RenderPipeline` for deterministic-sim-safe, presentation-only acceleration of bullets and trails.
 - Added per-frame CPU vertex/index rebuild with preallocated GL buffers and one draw call for active projectiles.
+
+## Section 15 (Rendering Strategy) — Compile hotfix note (2026-03-07)
+- Resolved a palette-ramp header merge regression that duplicated `PaletteRampTexture` members (`textureId`, `rowV`, `shutdown`, and `texture_`) and blocked renderer compilation.
+- `PaletteRampTexture::animationFor` is now exposed in the public interface to match existing `GlBulletRenderer` usage.
+- `GlBulletRenderer` now explicitly includes `projectiles.h` so `ProjectileAllegiance::Enemy` resolves from the canonical projectile allegiance enum.

@@ -540,3 +540,9 @@
 - **Decision**: define runtime content compatibility as shared constant `engine::kRuntimePackVersion = 4`.
 - **Rationale**: avoid drift from duplicated hardcoded values in entity/pattern loaders and packer outputs.
 - **Consequence**: pack-version enforcement becomes explicit and aligned with generated pack metadata.
+
+## 2026-03-07 — Palette ramp compile hotfix scope
+- **Context**: `engine_core` build was blocked by duplicated `PaletteRampTexture` declarations and a renderer-side unresolved projectile allegiance symbol.
+- **Decision**: Apply a surgical fix: deduplicate `palette_ramp.h/.cpp`, keep one canonical `texture_` + member set, expose `animationFor` publicly, and include `projectiles.h` in `gl_bullet_renderer.cpp`.
+- **Rationale**: Restores compile integrity without redesigning palette or projectile rendering architecture.
+- **Status**: Accepted.

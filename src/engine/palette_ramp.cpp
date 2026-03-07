@@ -2,6 +2,9 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <cstring>
+#include <vector>
 
 namespace engine {
 
@@ -20,12 +23,7 @@ int mapAnimationMode(const PaletteAnimationMode mode) {
 
 float lerp(const float a, const float b, const float t) {
     return a + (b - a) * t;
-#include <cmath>
-#include <cstring>
-#include <vector>
-
-namespace engine {
-namespace {
+}
 
 std::uint8_t toByte(const float channel) {
     return static_cast<std::uint8_t>(std::clamp(std::lround(channel * 255.0F), 0L, 255L));
@@ -140,17 +138,7 @@ bool PaletteRampTexture::buildFromRegistry(const PaletteFxTemplateRegistry& regi
     }
 
     glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGBA8,
-        kRampWidth,
-        paletteCount_,
-        0,
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
-        image.data()
-    );
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kRampWidth, paletteCount_, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -191,10 +179,16 @@ int PaletteRampTexture::paletteCount() const {
     return paletteCount_;
 }
 
-float PaletteRampTexture::rowV(const std::uint8_t index) const {
-    if (paletteCount_ <= 0) return 0.5F;
-    const std::uint8_t clamped = static_cast<std::uint8_t>(std::min<int>(index, paletteCount_ - 1));
-    return (static_cast<float>(clamped) + 0.5F) / static_cast<float>(paletteCount_);
+float PaletteRampTexture::rowV(const std::uint8_t paletteIndex) const {
+    if (paletteCount_ > 0) {
+        const int row = std::clamp<int>(paletteIndex, 0, paletteCount_ - 1);
+        return (static_cast<float>(row) + 0.5F) / static_cast<float>(paletteCount_);
+    }
+    if (height_ > 0) {
+        const int row = std::clamp<int>(paletteIndex, 0, height_ - 1);
+        return (static_cast<float>(row) + 0.5F) / static_cast<float>(height_);
+    }
+    return 0.5F;
 }
 
 const PaletteAnimationSettings& PaletteRampTexture::animationFor(const std::uint8_t index) const {
@@ -216,12 +210,9 @@ void PaletteRampTexture::shutdown() {
     width_ = 0;
     height_ = 0;
     rowAnimations_.clear();
-}
-
-float PaletteRampTexture::rowV(const std::uint8_t paletteIndex) const {
-    if (height_ <= 0) return 0.5F;
-    const int row = std::clamp<int>(paletteIndex, 0, height_ - 1);
-    return (static_cast<float>(row) + 0.5F) / static_cast<float>(height_);
+    paletteCount_ = 0;
+    paletteNameToIndex_.clear();
+    registry_ = nullptr;
 }
 
 PaletteRampTexture::RowAnimation PaletteRampTexture::rowAnimation(const std::uint8_t paletteIndex) const {
@@ -243,9 +234,6 @@ PaletteRampTexture::RowAnimation PaletteRampTexture::mostCommonAnimation() const
         if (modeCount[i] > modeCount[winner]) winner = i;
     }
     return sample[winner];
-    paletteCount_ = 0;
-    paletteNameToIndex_.clear();
-    registry_ = nullptr;
 }
 
 void PaletteRampTexture::buildRow(const std::uint8_t index, const PaletteTemplate& templ) {
@@ -273,7 +261,7 @@ void PaletteRampTexture::buildRow(const std::uint8_t index, const PaletteTemplat
     const int endB = std::clamp(static_cast<int>(std::round(params.thresholdB * static_cast<float>(kRampWidth))), 0, kRampWidth);
     constexpr int kBlend = 4;
 
-    auto colorFor = [&](int x) -> PaletteColor {
+    auto colorFor = [&](const int x) -> PaletteColor {
         PaletteColor out = params.paletteCore;
 
         if (x < endA) {

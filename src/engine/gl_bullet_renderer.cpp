@@ -1,4 +1,5 @@
 #include <engine/gl_bullet_renderer.h>
+#include <engine/projectiles.h>
 
 #include <algorithm>
 #include <array>
@@ -125,7 +126,6 @@ void GlBulletRenderer::buildVertexBuffer(
 ) {
     (void)velX;
     (void)velY;
-    (void)paletteRamp;
     if (!initialized()) return;
 
     quadCount_ = 0;
