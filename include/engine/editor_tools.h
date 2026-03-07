@@ -2,6 +2,7 @@
 
 #include <SDL.h>
 
+#include <engine/encounter_graph.h>
 #include <engine/palette_fx_templates.h>
 #include <engine/standards.h>
 
@@ -121,6 +122,16 @@ class ControlCenterToolSuite {
     [[nodiscard]] std::string consumeGeneratedGraphPath();
 
   private:
+    void drawWorkspaceShell(const ToolRuntimeSnapshot& snapshot);
+    void drawPaletteFxEditorPanel(const ToolRuntimeSnapshot& snapshot);
+    void drawPatternGraphEditorPanel(const ToolRuntimeSnapshot& snapshot);
+    void drawProjectileEditorPanel();
+    void drawEncounterWaveEditorPanel();
+    void drawTraitUpgradePanel(const ToolRuntimeSnapshot& snapshot);
+    void drawValidationDiagnosticsPanel();
+    EncounterGraphAsset buildEncounterAsset() const;
+    void ensurePatternGraphSeeded();
+    void ensureEncounterNodesSeeded();
     void appendConsole(const std::string& message);
 
     bool initialized_ {false};

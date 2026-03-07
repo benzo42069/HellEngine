@@ -311,3 +311,9 @@ Implemented architectural remediation for the previously identified overloaded `
 - Isolated encounter collision/danger-field-adjacent runtime scratch data in a dedicated encounter partition.
 
 Result: ownership boundaries are now explicit and testable while preserving deterministic replay behavior.
+
+
+## Update: Editor Tools Monolith Decomposition (2026-03-07)
+- Addressed audit concern around monolithic editor tooling by decomposing `ControlCenterToolSuite` panel rendering into modular tool panel methods.
+- Added explicit shared editor services for encounter asset assembly and panel-state seeding to reduce cross-panel coupling.
+- Preserved existing functionality and editor menu topology while improving maintainability and extension readiness.

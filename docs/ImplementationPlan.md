@@ -320,3 +320,18 @@ ctest --test-dir build -C RelWithDebInfo --output-on-failure
 - Existing call-sites continue to use stable `GameplaySession` methods (`playerPos()`, `dangerFieldEnabled()`, `consumeCameraShakeEvents()`, etc.).
 - Internal members formerly accessed as top-level `GameplaySession` fields now route through partition roots (e.g., `simulation_`, `playerState_`, `presentation_`, `debugTools_`, `encounter_`, `progression_`).
 - Replay and deterministic systems were kept in place; tick/replay logic now reads tick from `simulation_.tickIndex`.
+
+
+## Editor Tools Decomposition — Delivered
+- [x] Broke the monolithic `drawControlCenter` flow into modular panel methods aligned with tool domains.
+- [x] Added explicit shared editor service methods for encounter asset build and panel state seeding.
+- [x] Kept existing panel behavior and menu toggles intact (content browser, graph editor, encounter editor, palette/FX, validator, profiler, debug).
+- [x] Preserved runtime/editor contract through `ToolRuntimeSnapshot` read-only consumption in panel methods.
+
+### Migration notes
+- Existing external API remained stable (`ControlCenterToolSuite` public methods unchanged).
+- Internal contributors should add new tools as dedicated panel methods and avoid adding large inline UI blocks to `drawControlCenter`.
+
+### Future extension points
+- Introduce a lightweight panel registry that maps menu toggles to panel method delegates.
+- Move shared panel state structs into dedicated editor service files once additional tooling lands.
