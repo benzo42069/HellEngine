@@ -302,3 +302,21 @@ ctest --test-dir build -C RelWithDebInfo --output-on-failure
 - Edited: `include/engine/projectiles.h`, `src/engine/projectiles.cpp`
 - Edited: `docs/DecisionLog.md`, `docs/ImplementationPlan.md`
 - Edited: `docs/PerfTargets.md` (benchmark note)
+
+## 2026-03-07 — GameplaySession architecture refactor (runtime boundaries)
+
+### Scope implemented
+- Split `GameplaySession` runtime ownership into six state partitions:
+  - `SessionSimulationState` (tick/clock/frame allocator/rng streams)
+  - `PlayerCombatState` (player transform/aim/health/radius)
+  - `ProgressionState` (upgrade screen + focus + progression memo indices)
+  - `PresentationState` (camera shake queue, particle FX, danger-field runtime)
+  - `DebugToolState` (tool suite, debug/perf flags, profiling labels)
+  - `EncounterRuntimeState` (collision target/event buffers and rolling collision counters)
+- Updated runtime integration (`Runtime`) to consume tool state and tick state through the new boundaries.
+- Added `gameplay_session_state_tests` to validate that getter APIs and partitioned ownership remain aligned.
+
+### Migration / integration notes
+- Existing call-sites continue to use stable `GameplaySession` methods (`playerPos()`, `dangerFieldEnabled()`, `consumeCameraShakeEvents()`, etc.).
+- Internal members formerly accessed as top-level `GameplaySession` fields now route through partition roots (e.g., `simulation_`, `playerState_`, `presentation_`, `debugTools_`, `encounter_`, `progression_`).
+- Replay and deterministic systems were kept in place; tick/replay logic now reads tick from `simulation_.tickIndex`.

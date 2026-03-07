@@ -1433,3 +1433,13 @@ Headless mode contract:
   2. `buildGrid()`
   3. `resolveCollisions(targets, outEvents)`
 - `resolveCollisions()` performs target AABB -> grid-cell range query, traverses linked lists in overlapping cells, runs circle-circle narrowphase, and enforces one-hit-per-bullet per tick.
+
+### Runtime Architecture Update — GameplaySession State Partitioning (2026-03-07)
+- `GameplaySession` now owns explicit state partitions to enforce clearer runtime boundaries:
+  - `SessionSimulationState`: deterministic tick-clock and scratch/frame allocation state.
+  - `PlayerCombatState`: player runtime combat data (position, aim target, radius, health).
+  - `ProgressionState`: upgrade/progression UI navigation state.
+  - `PresentationState`: presentation-event sinks and visual runtime state (shake queue, particle effects, danger-field overlay data).
+  - `DebugToolState`: debug/perf/tool integration state.
+  - `EncounterRuntimeState`: deterministic encounter collision scratch buffers/counters.
+- Deterministic simulation behavior is preserved; partitioning is architectural/ownership-focused and keeps replay/hash flow intact.

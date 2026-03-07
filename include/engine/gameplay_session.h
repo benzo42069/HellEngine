@@ -32,6 +32,66 @@
 
 namespace engine {
 
+struct SessionSimulationState {
+    FrameAllocator frameAllocator {1024 * 1024};
+    JobSystem jobSystem {};
+    RngStreams rngStreams {};
+    std::uint64_t tickIndex {0};
+    double simClock {0.0};
+
+    explicit SessionSimulationState(const std::uint64_t seed)
+        : rngStreams(seed) {}
+};
+
+struct PlayerCombatState {
+    Vec2 playerPos {0.0F, 0.0F};
+    Vec2 aimTarget {160.0F, 0.0F};
+    float playerRadius {12.0F};
+    float playerHealth {100.0F};
+};
+
+struct ProgressionState {
+    bool archetypeSelectionOpen {true};
+    bool upgradeScreenOpen {false};
+    std::size_t focusedUpgradeIndex {0};
+    std::size_t zoneIndexMemo {0};
+    std::size_t stageIndexMemo {0};
+};
+
+struct PresentationState {
+    mutable DangerFieldOverlay dangerField {};
+    ParticleFxSystem particleFx {};
+    mutable std::vector<ShakeParams> cameraShakeEvents {};
+    bool dangerFieldEnabled {false};
+
+    PresentationState() { cameraShakeEvents.reserve(16); }
+};
+
+struct DebugToolState {
+    bool showHitboxes {true};
+    bool showGrid {true};
+    bool perfHudOpen {true};
+    bool debugHudOpen {true};
+    ControlCenterToolSuite toolSuite {};
+    std::string hotReloadErrorMessage {};
+    float gpuUpdateMsFrame {0.0F};
+    float gpuRenderMsFrame {0.0F};
+    std::string difficultyProfileLabelCache {"Normal"};
+};
+
+struct EncounterRuntimeState {
+    static constexpr std::uint32_t kMaxCollisionTargets = 512;
+    static constexpr std::uint32_t kMaxCollisionEvents = 8192;
+    std::array<CollisionTarget, kMaxCollisionTargets> collisionTargets {};
+    std::uint32_t collisionTargetCount {0};
+    std::array<CollisionEvent, kMaxCollisionEvents> collisionEvents {};
+    std::uint32_t collisionEventCount {0};
+    float prevTotalCollisions {0};
+    float prevHealthRecoveryAccum {0.0F};
+    float collisionRateAccumulator {0.0F};
+    float collisionRateWindowSeconds {0.0F};
+};
+
 class GameplaySession {
   public:
     struct UpgradeCardAnimState {
@@ -49,27 +109,30 @@ class GameplaySession {
     void renderDangerFieldOverlay(SDL_Renderer* renderer, const Camera2D& camera, float opacity = 0.25F) const;
     [[nodiscard]] std::vector<ShakeParams> consumeCameraShakeEvents() const;
 
-    [[nodiscard]] Vec2 playerPos() const { return playerPos_; }
-    [[nodiscard]] Vec2 aimTarget() const { return aimTarget_; }
-    [[nodiscard]] float playerRadius() const { return playerRadius_; }
-    [[nodiscard]] float playerHealth() const { return playerHealth_; }
-    [[nodiscard]] bool upgradeScreenOpen() const { return upgradeScreenOpen_; }
-    [[nodiscard]] bool perfHudOpen() const { return perfHudOpen_; }
-    [[nodiscard]] bool debugHudOpen() const { return debugHudOpen_; }
-    [[nodiscard]] bool archetypeSelectionOpen() const { return archetypeSelectionOpen_; }
-    [[nodiscard]] bool dangerFieldEnabled() const { return dangerFieldEnabled_; }
-    void setDangerFieldEnabled(bool enabled) { dangerFieldEnabled_ = enabled; }
-    void toggleDangerField() { dangerFieldEnabled_ = !dangerFieldEnabled_; }
+    [[nodiscard]] Vec2 playerPos() const { return playerState_.playerPos; }
+    [[nodiscard]] Vec2 aimTarget() const { return playerState_.aimTarget; }
+    [[nodiscard]] float playerRadius() const { return playerState_.playerRadius; }
+    [[nodiscard]] float playerHealth() const { return playerState_.playerHealth; }
+    [[nodiscard]] bool upgradeScreenOpen() const { return progression_.upgradeScreenOpen; }
+    [[nodiscard]] bool perfHudOpen() const { return debugTools_.perfHudOpen; }
+    [[nodiscard]] bool debugHudOpen() const { return debugTools_.debugHudOpen; }
+    [[nodiscard]] bool archetypeSelectionOpen() const { return progression_.archetypeSelectionOpen; }
+    [[nodiscard]] bool dangerFieldEnabled() const { return presentation_.dangerFieldEnabled; }
+    [[nodiscard]] std::uint64_t tickIndex() const { return simulation_.tickIndex; }
+    [[nodiscard]] bool replayPlaybackMode() const { return replayPlaybackMode_; }
+    [[nodiscard]] bool replayVerificationFailed() const { return replayVerificationFailed_; }
+    void setReplayVerificationFailed(bool failed) { replayVerificationFailed_ = failed; }
+    void setDangerFieldEnabled(bool enabled) { presentation_.dangerFieldEnabled = enabled; }
+    void toggleDangerField() { presentation_.dangerFieldEnabled = !presentation_.dangerFieldEnabled; }
 
-    FrameAllocator frameAllocator_;
-    JobSystem jobSystem_;
-    RngStreams rngStreams_;
-    std::uint64_t tickIndex_ {0};
-    double simClock_ {0.0};
+    SessionSimulationState simulation_;
+    PlayerCombatState playerState_ {};
+    ProgressionState progression_ {};
+    PresentationState presentation_ {};
+    DebugToolState debugTools_ {};
+    EncounterRuntimeState encounter_ {};
 
     ProjectileSystem projectiles_;
-    mutable DangerFieldOverlay dangerField_ {};
-    ParticleFxSystem particleFx_;
     PaletteFxTemplateRegistry bulletPaletteRegistry_ {};
     BulletPaletteTable bulletPaletteTable_ {};
     PatternBank patternBank_;
@@ -94,18 +157,7 @@ class GameplaySession {
     PatternGraphVm::RuntimeState graphVmState_ {};
     DefensiveSpecialSystem defensiveSpecial_ {};
     DifficultyModel difficultyModel_ {};
-    ControlCenterToolSuite toolSuite_;
-    std::string hotReloadErrorMessage_ {};
-    float gpuUpdateMsFrame_ {0.0F};
-    float gpuRenderMsFrame_ {0.0F};
-    std::string difficultyProfileLabelCache_ {"Normal"};
-    static constexpr std::uint32_t kMaxCollisionTargets = 512;
-    static constexpr std::uint32_t kMaxCollisionEvents = 8192;
-    std::array<CollisionTarget, kMaxCollisionTargets> collisionTargets_ {};
-    std::uint32_t collisionTargetCount_ {0};
-    std::array<CollisionEvent, kMaxCollisionEvents> collisionEvents_ {};
-    std::uint32_t collisionEventCount_ {0};
-    mutable std::vector<ShakeParams> cameraShakeEvents_ {};
+    std::array<UpgradeCardAnimState, TraitSystem::choiceCount> cardAnim_ {};
 
   private:
     UpgradeViewStats buildCurrentViewStats() const;
@@ -113,27 +165,6 @@ class GameplaySession {
     bool hasSynergyWithActive(const Trait& trait) const;
 
     EngineConfig& config_;
-    Vec2 playerPos_ {0.0F, 0.0F};
-    Vec2 aimTarget_ {160.0F, 0.0F};
-    float playerRadius_ {12.0F};
-    bool showHitboxes_ {true};
-    bool showGrid_ {true};
-    bool archetypeSelectionOpen_ {true};
-    bool perfHudOpen_ {true};
-    bool debugHudOpen_ {true};
-    bool dangerFieldEnabled_ {false};
-
-    bool upgradeScreenOpen_ {false};
-    std::size_t focusedUpgradeIndex_ {0};
-    std::array<UpgradeCardAnimState, TraitSystem::choiceCount> cardAnim_ {};
-    std::size_t zoneIndexMemo_ {0};
-    std::size_t stageIndexMemo_ {0};
-
-    float prevTotalCollisions_ {0};
-    float prevHealthRecoveryAccum_ {0.0F};
-    float collisionRateAccumulator_ {0.0F};
-    float collisionRateWindowSeconds_ {0.0F};
-    float playerHealth_ {100.0F};
 };
 
 } // namespace engine
