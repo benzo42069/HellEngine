@@ -59,6 +59,9 @@
 - `ShaderCache` compiles/links GLSL programs from `assets/shaders/` (disk-loaded for hot-reload workflows).
 - `GrayscaleSpriteAtlas` generates a procedural grayscale SDF atlas texture for six bullet archetype shapes (circle/rice/star/diamond/ring/beam).
 - Hybrid rendering model: OpenGL resources are initialized for shader-driven bullets while `SDL_Renderer` remains active for ImGui, debug draw, and existing 2D batching path.
+- `PaletteRampTexture` builds a GPU palette ramp LUT (rows per palette) and stores per-row animation metadata used by the bullet shader uniforms.
+- `GlBulletRenderer` consumes projectile SoA arrays (`pos/vel/radius/life/palette/active`) to generate rotated quads on CPU each frame, uploads preallocated dynamic buffers, then issues one draw call for all bullets.
+- Runtime keeps a hard fallback: when GL context/shaders/textures are unavailable, projectiles continue through the existing `SpriteBatch::renderProcedural` path.
 - If OpenGL init fails, renderer startup continues in SDL_Renderer-only mode.
 
 ## Post-processing pass chain

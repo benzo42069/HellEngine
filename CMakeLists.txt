@@ -116,6 +116,7 @@ add_library(engine_core STATIC
   src/engine/editor_tools.cpp
   src/engine/entities.cpp
   src/engine/gpu_bullets.cpp
+  src/engine/gl_bullet_renderer.cpp
   src/engine/gradient_animator.cpp
   src/engine/input_system.cpp
   src/engine/job_system.cpp

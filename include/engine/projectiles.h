@@ -114,7 +114,14 @@ class ProjectileSystem {
     [[nodiscard]] const std::vector<int>& gridNext() const { return gridNext_; }
     [[nodiscard]] const std::vector<float>& posX() const { return posX_; }
     [[nodiscard]] const std::vector<float>& posY() const { return posY_; }
+    [[nodiscard]] const std::vector<float>& velX() const { return velX_; }
+    [[nodiscard]] const std::vector<float>& velY() const { return velY_; }
+    [[nodiscard]] const std::vector<float>& radius() const { return radius_; }
+    [[nodiscard]] const std::vector<float>& life() const { return life_; }
+    [[nodiscard]] const std::vector<std::uint8_t>& paletteIndex() const { return paletteIndex_; }
     [[nodiscard]] const std::vector<std::uint8_t>& active() const { return active_; }
+    [[nodiscard]] const std::vector<std::uint32_t>& activeIndices() const { return activeIndices_; }
+    [[nodiscard]] std::uint32_t activeCount() const { return activeCount_; }
     [[nodiscard]] std::uint32_t gridX() const { return gridX_; }
     [[nodiscard]] std::uint32_t gridY() const { return gridY_; }
     [[nodiscard]] float worldHalfExtent() const { return worldHalfExtent_; }

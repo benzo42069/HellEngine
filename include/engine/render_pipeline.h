@@ -11,6 +11,7 @@
 #include <engine/render2d.h>
 #include <engine/shader_cache.h>
 #include <engine/sprite_atlas_gen.h>
+#include <engine/gl_bullet_renderer.h>
 #include <engine/patterns.h>
 
 #include <SDL.h>
@@ -69,6 +70,8 @@ class RenderPipeline {
     EngineConfig config_ {};
     ShaderCache shaderCache_ {};
     GrayscaleSpriteAtlas spriteAtlas_ {};
+    PaletteRampTexture paletteRamp_ {};
+    GlBulletRenderer glBulletRenderer_ {};
     PaletteRampTexture paletteRampTexture_ {};
 };
 
