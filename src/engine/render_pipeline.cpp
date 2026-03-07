@@ -135,6 +135,7 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     buildSceneOverlay(snapshot, frameDelta);
     spriteBatch_.flush(renderer_, *textures_);
     debugDraw_.flush(renderer_, camera_);
+    snapshot.session.renderDangerFieldOverlay(renderer_, camera_);
     toolSuite.beginFrame();
     toolSuite.drawControlCenter({});
     toolSuite.endFrame();

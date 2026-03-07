@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-06 — Danger field overlay
+- **Context**: Players need lightweight subconscious guidance about bullet density without changing deterministic simulation behavior.
+- **Decision**: Add a presentation-only, low-resolution danger field overlay generated from projectile collision-grid occupancy, smoothed with a box blur, gradient-mapped (blue→yellow→red), and additively blended over the scene.
+- **Rationale**: Reuses existing broadphase data for cheap per-frame density estimation, improving readability while keeping sim/render boundaries clean.
+- **Status**: Accepted.
+
 ## 2026-03-06 — Parallax background layering
 - **Context**: The runtime renderer used a flat clear color with no depth cues behind gameplay actors.
 - **Decision**: Add `BackgroundSystem` with three startup-generated procedural layers (hash-noise deep space, low-alpha grid, and sparse particle dust) using bounded parallax tiling.

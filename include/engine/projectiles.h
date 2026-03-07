@@ -106,6 +106,15 @@ class ProjectileSystem {
     [[nodiscard]] std::uint32_t collectGrazePoints(Vec2 playerPos, float playerRadius, float innerPad, float outerPad, std::uint64_t tick, std::uint64_t cooldownTicks);
     [[nodiscard]] std::span<const ProjectileDespawnEvent> despawnEvents() const;
 
+    [[nodiscard]] const std::vector<int>& gridHead() const { return gridHead_; }
+    [[nodiscard]] const std::vector<int>& gridNext() const { return gridNext_; }
+    [[nodiscard]] const std::vector<float>& posX() const { return posX_; }
+    [[nodiscard]] const std::vector<float>& posY() const { return posY_; }
+    [[nodiscard]] const std::vector<std::uint8_t>& active() const { return active_; }
+    [[nodiscard]] std::uint32_t gridX() const { return gridX_; }
+    [[nodiscard]] std::uint32_t gridY() const { return gridY_; }
+    [[nodiscard]] float worldHalfExtent() const { return worldHalfExtent_; }
+
   private:
     std::uint32_t gridIndexFor(float x, float y) const;
 

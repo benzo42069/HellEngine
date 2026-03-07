@@ -828,6 +828,7 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
         ImGui::Begin("Trait Editor + Upgrade UI Preview");
         ImGui::Checkbox("Spawn upgrade screen", &upgradeDebug_.spawnUpgradeScreen);
         ImGui::Checkbox("Show internal stat modifiers", &upgradeDebug_.showInternalStatModifiers);
+        ImGui::Checkbox("Show danger field overlay", &upgradeDebug_.showDangerField);
         ImGui::Text("Force rarity");
         ImGui::RadioButton("Auto", &upgradeDebug_.forcedRarity, -1); ImGui::SameLine();
         ImGui::RadioButton("Common", &upgradeDebug_.forcedRarity, 0); ImGui::SameLine();
@@ -864,6 +865,8 @@ void ControlCenterToolSuite::drawControlCenter(const ToolRuntimeSnapshot& snapsh
 
 
 const UpgradeDebugOptions& ControlCenterToolSuite::upgradeDebugOptions() const { return upgradeDebug_; }
+
+UpgradeDebugOptions& ControlCenterToolSuite::upgradeDebugOptionsMutable() { return upgradeDebug_; }
 
 ProjectileDebugOptions ControlCenterToolSuite::consumeProjectileDebugOptions() {
     ProjectileDebugOptions out = projectileDebug_;

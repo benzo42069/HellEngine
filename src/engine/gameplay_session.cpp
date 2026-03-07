@@ -103,6 +103,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         }
         const UpgradeDebugOptions& upgradeDebug = toolSuite_.upgradeDebugOptions();
         perfHudOpen_ = upgradeDebug.showPerfHud;
+        dangerFieldEnabled_ = upgradeDebug.showDangerField;
         if (upgradeDebug.spawnUpgradeScreen && !traitSystem_.hasPendingChoices()) {
             (void)traitSystem_.rollChoices();
             upgradeScreenOpen_ = true;
@@ -170,6 +171,18 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         projectiles_.updateMotion(static_cast<float>(dt), dilation.enemyProjectiles, dilation.playerProjectiles);
         emitDespawnParticles();
         projectiles_.buildGrid();
+        if (dangerFieldEnabled_) {
+            dangerField_.buildFromGrid(
+                projectiles_.gridHead(),
+                projectiles_.gridNext(),
+                projectiles_.posX(),
+                projectiles_.posY(),
+                projectiles_.active(),
+                projectiles_.gridX(),
+                projectiles_.gridY(),
+                projectiles_.worldHalfExtent()
+            );
+        }
         collisionTargets_.clear();
         collisionTargets_.push_back(CollisionTarget {.pos = playerPos_, .radius = playerRadius_, .id = 0U, .team = 0U});
         entitySystem_.appendCollisionTargets(collisionTargets_);
@@ -205,6 +218,11 @@ bool GameplaySession::hasSynergyWithActive(const Trait& trait) const {
     return false;
 }
 
+
+void GameplaySession::renderDangerFieldOverlay(SDL_Renderer* renderer, const Camera2D& camera, const float opacity) const {
+    if (!dangerFieldEnabled_) return;
+    dangerField_.render(renderer, camera, opacity);
+}
 void GameplaySession::drawUpgradeSelectionUi(const double frameDelta) {
     if (!upgradeScreenOpen_ || !traitSystem_.hasPendingChoices()) return;
     const ImVec2 viewport = ImGui::GetMainViewport()->Size;
