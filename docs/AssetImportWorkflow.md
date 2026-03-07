@@ -1,5 +1,19 @@
 # Sprite + Texture Asset Import Workflow
 
+This guide is for creators importing source art into runtime packs.
+
+## Quick workflow
+1. Author/update an `art-import` manifest (for example `data/art_import_manifest.json`).
+2. Run `ContentPacker` to validate + compile pack metadata.
+3. Fix any import validation errors and repack.
+4. Run the runtime with the generated pack.
+
+```bash
+./build/ContentPacker --input data --output content.pak
+./build/EngineDemo --content-pack content.pak
+```
+
+
 ## Manifest format
 Author source-art manifests as JSON files with:
 

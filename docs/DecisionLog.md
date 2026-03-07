@@ -1,6 +1,12 @@
 # Decision Log
 
 
+## 2026-03-07 — Projectile hot-path allocation cleanup
+- **Context**: The legacy `ProjectileSystem::update()` compatibility wrapper and procedural fallback renderer still had allocation risks in hot paths.
+- **Decision**: Keep `update()` for test compatibility but preallocate `legacyCollisionEvents_` to capacity during `initialize()`, and precompute all procedural bullet texture IDs (`64 palettes × 6 shapes`) once during initialization for indexed lookup in `renderProcedural()`.
+- **Rationale**: Removes per-tick/per-frame heap churn while preserving compatibility and deterministic behavior across legacy and fallback execution paths.
+- **Status**: Accepted.
+
 ## 2026-03-07 — Persistence schema and fallback contract
 - **Context**: Save/profile/settings persistence existed in isolated paths but lacked a single migration strategy and corrupted-data fallback baseline.
 - **Decision**: Add a dedicated persistence module with explicit schema versions (`v2` current), hard rejection of unknown future schemas, and explicit v1→v2 migrators for settings/profiles.
@@ -481,3 +487,49 @@
 - **Decision**: Added compact `activeSlots_` + `slotToActiveIndex_` bookkeeping so update/render loops iterate only live bullets.
 - **Rationale**: Improves scaling behavior and profiling clarity at high bullet counts while preserving deterministic update order within active set transitions.
 - **Status**: Accepted.
+
+## 2026-03-07 — Generalized content hot-reload
+- **Context**: Runtime hot-reload covered only generated pattern graph handoff and did not provide a unified JSON content refresh path.
+- **Decision**: Introduce `ContentWatcher` and deterministic tick-boundary polling for patterns, entities, traits, difficulty profiles, and palette templates; each reload validates into temporary state and swaps only on success.
+- **Rationale**: Keeps replay determinism and protects runtime state by preserving previous content when parse/validation fails.
+- **Status**: Accepted.
+
+
+## 2026-03-07 — Audio system fallback boundary
+- **Context**: Runtime feedback needed basic SFX without introducing deterministic simulation coupling or hard failures when audio assets/devices are missing.
+- **Decision**: Use SDL_mixer-based `AudioSystem` owned by `Runtime`, feed it from a presentation-only `GameplaySession` audio-event queue, and dispatch sounds outside `simTick()`.
+- **Rationale**: Keeps replay hashes and simulation state independent from audio timing/device state while allowing graceful silence when init/load fails.
+- **Status**: Accepted.
+## 2026-03-07 — Catch2 v3.5.2 test framework adoption and targeted migration
+- **Context**: Test infrastructure mixed many standalone `main()` executables with manual assertions, limiting discovery/tag filtering and making property/fuzz style tests harder to scale.
+- **Decision**: Adopt Catch2 v3.5.2 via CMake `FetchContent`, migrate five core test binaries (`projectile`, `projectile_behavior`, `pattern_graph`, `replay`, `collision_correctness`) to `TEST_CASE`/`REQUIRE`, and add determinism property and content fuzz test targets.
+- **Rationale**: Improves test ergonomics and selective execution (`[determinism]`, `[fuzz]`) while preserving existing logic and leaving non-migrated tests unchanged.
+- **Status**: Accepted.
+## 2026-03-07 — Camera shake vocabulary: 6 profiles, additive blending, max 4 simultaneous
+- **Context**: A single shake mode made combat feedback feel uniform and forced simulation code to hand-tune one-off shake parameters.
+- **Decision**: Standardize camera shake around a six-profile vocabulary (`Impact`, `BossRumble`, `GrazeTremor`, `SpecialPulse`, `Explosion`, `Ambient`) implemented by `CameraShakeSystem`, with additive blending, a max of four active shakes, and total per-axis clamp to ±20 px.
+- **Rationale**: Keeps shake presentation-only and deterministic per frame while giving gameplay hooks consistent, reusable semantics across hit, graze, boss, special, and ambience events.
+- **Status**: Accepted.
+## 2026-03-07 — GlBulletRenderer single-draw-call OpenGL bullet rendering with SpriteBatch fallback
+- **Context**: Shader cache, grayscale sprite atlas, and palette ramp texture pipeline were available but runtime bullets still defaulted to CPU SpriteBatch quads.
+- **Decision**: Wire `GlBulletRenderer` into `RenderPipeline` to rebuild one CPU vertex/index stream each frame and submit bullets + trails in a single OpenGL draw call when GL is available; keep existing `renderProcedural` fallback for non-GL/runtime-failure paths.
+- **Rationale**: Preserves deterministic simulation ownership and replay/hash boundaries while unlocking GPU-side presentation throughput and reducing draw-call overhead.
+- **Status**: Accepted.
+## 2026-03-07 — External-facing creator documentation baseline
+- **Context**: Documentation quality was strong for internal engineering, but external onboarding and creator workflow coverage was fragmented.
+- **Decision**: Establish a dedicated external documentation set covering getting started, asset import, pattern authoring, boss/encounter authoring, replay/debug, plugin/mod extension overview, creator performance guidance, and troubleshooting.
+- **Rationale**: Improves product readiness for creators/integrators while keeping documentation aligned to implemented runtime and content-pipeline behavior.
+- **Status**: Accepted.
+## 2026-03-07 — Release gating moved into build/package scripts
+- **Decision**: promote release scripts from convenience wrappers to required gates.
+- **Rationale**: audit identified productization gaps where tests/content/replay checks could be skipped by default.
+- **Implementation**:
+  - `tools/build_release.ps1` now runs tests, benchmarks, content pack build (default + sample), and replay verification by default.
+  - `tools/package_dist.ps1` now performs portable self-validation before zip creation.
+  - `tools/release_validate.ps1` added as end-to-end release gate.
+- **Consequence**: slower release build command but substantially stronger confidence and failure diagnostics.
+
+## 2026-03-07 — Centralized runtime pack compatibility version
+- **Decision**: define runtime content compatibility as shared constant `engine::kRuntimePackVersion = 4`.
+- **Rationale**: avoid drift from duplicated hardcoded values in entity/pattern loaders and packer outputs.
+- **Consequence**: pack-version enforcement becomes explicit and aligned with generated pack metadata.

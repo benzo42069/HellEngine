@@ -1,5 +1,11 @@
 # Authoring Guide
 
+> Note: External creator docs are now split by workflow for faster onboarding:
+> - `docs/PatternAuthoringGuide.md`
+> - `docs/BossEncounterAuthoring.md`
+> - `docs/CreatorPerformanceGuide.md`
+> - `docs/ReplayAndDebugGuide.md`
+
 This guide covers authoring for:
 - patterns (legacy layered)
 - graph patterns (compiled VM)
@@ -284,3 +290,8 @@ Authoring expectations:
 - Validate in both modern renderer path and fallback path.
 
 Palette FX templates and post-FX presets should be reviewed together so projectile palette motion and scene grading remain visually coherent.
+## Editing JSON while the engine is running
+- You can safely edit `data/patterns.json`, `assets/patterns/sandbox_patterns.json`, `data/entities.json`, `data/traits.json`, `data/difficulty_profiles.json`, and `data/palettes/palette_fx_templates.json` while runtime is active.
+- The engine polls these files once per ~1 second (60 ticks) and hot-reloads changes at deterministic tick boundaries.
+- If JSON is invalid, the editor console/log reports the error and the previous in-memory content remains active.
+

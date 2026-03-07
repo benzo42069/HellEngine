@@ -55,6 +55,16 @@ FetchContent_Declare(
   GIT_TAG release-2.30.5
 )
 
+# Keep SDL_mixer self-contained in CI/dev environments without system codec dev packages.
+set(SDL2MIXER_VENDORED ON CACHE BOOL "Use vendored dependencies for SDL2_mixer" FORCE)
+set(SDL2MIXER_SAMPLES OFF CACHE BOOL "Disable SDL2_mixer sample binaries" FORCE)
+
+FetchContent_Declare(
+  SDL2_mixer
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+  GIT_TAG release-2.8.1
+)
+
 FetchContent_Declare(
   imgui
   GIT_REPOSITORY https://github.com/ocornut/imgui.git
@@ -67,7 +77,17 @@ FetchContent_Declare(
   GIT_TAG v3.11.3
 )
 
-FetchContent_MakeAvailable(SDL2 imgui nlohmann_json)
+FetchContent_MakeAvailable(SDL2 SDL2_mixer imgui nlohmann_json)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG v3.5.2
+)
+
+FetchContent_MakeAvailable(SDL2 imgui nlohmann_json Catch2)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(CTest)
+include(Catch)
 
 find_package(OpenGL REQUIRED)
 
@@ -104,11 +124,13 @@ add_library(engine_core STATIC
   src/engine/audio_system.cpp
   src/engine/bullet_palette.cpp
   src/engine/bullet_sprite_gen.cpp
+  src/engine/camera_shake.cpp
   src/engine/config.cpp
   src/engine/crash_handler.cpp
   src/engine/diagnostics.cpp
   src/engine/gameplay_session.cpp
   src/engine/content_pipeline.cpp
+  src/engine/content_watcher.cpp
   src/engine/deterministic_rng.cpp
   src/engine/defensive_special.cpp
   src/engine/danger_field.cpp
@@ -164,6 +186,7 @@ target_include_directories(engine_core
 target_link_libraries(engine_core
   PUBLIC
     ${ENGINEDEMO_SDL_TARGET}
+    SDL2_mixer::SDL2_mixer
     imgui_sdl2
     nlohmann_json::nlohmann_json
     OpenGL::GL
@@ -181,10 +204,11 @@ endif()
 add_executable(ContentPacker
   src/tools_content_packer.cpp
   src/engine/content_pipeline.cpp
+  src/engine/content_watcher.cpp
   src/engine/palette_fx_templates.cpp
 )
 
-target_include_directories(ContentPacker PRIVATE include)
+target_include_directories(ContentPacker PRIVATE include ${SDL2_SOURCE_DIR}/include ${SDL2_BINARY_DIR}/include)
 target_link_libraries(ContentPacker PRIVATE nlohmann_json::nlohmann_json)
 
 add_executable(EngineDemo
@@ -197,7 +221,6 @@ if(WIN32)
   target_compile_definitions(EngineDemo PRIVATE SDL_MAIN_HANDLED)
 endif()
 
-enable_testing()
 
 add_executable(timing_tests tests/timing_tests.cpp)
 target_link_libraries(timing_tests PRIVATE engine_core)
@@ -212,8 +235,8 @@ target_link_libraries(render2d_tests PRIVATE engine_core)
 add_test(NAME render2d_tests COMMAND render2d_tests)
 
 add_executable(projectile_tests tests/projectile_tests.cpp)
-target_link_libraries(projectile_tests PRIVATE engine_core)
-add_test(NAME projectile_tests COMMAND projectile_tests)
+target_link_libraries(projectile_tests PRIVATE engine_core Catch2::Catch2WithMain)
+catch_discover_tests(projectile_tests)
 
 add_executable(pattern_tests tests/pattern_tests.cpp)
 target_link_libraries(pattern_tests PRIVATE engine_core)
@@ -263,8 +286,8 @@ target_link_libraries(editor_tools_tests PRIVATE engine_core)
 add_test(NAME editor_tools_tests COMMAND editor_tools_tests)
 
 add_executable(replay_tests tests/replay_tests.cpp)
-target_link_libraries(replay_tests PRIVATE engine_core)
-add_test(NAME replay_tests COMMAND replay_tests)
+target_link_libraries(replay_tests PRIVATE engine_core Catch2::Catch2WithMain)
+catch_discover_tests(replay_tests)
 
 add_executable(upgrade_ui_tests tests/upgrade_ui_tests.cpp)
 target_link_libraries(upgrade_ui_tests PRIVATE engine_core)
@@ -275,12 +298,12 @@ target_link_libraries(upgrade_ui_model_tests PRIVATE engine_core)
 add_test(NAME upgrade_ui_model_tests COMMAND upgrade_ui_model_tests)
 
 add_executable(projectile_behavior_tests tests/projectile_behavior_tests.cpp)
-target_link_libraries(projectile_behavior_tests PRIVATE engine_core)
-add_test(NAME projectile_behavior_tests COMMAND projectile_behavior_tests)
+target_link_libraries(projectile_behavior_tests PRIVATE engine_core Catch2::Catch2WithMain)
+catch_discover_tests(projectile_behavior_tests)
 
 add_executable(pattern_graph_tests tests/pattern_graph_tests.cpp)
-target_link_libraries(pattern_graph_tests PRIVATE engine_core)
-add_test(NAME pattern_graph_tests COMMAND pattern_graph_tests)
+target_link_libraries(pattern_graph_tests PRIVATE engine_core Catch2::Catch2WithMain)
+catch_discover_tests(pattern_graph_tests)
 
 add_executable(pattern_generator_tests tests/pattern_generator_tests.cpp)
 target_link_libraries(pattern_generator_tests PRIVATE engine_core)
@@ -348,8 +371,16 @@ target_link_libraries(standards_tests PRIVATE engine_core)
 add_test(NAME standards_tests COMMAND standards_tests)
 
 add_executable(collision_correctness_tests tests/collision_correctness_tests.cpp)
-target_link_libraries(collision_correctness_tests PRIVATE engine_core)
-add_test(NAME collision_correctness_tests COMMAND collision_correctness_tests)
+target_link_libraries(collision_correctness_tests PRIVATE engine_core Catch2::Catch2WithMain)
+catch_discover_tests(collision_correctness_tests)
+
+add_executable(determinism_property_tests tests/determinism_property_tests.cpp)
+target_link_libraries(determinism_property_tests PRIVATE engine_core Catch2::Catch2WithMain)
+catch_discover_tests(determinism_property_tests)
+
+add_executable(content_fuzz_tests tests/content_fuzz_tests.cpp)
+target_link_libraries(content_fuzz_tests PRIVATE engine_core Catch2::Catch2WithMain)
+catch_discover_tests(content_fuzz_tests)
 
 add_executable(determinism_cross_config_test tests/determinism_cross_config_test.cpp)
 target_link_libraries(determinism_cross_config_test PRIVATE engine_core)

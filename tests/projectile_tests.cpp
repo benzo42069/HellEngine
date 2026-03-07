@@ -1,9 +1,8 @@
 #include <engine/projectiles.h>
 
-#include <cstdlib>
-#include <iostream>
+#include <catch2/catch_test_macros.hpp>
 
-int main() {
+TEST_CASE("Projectile system deterministic burst simulation", "[projectile]") {
     engine::ProjectileSystem systemA;
     engine::ProjectileSystem systemB;
 
@@ -21,16 +20,7 @@ int main() {
     const auto& a = systemA.stats();
     const auto& b = systemB.stats();
 
-    if (a.activeCount != b.activeCount || a.totalCollisions != b.totalCollisions) {
-        std::cerr << "determinism mismatch\n";
-        return EXIT_FAILURE;
-    }
-
-    if (a.activeCount == 0) {
-        std::cerr << "expected active projectiles after simulation\n";
-        return EXIT_FAILURE;
-    }
-
-    std::cout << "projectile_tests passed\n";
-    return EXIT_SUCCESS;
+    REQUIRE(a.activeCount == b.activeCount);
+    REQUIRE(a.totalCollisions == b.totalCollisions);
+    REQUIRE(a.activeCount != 0);
 }

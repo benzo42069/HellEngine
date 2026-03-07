@@ -1,6 +1,9 @@
 #include <engine/traits.h>
 
 #include <algorithm>
+#include <fstream>
+
+#include <nlohmann/json.hpp>
 
 namespace engine {
 
@@ -41,6 +44,42 @@ float adjustedRarityWeight(const TraitRarity rarity, const float rareChanceMulti
 }
 
 TraitModifiers mods() { return TraitModifiers {}; }
+
+namespace {
+TraitRarity parseTraitRarity(const std::string& s) {
+    if (s == "common" || s == "Common") return TraitRarity::Common;
+    if (s == "rare" || s == "Rare") return TraitRarity::Rare;
+    if (s == "relic" || s == "Relic") return TraitRarity::Relic;
+    return TraitRarity::Common;
+}
+
+TraitModifiers parseTraitModifiers(const nlohmann::json& json) {
+    TraitModifiers m;
+    m.projectileSpeedMul = json.value("projectileSpeedMul", m.projectileSpeedMul);
+    m.projectileRadiusAdd = json.value("projectileRadiusAdd", m.projectileRadiusAdd);
+    m.patternCooldownScale = json.value("patternCooldownScale", m.patternCooldownScale);
+    m.patternExtraBullets = json.value("patternExtraBullets", m.patternExtraBullets);
+    m.patternJitterAddDeg = json.value("patternJitterAddDeg", m.patternJitterAddDeg);
+    m.playerRadiusAdd = json.value("playerRadiusAdd", m.playerRadiusAdd);
+    m.playerHarvestMultiplier = json.value("playerHarvestMultiplier", m.playerHarvestMultiplier);
+    m.enemyFireRateScale = json.value("enemyFireRateScale", m.enemyFireRateScale);
+    m.enemyProjectileSpeedScale = json.value("enemyProjectileSpeedScale", m.enemyProjectileSpeedScale);
+    m.defensiveSpecialCooldownReduction = json.value("defensiveSpecialCooldownReduction", m.defensiveSpecialCooldownReduction);
+    m.defensiveSpecialCapacityAdd = json.value("defensiveSpecialCapacityAdd", m.defensiveSpecialCapacityAdd);
+    m.offensiveSpecialPowerMul = json.value("offensiveSpecialPowerMul", m.offensiveSpecialPowerMul);
+    return m;
+}
+
+void parseSynergyTags(const nlohmann::json& json, Trait& trait) {
+    trait.synergyTagCount = 0;
+    if (!json.is_array()) return;
+    const std::size_t count = std::min<std::size_t>(trait.synergyTags.size(), json.size());
+    for (std::size_t i = 0; i < count; ++i) {
+        if (!json[i].is_string()) continue;
+        trait.synergyTags[i] = json[i].get<std::string>();
+        ++trait.synergyTagCount;
+    }
+}
 } // namespace
 
 void TraitSystem::initialize(const std::uint64_t seed) {
@@ -116,6 +155,46 @@ void TraitSystem::initialize(const std::uint64_t seed) {
     nextRerollTick_ = 0;
     currentTick_ = 0;
     validationCache_ = validateCatalog();
+}
+
+bool TraitSystem::loadFromFile(const std::string& path) {
+    std::ifstream in(path);
+    if (!in.good()) return false;
+
+    nlohmann::json json;
+    try {
+        in >> json;
+    } catch (const std::exception&) {
+        return false;
+    }
+
+    if (!json.contains("traits") || !json["traits"].is_array()) return false;
+
+    std::vector<Trait> parsedCatalog;
+    parsedCatalog.reserve(json["traits"].size());
+
+    for (const auto& t : json["traits"]) {
+        if (!t.is_object()) continue;
+        Trait trait;
+        trait.id = t.value("id", std::string {});
+        trait.name = t.value("name", trait.id);
+        trait.description = t.value("description", std::string {});
+        trait.iconToken = t.value("iconToken", std::string {});
+        trait.rarity = parseTraitRarity(t.value("rarity", std::string {"common"}));
+        if (t.contains("modifiers") && t["modifiers"].is_object()) {
+            trait.modifiers = parseTraitModifiers(t["modifiers"]);
+        }
+        if (t.contains("synergyTags")) parseSynergyTags(t["synergyTags"], trait);
+        parsedCatalog.push_back(std::move(trait));
+    }
+
+    if (parsedCatalog.empty()) return false;
+
+    catalog_ = std::move(parsedCatalog);
+    validationCache_ = validateCatalog();
+    if (!validationCache_.empty()) return false;
+
+    return true;
 }
 
 const Trait& TraitSystem::rollOne() {

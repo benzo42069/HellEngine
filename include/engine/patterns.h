@@ -78,6 +78,7 @@ struct PatternDefinition {
 class PatternBank {
   public:
     bool loadFromFile(const std::string& filePath);
+    bool loadFromString(const std::string& jsonText);
     void loadFallbackDefaults();
 
     [[nodiscard]] const std::vector<PatternDefinition>& patterns() const;
