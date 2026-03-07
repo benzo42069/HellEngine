@@ -73,6 +73,7 @@ void ProjectileSystem::initialize(const std::uint32_t capacity, const float worl
     despawnEvents_.reserve(capacity_);
 
     stats_ = {};
+    paletteAnimIds_.fill(GradientAnimator::kInvalidAnimId);
 }
 
 void ProjectileSystem::clear() {
@@ -410,13 +411,39 @@ void ProjectileSystem::debugDraw(DebugDraw& draw, const bool drawHitboxes, const
     }
 }
 
+void ProjectileSystem::configurePaletteAnimations(SDL_Renderer* renderer, TextureStore& store, const PaletteFxTemplateRegistry& registry) {
+    gradientAnimator_.initialize(renderer, store);
+    paletteAnimIds_.fill(GradientAnimator::kInvalidAnimId);
+
+    const auto& db = registry.database();
+    std::uint8_t paletteIndex = 1;
+    for (const PaletteTemplate& templ : db.palettes) {
+        if (paletteIndex >= BulletPaletteTable::kMaxPalettes) break;
+        if (templ.animation.mode == PaletteAnimationMode::None || templ.gradientName.empty()) {
+            ++paletteIndex;
+            continue;
+        }
+
+        const auto it = std::find_if(db.gradients.begin(), db.gradients.end(), [&](const GradientDefinition& g) {
+            return g.name == templ.gradientName;
+        });
+        if (it == db.gradients.end()) {
+            ++paletteIndex;
+            continue;
+        }
+        paletteAnimIds_[paletteIndex] = gradientAnimator_.addGradient(*it, templ.animation, 64);
+        ++paletteIndex;
+    }
+}
+
 void ProjectileSystem::render(SpriteBatch& batch, const std::string& textureId, const BulletPaletteTable& paletteTable) const {
     for (std::uint32_t j = 0; j < activeCount_; ++j) {
         const std::uint32_t i = activeIndices_[j];
         const float d = radius_[i] * 2.0F;
-        const Color bulletColor = paletteIndex_[i] == 0
+        const std::uint8_t paletteIndex = paletteIndex_[i];
+        const Color bulletColor = paletteIndex == 0
             ? (allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
-            : paletteTable.get(paletteIndex_[i]).core;
+            : paletteTable.get(paletteIndex).core;
 
         if (enableTrails_[i] != 0) {
             const std::uint32_t trailBase = i * kTrailLength;
@@ -431,7 +458,7 @@ void ProjectileSystem::render(SpriteBatch& batch, const std::string& textureId, 
                 const float trailR = radius_[i] * scale;
                 const float trailD = trailR * 2.0F;
 
-                Color trailColor = paletteIndex_[i] == 0 ? bulletColor : paletteTable.get(paletteIndex_[i]).trail;
+                Color trailColor = paletteIndex == 0 ? bulletColor : paletteTable.get(paletteIndex).trail;
                 trailColor.a = static_cast<Uint8>(alpha * 255.0F);
 
                 batch.draw(SpriteDrawCmd {
@@ -455,15 +482,22 @@ void ProjectileSystem::render(SpriteBatch& batch, const std::string& textureId, 
 }
 
 
-void ProjectileSystem::renderProcedural(SpriteBatch& batch, const BulletPaletteTable& paletteTable) const {
+void ProjectileSystem::renderProcedural(SpriteBatch& batch, const BulletPaletteTable& paletteTable, const float simClock) const {
     for (std::uint32_t j = 0; j < activeCount_; ++j) {
         const std::uint32_t i = activeIndices_[j];
         const float d = radius_[i] * 2.0F;
         const BulletShape shape = static_cast<BulletShape>(shape_[i]);
         const std::string textureId = bulletTextureId(std::to_string(paletteIndex_[i]), shape);
-        const Color bulletColor = paletteIndex_[i] == 0
+        const std::uint8_t paletteIndex = paletteIndex_[i];
+        Color bulletColor = paletteIndex == 0
             ? (allegiance_[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy) ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
-            : paletteTable.get(paletteIndex_[i]).core;
+            : paletteTable.get(paletteIndex).core;
+        if (paletteIndex > 0) {
+            const std::uint8_t animId = paletteAnimIds_[paletteIndex];
+            if (animId != GradientAnimator::kInvalidAnimId) {
+                bulletColor = gradientAnimator_.sample(animId, simClock, life_[i], i);
+            }
+        }
 
         if (enableTrails_[i] != 0) {
             const std::uint32_t trailBase = i * kTrailLength;
@@ -478,7 +512,7 @@ void ProjectileSystem::renderProcedural(SpriteBatch& batch, const BulletPaletteT
                 const float trailR = radius_[i] * scale;
                 const float trailD = trailR * 2.0F;
 
-                Color trailColor = paletteIndex_[i] == 0 ? bulletColor : paletteTable.get(paletteIndex_[i]).trail;
+                Color trailColor = paletteIndex == 0 ? bulletColor : paletteTable.get(paletteIndex).trail;
                 trailColor.a = static_cast<Uint8>(alpha * 255.0F);
 
                 batch.draw(SpriteDrawCmd {

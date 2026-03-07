@@ -4,6 +4,7 @@
 
 #include <engine/bullet_palette.h>
 #include <engine/bullet_sprite_gen.h>
+#include <engine/gradient_animator.h>
 
 #include <array>
 #include <cstdint>
@@ -98,7 +99,8 @@ class ProjectileSystem {
 
     void debugDraw(DebugDraw& draw, bool drawHitboxes, bool drawGrid) const;
     void render(SpriteBatch& batch, const std::string& textureId, const BulletPaletteTable& paletteTable) const;
-    void renderProcedural(SpriteBatch& batch, const BulletPaletteTable& paletteTable) const;
+    void renderProcedural(SpriteBatch& batch, const BulletPaletteTable& paletteTable, float simClock) const;
+    void configurePaletteAnimations(SDL_Renderer* renderer, TextureStore& store, const PaletteFxTemplateRegistry& registry);
 
     [[nodiscard]] const ProjectileStats& stats() const;
     [[nodiscard]] std::uint32_t capacity() const;
@@ -142,6 +144,9 @@ class ProjectileSystem {
     std::vector<float> trailY_;
     std::vector<std::uint8_t> trailHead_;
     std::vector<std::uint64_t> grazeAwardTick_;
+
+    GradientAnimator gradientAnimator_ {};
+    std::array<std::uint8_t, BulletPaletteTable::kMaxPalettes> paletteAnimIds_ {};
 
     static constexpr std::uint32_t kMaxPendingSpawns = 4096;
     std::array<ProjectileSpawn, kMaxPendingSpawns> pendingSpawns_ {};

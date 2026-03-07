@@ -365,3 +365,9 @@
 - **Decision**: Add `ParticleFxSystem` as a render-layer-only subsystem fed by projectile despawn events, updated on frame delta and excluded from collision/state hash/replay determinism.
 - **Rationale**: Preserves simulation determinism while improving visual clarity for bullet hit/expire events.
 - **Status**: Accepted.
+
+## 2026-03-07 — Gradient animation phase-wave mapping
+- **Context**: Bullet palettes include gradient + animation settings but runtime projectile rendering only used static palette colors.
+- **Decision**: Add `GradientAnimator` with precomputed LUT sampling and per-bullet phase offset (`instanceIndex * perInstanceOffset`) applied at render time, then route animated palettes through this sampler in projectile rendering.
+- **Rationale**: Produces the signature rotating wave look across emitted rings while keeping simulation deterministic and unchanged.
+- **Status**: Accepted.
