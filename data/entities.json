@@ -43,7 +43,8 @@
         "maxAlive": 4
       },
       "guid": "enemy-523cea28222c09c7",
-      "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
+      "attackPatternGuid": "pattern-9b5229bbb5bf6fe9",
+      "projectilePalette": "Sky Nova"
     },
     {
       "name": "Asterion Dreadnought",
@@ -101,7 +102,8 @@
         "maxAlive": 1
       },
       "guid": "enemy-2503085d2280a3bb",
-      "attackPatternGuid": "pattern-7305ed346ff7c0ae"
+      "attackPatternGuid": "pattern-7305ed346ff7c0ae",
+      "projectilePalette": "Crimson Burst"
     },
     {
       "name": "Nyx Seraph",
@@ -161,7 +163,8 @@
         "maxAlive": 1
       },
       "guid": "enemy-981a413aa9f8e0a3",
-      "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
+      "attackPatternGuid": "pattern-9b5229bbb5bf6fe9",
+      "projectilePalette": "Scarlet Wave"
     },
     {
       "name": "Currency Crystal",

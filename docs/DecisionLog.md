@@ -389,3 +389,9 @@
 - **Decision**: Add an OpenGL 3.3 Core context plus GLAD loader at render initialization while retaining SDL_Renderer for ImGui + debug/UI drawing.
 - **Rationale**: Enables custom shader pipeline and generated sprite-atlas textures with graceful fallback to SDL_Renderer-only when GL context/loader init fails.
 - **Status**: Accepted.
+
+## 2026-03-07 — Palette ramp texture: 64×64 GL_TEXTURE_2D, Band3 and GradientRamp modes, per-row hot-reload
+- **Context**: Bullet shaders need stable palette sampling with both authored gradients and legacy 3-band palette behavior.
+- **Decision**: Add `PaletteRampTexture` that builds a 64px-wide RGBA ramp per palette row from the palette template registry, supporting Band3 and GradientRamp generation plus `glTexSubImage2D` single-row hot-reload.
+- **Rationale**: Keeps palette lookup deterministic, tiny in memory footprint (~16KB), and fast to patch when JSON palette definitions change.
+- **Status**: Accepted.

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engine/deterministic_rng.h>
+#include <engine/palette_fx_templates.h>
 #include <engine/patterns.h>
 #include <engine/projectiles.h>
 #include <engine/render2d.h>
@@ -81,6 +82,7 @@ struct EntityTemplate {
 
     SpawnRule spawnRule {};
     std::uint8_t projectilePaletteIndex {0};
+    std::string projectilePaletteName;
 };
 
 class EntityDatabase {
@@ -89,6 +91,7 @@ class EntityDatabase {
     void loadFallbackDefaults();
 
     [[nodiscard]] const std::vector<EntityTemplate>& templates() const;
+    void resolveProjectilePaletteIndices(const PaletteFxTemplateRegistry& registry);
 
   private:
     std::vector<EntityTemplate> templates_;

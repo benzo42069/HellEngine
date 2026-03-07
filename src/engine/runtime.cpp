@@ -101,6 +101,7 @@ int Runtime::run() {
     std::string paletteError;
     if (session_.bulletPaletteRegistry_.loadFromJsonFile("data/palettes/palette_fx_templates.json", &paletteError)) {
         session_.bulletPaletteTable_.buildFromRegistry(session_.bulletPaletteRegistry_);
+        session_.entityDatabase_.resolveProjectilePaletteIndices(session_.bulletPaletteRegistry_);
     } else {
         logWarn("Bullet palette template load failed: " + paletteError);
     }

@@ -131,6 +131,7 @@ add_library(engine_core STATIC
   src/engine/patterns.cpp
   src/engine/particle_fx.cpp
   src/engine/palette_fx_templates.cpp
+  src/engine/palette_ramp.cpp
   src/engine/projectiles.cpp
   src/engine/replay.cpp
   src/engine/render_pipeline.cpp

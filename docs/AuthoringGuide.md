@@ -217,3 +217,18 @@ Background base tiles can now be generated procedurally at runtime from run seed
 Generation runs when run structure transitions to a new zone (not per frame), then the background system swaps the primary tile layer texture.
 
 Designer override path: stage definitions/tools can opt to provide explicit tile generation parameters or custom authored textures per stage/zone to replace the default zone-type mapping.
+
+### Palette JSON to shader ramp row mapping
+
+`PaletteRampTexture` builds a `64 x N` palette ramp texture from `data/palettes/palette_fx_templates.json` in registry order (row 0 is the default fallback row; template rows begin at index 1).
+
+- If a palette template has no `gradient` value, the row is generated in **Band3** mode using `thresholdA`/`thresholdB` from material params:
+  - glow band: `[0, thresholdA * 64)`
+  - highlight band: `[thresholdA * 64, thresholdB * 64)`
+  - core band: `[thresholdB * 64, 64)`
+  - each boundary gets a 4-pixel blend strip.
+- If a palette template has a valid named `gradient`, the row is generated in **GradientRamp** mode using `generateGradientLut()`.
+
+For content authors:
+- `projectilePalette` on entity JSON can reference a palette template by name, and runtime resolves it to the internal `paletteIndex` used by projectile SoA.
+- Archetypes also resolve their configured palette template name to runtime `paletteIndex` at spawn time.

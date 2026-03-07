@@ -119,6 +119,7 @@ bool EntityDatabase::loadFromFile(const std::string& path) {
             t.attackPatternName = e.value("attackPatternName", "");
             t.attackIntervalSeconds = e.value("attackIntervalSeconds", 0.5F);
             t.projectilePaletteIndex = e.value("projectilePaletteIndex", static_cast<std::uint8_t>(0));
+            t.projectilePaletteName = e.value("projectilePalette", std::string {});
 
             if (e.contains("boss") && e["boss"].is_object()) {
                 const auto& boss = e["boss"];
@@ -209,6 +210,24 @@ void EntityDatabase::loadFallbackDefaults() {
 }
 
 const std::vector<EntityTemplate>& EntityDatabase::templates() const { return templates_; }
+
+
+void EntityDatabase::resolveProjectilePaletteIndices(const PaletteFxTemplateRegistry& registry) {
+    std::unordered_map<std::string, std::uint8_t> nameToIndex;
+    const auto& palettes = registry.database().palettes;
+    const std::size_t maxRows = static_cast<std::size_t>(BulletPaletteTable::kMaxPalettes - 1);
+    const std::size_t count = std::min(palettes.size(), maxRows);
+    for (std::size_t i = 0; i < count; ++i) {
+        nameToIndex[palettes[i].name] = static_cast<std::uint8_t>(i + 1);
+    }
+    for (auto& templ : templates_) {
+        if (templ.projectilePaletteName.empty()) continue;
+        const auto found = nameToIndex.find(templ.projectilePaletteName);
+        if (found != nameToIndex.end()) {
+            templ.projectilePaletteIndex = found->second;
+        }
+    }
+}
 
 void EntitySystem::setTemplates(const std::vector<EntityTemplate>* templates) {
     templates_ = templates;
