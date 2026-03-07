@@ -1541,6 +1541,8 @@ Documentation policy:
   - Meta progression snapshot (`progressionPoints`, purchased node IDs) for cross-run progression continuity.
   - Extension-ready counters for run-level lifetime stats (started/cleared) for future progression systems.
 
+- Section 13 update: Data-driven content now supports deterministic tick-boundary hot-reload for patterns, entities, traits, difficulty profiles, and palette templates via `ContentWatcher`; failed loads keep prior content active and emit editor-visible errors.
+
 
 ### Section 27 — Implemented Runtime Baseline (Update)
 - Added presentation-only SDL_mixer audio runtime with graceful fallback when device init or `.wav` loading fails.

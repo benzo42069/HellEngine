@@ -79,6 +79,11 @@
   - `FxPreset` values are mapped 1:1 into `PostFxSettings`.
   - `RenderPipeline` resolves archetype/zone-driven `autoFxPreset` names and applies the resolved settings each frame through `RendererModernPipeline::setPostFx`.
 
+### ContentWatcher in the content pipeline
+- `GameplaySession` owns `ContentWatcher` and registers deterministic watch paths for pattern, entity, trait, difficulty, and palette JSON files.
+- Reload checks run on fixed tick boundaries (~1 second cadence at 60 ticks) so replay hash behavior is not affected by wall-clock jitter.
+- Reload flow is **validate into temporary object -> swap on success -> preserve previous content on failure** with errors surfaced through runtime logging/editor console channel.
+
 ## Audio subsystem (presentation-only)
 - `AudioSystem` now uses SDL_mixer and is owned by `Runtime`.
 - `GameplaySession` emits lightweight `AudioEvent` records during simulation, but playback dispatch is performed by `Runtime` outside `simTick()`.

@@ -482,6 +482,12 @@
 - **Rationale**: Improves scaling behavior and profiling clarity at high bullet counts while preserving deterministic update order within active set transitions.
 - **Status**: Accepted.
 
+## 2026-03-07 — Generalized content hot-reload
+- **Context**: Runtime hot-reload covered only generated pattern graph handoff and did not provide a unified JSON content refresh path.
+- **Decision**: Introduce `ContentWatcher` and deterministic tick-boundary polling for patterns, entities, traits, difficulty profiles, and palette templates; each reload validates into temporary state and swaps only on success.
+- **Rationale**: Keeps replay determinism and protects runtime state by preserving previous content when parse/validation fails.
+- **Status**: Accepted.
+
 
 ## 2026-03-07 — Audio system fallback boundary
 - **Context**: Runtime feedback needed basic SFX without introducing deterministic simulation coupling or hard failures when audio assets/devices are missing.

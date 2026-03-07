@@ -238,3 +238,9 @@ Designer override path: stage definitions/tools can opt to provide explicit tile
 For content authors:
 - `projectilePalette` on entity JSON can reference a palette template by name, and runtime resolves it to the internal `paletteIndex` used by projectile SoA.
 - Archetypes also resolve their configured palette template name to runtime `paletteIndex` at spawn time.
+
+## Editing JSON while the engine is running
+- You can safely edit `data/patterns.json`, `assets/patterns/sandbox_patterns.json`, `data/entities.json`, `data/traits.json`, `data/difficulty_profiles.json`, and `data/palettes/palette_fx_templates.json` while runtime is active.
+- The engine polls these files once per ~1 second (60 ticks) and hot-reloads changes at deterministic tick boundaries.
+- If JSON is invalid, the editor console/log reports the error and the previous in-memory content remains active.
+

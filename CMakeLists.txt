@@ -130,6 +130,7 @@ add_library(engine_core STATIC
   src/engine/diagnostics.cpp
   src/engine/gameplay_session.cpp
   src/engine/content_pipeline.cpp
+  src/engine/content_watcher.cpp
   src/engine/deterministic_rng.cpp
   src/engine/defensive_special.cpp
   src/engine/danger_field.cpp
@@ -203,6 +204,7 @@ endif()
 add_executable(ContentPacker
   src/tools_content_packer.cpp
   src/engine/content_pipeline.cpp
+  src/engine/content_watcher.cpp
   src/engine/palette_fx_templates.cpp
 )
 

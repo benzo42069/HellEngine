@@ -4,6 +4,7 @@
 #include <engine/bullet_palette.h>
 #include <engine/camera_shake.h>
 #include <engine/config.h>
+#include <engine/content_watcher.h>
 #include <engine/danger_field.h>
 #include <engine/defensive_special.h>
 #include <engine/deterministic_rng.h>
@@ -178,9 +179,20 @@ class GameplaySession {
     std::array<UpgradeCardAnimState, TraitSystem::choiceCount> cardAnim_ {};
 
   private:
+    void reloadPatterns(const std::string& path);
+    void reloadEntities(const std::string& path);
+    void reloadTraits(const std::string& path);
+    void reloadDifficulty(const std::string& path);
+    void reloadPalettes(const std::string& path);
+    void initializeContentWatcher();
     UpgradeViewStats buildCurrentViewStats() const;
     UpgradeViewStats buildProjectedViewStats(const Trait& trait) const;
     bool hasSynergyWithActive(const Trait& trait) const;
+
+    static constexpr std::uint64_t kHotReloadPollTicks = 60;
+
+    ContentWatcher contentWatcher_ {};
+    std::uint64_t nextHotReloadPollTick_ {0};
 
     EngineConfig& config_;
 };
