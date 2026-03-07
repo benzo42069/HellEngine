@@ -9,6 +9,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -111,12 +112,19 @@ void appendAssetRegistry(nlohmann::json& pack, const nlohmann::json& arr, const 
     }
 }
 
+void appendArtValidationErrors(const std::vector<engine::ArtImportValidationError>& artErrors, std::vector<ValidationError>& errors) {
+    for (const auto& e : artErrors) {
+        errors.push_back({e.file, e.message});
+    }
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
     fs::path inputDir = "data";
     fs::path outputPak = "content.pak";
     std::string packId = "base";
+    fs::path previousPackPath;
 
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
@@ -130,6 +138,10 @@ int main(int argc, char** argv) {
         }
         if (arg == "--pack-id" && i + 1 < argc) {
             packId = argv[++i];
+            continue;
+        }
+        if (arg == "--previous-pack" && i + 1 < argc) {
+            previousPackPath = argv[++i];
             continue;
         }
     }
@@ -150,6 +162,8 @@ int main(int argc, char** argv) {
     nlohmann::json mergedFxPresets = nlohmann::json::array();
     std::vector<std::string> conflicts;
 
+    std::vector<engine::SourceArtAssetRecord> sourceArtAssets;
+
     for (const auto& entry : fs::recursive_directory_iterator(inputDir)) {
         if (!entry.is_regular_file() || entry.path().extension() != ".json") continue;
 
@@ -161,6 +175,14 @@ int main(int argc, char** argv) {
 
         nlohmann::json doc;
         in >> doc;
+
+        if (doc.contains("assets") && doc["assets"].is_array() && doc.value("assetManifestType", std::string()) == "art-import") {
+            std::vector<engine::ArtImportValidationError> artErrors;
+            if (!engine::parseSourceArtManifest(doc, entry.path().string(), sourceArtAssets, artErrors)) {
+                appendArtValidationErrors(artErrors, errors);
+            }
+            continue;
+        }
 
         std::string migrationMessage;
         if (!engine::migratePackJson(doc, migrationMessage)) {
@@ -208,6 +230,14 @@ int main(int argc, char** argv) {
         }
     }
 
+    std::vector<engine::ImportedArtAssetRecord> importedAssets;
+    {
+        std::vector<engine::ArtImportValidationError> artErrors;
+        if (!engine::importSourceArtAssets(sourceArtAssets, importedAssets, artErrors)) {
+            appendArtValidationErrors(artErrors, errors);
+        }
+    }
+
     if (!errors.empty()) {
         for (const auto& e : errors) {
             std::cerr << "[schema] " << e.file << ": " << e.message << "\n";
@@ -216,14 +246,26 @@ int main(int argc, char** argv) {
         return 2;
     }
 
+    std::unordered_map<std::string, std::string> previousFingerprints;
+    if (!previousPackPath.empty() && fs::exists(previousPackPath)) {
+        std::ifstream prevIn(previousPackPath);
+        if (prevIn.good()) {
+            nlohmann::json previous;
+            prevIn >> previous;
+            previousFingerprints = engine::extractImportFingerprintByGuid(previous);
+        }
+    }
+
+    const auto atlasPlans = engine::buildAtlasPlans(importedAssets);
+
     nlohmann::json pack;
     pack["packId"] = packId;
     pack["schemaVersion"] = 2;
-    pack["packVersion"] = 3;
+    pack["packVersion"] = 4;
     pack["sourceDir"] = inputDir.string();
     pack["compatibility"] = {
         {"minRuntimePackVersion", 2},
-        {"maxRuntimePackVersion", 3},
+        {"maxRuntimePackVersion", 4},
         {"notes", "Schema v2 requires GUID-based references; regenerate packs after schema edits."},
     };
     pack["patterns"] = mergedPatterns;
@@ -243,6 +285,75 @@ int main(int argc, char** argv) {
     appendAssetRegistry(pack, mergedPaletteTemplates, "palette-template");
     appendAssetRegistry(pack, mergedGradients, "gradient");
     appendAssetRegistry(pack, mergedFxPresets, "fx-preset");
+
+    pack["sourceAssetRegistry"] = nlohmann::json::array();
+    pack["importRegistry"] = nlohmann::json::array();
+    pack["importInvalidations"] = nlohmann::json::array();
+
+    for (const auto& imported : importedAssets) {
+        const std::string kind = imported.source.kind == engine::ArtAssetKind::Texture ? "texture" : "sprite";
+        pack["assetRegistry"].push_back({
+            {"kind", kind},
+            {"guid", imported.source.guid},
+            {"name", imported.source.name},
+        });
+
+        pack["sourceAssetRegistry"].push_back({
+            {"guid", imported.source.guid},
+            {"name", imported.source.name},
+            {"kind", kind},
+            {"source", imported.source.sourcePath},
+            {"manifest", imported.source.manifestPath},
+            {"settings", {
+                {"colorWorkflow", imported.source.settings.colorWorkflow},
+                {"pivotX", imported.source.settings.pivotX},
+                {"pivotY", imported.source.settings.pivotY},
+                {"collisionBoundsPolicy", imported.source.settings.collisionBoundsPolicy},
+                {"atlasGroup", imported.source.settings.atlasGroup},
+                {"filter", imported.source.settings.filter},
+                {"mipPreference", imported.source.settings.mipPreference},
+                {"variantGroup", imported.source.settings.variantGroup},
+                {"animationGroup", imported.source.settings.animationGroup},
+                {"animationFps", imported.source.settings.animationFps},
+                {"animationSequenceFromFilename", imported.source.settings.animationSequenceFromFilename},
+            }},
+        });
+
+        std::string status = "new";
+        if (const auto it = previousFingerprints.find(imported.source.guid); it != previousFingerprints.end()) {
+            if (it->second == imported.importFingerprint) {
+                status = "up-to-date";
+            } else {
+                status = "reimported";
+                pack["importInvalidations"].push_back({
+                    {"guid", imported.source.guid},
+                    {"reason", "source-or-settings-changed"},
+                    {"oldFingerprint", it->second},
+                    {"newFingerprint", imported.importFingerprint},
+                    {"dependencies", imported.dependencies},
+                });
+            }
+        }
+
+        pack["importRegistry"].push_back({
+            {"guid", imported.source.guid},
+            {"kind", kind},
+            {"sourceFingerprint", imported.sourceFingerprint},
+            {"settingsFingerprint", imported.settingsFingerprint},
+            {"importFingerprint", imported.importFingerprint},
+            {"dependencies", imported.dependencies},
+            {"status", status},
+        });
+    }
+
+    pack["atlasBuild"] = nlohmann::json::array();
+    for (const auto& plan : atlasPlans) {
+        pack["atlasBuild"].push_back({
+            {"atlasGroup", plan.group},
+            {"colorWorkflow", plan.colorWorkflow},
+            {"assetGuids", plan.assetGuids},
+        });
+    }
 
     pack["gradientLuts"] = nlohmann::json::array();
     for (const auto& g : mergedGradients) {
@@ -290,6 +401,6 @@ int main(int argc, char** argv) {
     std::cout << "Packed patterns=" << mergedPatterns.size() << " entities=" << mergedEntities.size() << " traits=" << mergedTraits.size()
               << " archetypes=" << mergedArchetypes.size() << " encounters=" << mergedEncounters.size()
               << " palettes=" << mergedPaletteTemplates.size() << " gradients=" << mergedGradients.size() << " fxPresets=" << mergedFxPresets.size()
-              << " -> " << outputPak << "\n";
+              << " importedArt=" << importedAssets.size() << " atlasPlans=" << atlasPlans.size() << " -> " << outputPak << "\n";
     return 0;
 }

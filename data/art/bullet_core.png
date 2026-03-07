@@ -1,0 +1,3 @@
+# Placeholder source art file used by content pipeline tests.
+# This repository intentionally stores text placeholders instead of binary textures.
+# Extension remains .png so import settings/manifest wiring can be exercised deterministically.

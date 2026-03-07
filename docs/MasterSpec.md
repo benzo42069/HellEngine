@@ -1451,3 +1451,11 @@ Headless mode contract:
 - Shared editor service helpers are explicit (`buildEncounterAsset`, `ensurePatternGraphSeeded`, `ensureEncounterNodesSeeded`) to keep deterministic runtime state separate from persistent UI authoring state.
 - Runtime/editor boundaries remain telemetry-driven: panel rendering consumes `ToolRuntimeSnapshot` and mutation hand-off fields (`UpgradeDebugOptions`, `ProjectileDebugOptions`, `PatternGeneratorDebugState`) without embedding simulation execution into panel code.
 - Extension point: future tools should add one panel method + one state/service surface instead of growing `drawControlCenter`.
+
+## 13. Asset Import Pipeline Requirements (Implemented)
+- Source-art import is manifest-driven and integrated directly into the pack build stage.
+- Sprite + texture authored assets are supported with deterministic GUID assignment.
+- Import settings include: classification, grayscale/monochrome workflow, pivot, collision policy, atlas group, filtering/mips, variant group, animation grouping.
+- Reimport behavior is fingerprint-based and emits explicit dependency invalidation records.
+- Atlas build grouping is deterministic and represented in pack metadata for downstream consumers.
+- Runtime pack integration includes full source/import registries for tooling diagnostics and cache invalidation behavior.

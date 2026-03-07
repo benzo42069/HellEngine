@@ -317,3 +317,15 @@ Result: ownership boundaries are now explicit and testable while preserving dete
 - Addressed audit concern around monolithic editor tooling by decomposing `ControlCenterToolSuite` panel rendering into modular tool panel methods.
 - Added explicit shared editor services for encounter asset assembly and panel-state seeding to reduce cross-panel coupling.
 - Preserved existing functionality and editor menu topology while improving maintainability and extension readiness.
+
+## Update 2026-03-07 — Asset Pipeline Remediation
+
+The content pipeline now includes a real source-art import workflow for sprite/texture assets:
+
+- Manifest-driven import (`assetManifestType: art-import`) with per-asset import settings.
+- Validation for missing files, unsupported formats, and invalid setting values.
+- Pack-integrated source/import registries plus deterministic import fingerprints.
+- Reimport invalidation support via `--previous-pack` fingerprint comparison.
+- Atlas-group planning output keyed by atlas group and color workflow, including grayscale/monochrome support metadata.
+
+This addresses the prior audit gap where authored art handling was underdeveloped relative to pack/schema infrastructure.

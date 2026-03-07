@@ -335,3 +335,17 @@ ctest --test-dir build -C RelWithDebInfo --output-on-failure
 ### Future extension points
 - Introduce a lightweight panel registry that maps menu toggles to panel method delegates.
 - Move shared panel state structs into dedicated editor service files once additional tooling lands.
+
+## 2026-03-07 — Asset Pipeline: Sprite/Texture Import (Completed)
+
+Completed items:
+
+- Added source asset import registry model (`SourceArtAssetRecord`, `ImportedArtAssetRecord`) in `content_pipeline`.
+- Implemented manifest parsing + validation for sprite/texture source assets and import settings.
+- Added import fingerprinting, previous-pack reimport comparison, and dependency invalidation output.
+- Added atlas build planning output grouped by atlas group and color workflow.
+- Integrated import metadata into generated runtime packs (`sourceAssetRegistry`, `importRegistry`, `importInvalidations`, `atlasBuild`).
+- Added automated coverage:
+  - `content_import_pipeline_tests` for parse/import/atlas/fingerprint behavior.
+  - updated `content_packer_tests` to assert new import metadata fields in produced packs.
+- Added authored sample manifest and source art examples under `data/`.
