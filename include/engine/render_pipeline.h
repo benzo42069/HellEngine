@@ -7,9 +7,11 @@
 #include <engine/level_tile_gen.h>
 #include <engine/modern_renderer.h>
 #include <engine/palette_fx_templates.h>
+#include <engine/palette_ramp.h>
 #include <engine/render2d.h>
 #include <engine/shader_cache.h>
 #include <engine/sprite_atlas_gen.h>
+#include <engine/gl_bullet_renderer.h>
 #include <engine/patterns.h>
 
 #include <SDL.h>
@@ -68,6 +70,8 @@ class RenderPipeline {
     EngineConfig config_ {};
     ShaderCache shaderCache_ {};
     GrayscaleSpriteAtlas spriteAtlas_ {};
+    PaletteRampTexture paletteRamp_ {};
+    GlBulletRenderer glBulletRenderer_ {};
 };
 
 } // namespace engine

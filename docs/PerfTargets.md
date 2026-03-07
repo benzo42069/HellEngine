@@ -53,3 +53,8 @@ This script runs:
 ## Phase 5 active-list optimization note
 - `ProjectileSystem` hot loops now iterate over compact active indices instead of scanning full capacity with active checks.
 - Keep current CI thresholds unchanged unless repeated benchmark runs show stable margin gains across environments.
+
+## GPU Bullet Rendering Target
+- OpenGL bullet path must render **10,000 active bullets in a single draw call**.
+- Target GPU time for bullet pass: **< 1.0 ms** on the reference profiling machine.
+- CPU-side buffer rebuild remains authoritative each frame but must avoid per-frame allocations (preallocated max-capacity buffers only).

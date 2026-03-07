@@ -70,6 +70,14 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
     lastBgZoneIndex_ = std::numeric_limits<std::size_t>::max();
     renderContextReady_ = true;
     refreshDisplayMetrics(window);
+    if (glReady_) {
+        const bool rampOk = paletteRamp_.generate(PaletteFxTemplateRegistry {}, BulletPaletteTable {}, 64);
+        std::string bulletError;
+        if (!rampOk || !glBulletRenderer_.initialize(shaderCache_, spriteAtlas_, paletteRamp_, config_.projectileCapacity, &bulletError)) {
+            logWarn("OpenGL bullet renderer init failed: " + bulletError + " Falling back to SpriteBatch bullets.");
+            glBulletRenderer_.shutdown();
+        }
+    }
     spriteBatch_.reserve(config_.projectileCapacity + 2048);
     return true;
 }
@@ -78,6 +86,8 @@ void RenderPipeline::shutdown(ControlCenterToolSuite& toolSuite) {
     if (!renderContextReady_ && !renderer_ && !textures_) return;
     toolSuite.shutdown();
     modernRenderer_.shutdown();
+    glBulletRenderer_.shutdown();
+    paletteRamp_.shutdown();
     shaderCache_.shutdown();
     spriteAtlas_.shutdown();
     backgroundSystem_.clear();
@@ -141,6 +151,10 @@ void RenderPipeline::generateBulletSprites(const PaletteFxTemplateRegistry& regi
         generator.generatePaletteSet(renderer_, *textures_, templ.name, fill, 16);
         ++idx;
     }
+
+    if (glReady_) {
+        (void)paletteRamp_.generate(registry, table, 64);
+    }
 }
 
 
@@ -190,7 +204,34 @@ void RenderPipeline::ensureZoneBackground(const GameplaySession& session) {
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
     const GameplaySession& s = snapshot.session;
     if (s.bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
-        s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_, static_cast<float>(s.simClock_));
+        const bool canUseGlBullets = glReady_ && paletteRamp_.valid();
+        if (canUseGlBullets) {
+            const auto& posX = s.projectiles_.posX();
+            const auto& posY = s.projectiles_.posY();
+            const auto& velX = s.projectiles_.velX();
+            const auto& velY = s.projectiles_.velY();
+            const auto& radius = s.projectiles_.radius();
+            const auto& life = s.projectiles_.life();
+            const auto& paletteIndex = s.projectiles_.paletteIndex();
+            const auto& active = s.projectiles_.active();
+            const auto& activeIndices = s.projectiles_.activeIndices();
+            glBulletRenderer_.buildVertexBuffer(
+                posX.data(),
+                posY.data(),
+                velX.data(),
+                velY.data(),
+                radius.data(),
+                life.data(),
+                paletteIndex.data(),
+                active.data(),
+                activeIndices.data(),
+                s.projectiles_.activeCount(),
+                s.projectiles_.capacity(),
+                BulletShape::Circle
+            );
+        } else {
+            s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_, static_cast<float>(s.simClock_));
+        }
         s.particleFx_.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
         s.projectiles_.debugDraw(debugDraw_, true, true);
     }
@@ -215,6 +256,9 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     backgroundSystem_.render(spriteBatch_, camera_);
     buildSceneOverlay(snapshot, frameDelta);
     spriteBatch_.flush(renderer_, *textures_);
+    if (glReady_ && paletteRamp_.valid()) {
+        glBulletRenderer_.render(camera_, static_cast<float>(snapshot.session.simClock_), paletteRamp_, camera_.viewportWidth(), camera_.viewportHeight());
+    }
     debugDraw_.flush(renderer_, camera_);
     snapshot.session.renderDangerFieldOverlay(renderer_, camera_);
     toolSuite.beginFrame();

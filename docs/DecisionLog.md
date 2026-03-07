@@ -389,3 +389,9 @@
 - **Decision**: Add an OpenGL 3.3 Core context plus GLAD loader at render initialization while retaining SDL_Renderer for ImGui + debug/UI drawing.
 - **Rationale**: Enables custom shader pipeline and generated sprite-atlas textures with graceful fallback to SDL_Renderer-only when GL context/loader init fails.
 - **Status**: Accepted.
+
+## 2026-03-07 — OpenGL bullet renderer: single draw call, grayscale SDF + palette ramp shader
+- **Context**: CPU deterministic projectile simulation was rendering bullets through per-sprite `SpriteBatch` geometry, increasing draw overhead at high bullet counts.
+- **Decision**: Add `GlBulletRenderer` that rebuilds a preallocated dynamic CPU->GPU vertex/index buffer each frame from projectile SoA data and renders all bullets in one `glDrawElements` call using grayscale atlas + palette ramp shading.
+- **Rationale**: Preserves deterministic CPU authority while achieving GPU-efficient batching for stress targets (10k bullets) and keeping SDL sprite rendering as fallback when OpenGL is unavailable.
+- **Status**: Accepted.
