@@ -69,6 +69,8 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(SDL2 imgui nlohmann_json)
 
+find_package(OpenGL REQUIRED)
+
 if(TARGET SDL2::SDL2)
   set(ENGINEDEMO_SDL_TARGET SDL2::SDL2)
 elseif(TARGET SDL2::SDL2-static)
@@ -162,6 +164,7 @@ target_link_libraries(engine_core
     ${ENGINEDEMO_SDL_TARGET}
     imgui_sdl2
     nlohmann_json::nlohmann_json
+    OpenGL::GL
 )
 
 target_compile_definitions(engine_core PUBLIC HELLEngine_ENABLE_MODERN_RENDERER=$<BOOL:${HELLEngine_ENABLE_MODERN_RENDERER}>)

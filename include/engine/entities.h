@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engine/deterministic_rng.h>
+#include <engine/palette_fx_templates.h>
 #include <engine/patterns.h>
 #include <engine/projectiles.h>
 #include <engine/render2d.h>
@@ -81,6 +82,7 @@ struct EntityTemplate {
 
     SpawnRule spawnRule {};
     std::uint8_t projectilePaletteIndex {0};
+    std::string projectilePaletteName;
 };
 
 class EntityDatabase {
@@ -89,6 +91,7 @@ class EntityDatabase {
     void loadFallbackDefaults();
 
     [[nodiscard]] const std::vector<EntityTemplate>& templates() const;
+    void resolveProjectilePaletteIndices(const PaletteFxTemplateRegistry& registry);
 
   private:
     std::vector<EntityTemplate> templates_;
@@ -125,7 +128,7 @@ class EntitySystem {
     void reset();
     void update(float dt, ProjectileSystem& projectiles, Vec2 playerPos, const EntityRuntimeModifiers& runtimeMods = {});
     void debugDraw(DebugDraw& draw) const;
-    void appendCollisionTargets(std::vector<CollisionTarget>& outTargets, std::uint32_t idBase = 1000U) const;
+    void appendCollisionTargets(std::span<CollisionTarget> outTargets, std::uint32_t& outCount, std::uint32_t idBase = 1000U) const;
     void processCollisionEvents(std::span<const CollisionEvent> events);
 
     [[nodiscard]] const EntityStats& stats() const;

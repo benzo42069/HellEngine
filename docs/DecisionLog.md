@@ -394,4 +394,14 @@
 - **Context**: CPU deterministic projectile simulation was rendering bullets through per-sprite `SpriteBatch` geometry, increasing draw overhead at high bullet counts.
 - **Decision**: Add `GlBulletRenderer` that rebuilds a preallocated dynamic CPU->GPU vertex/index buffer each frame from projectile SoA data and renders all bullets in one `glDrawElements` call using grayscale atlas + palette ramp shading.
 - **Rationale**: Preserves deterministic CPU authority while achieving GPU-efficient batching for stress targets (10k bullets) and keeping SDL sprite rendering as fallback when OpenGL is unavailable.
+## 2026-03-07 — Palette ramp texture: 64×64 GL_TEXTURE_2D, Band3 and GradientRamp modes, per-row hot-reload
+- **Context**: Bullet shaders need stable palette sampling with both authored gradients and legacy 3-band palette behavior.
+- **Decision**: Add `PaletteRampTexture` that builds a 64px-wide RGBA ramp per palette row from the palette template registry, supporting Band3 and GradientRamp generation plus `glTexSubImage2D` single-row hot-reload.
+- **Rationale**: Keeps palette lookup deterministic, tiny in memory footprint (~16KB), and fast to patch when JSON palette definitions change.
+- **Status**: Accepted.
+
+## 2026-03-07 — Real post-processing shaders: Kawase bloom, vignette, tone mapping, chromatic aberration, film grain, scanlines
+- **Context**: Existing post-FX path used fake SDL overlays, so editor controls could not drive physically plausible bloom, tone mapping, or camera-style post passes.
+- **Decision**: Replace fake post overlays with shader-driven passes in `RendererModernPipeline`: half-resolution Kawase bloom (threshold + 4 blur iterations + additive composite), vignette pass, and final composite pass including tone mapping, exposure/contrast/saturation, chromatic aberration, film grain, and scanlines.
+- **Rationale**: Preserves presentation-only coupling while upgrading visual quality and making PostFx controls map directly to shader uniforms and palette FX presets.
 - **Status**: Accepted.

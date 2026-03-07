@@ -63,3 +63,18 @@
 - `GlBulletRenderer` consumes projectile SoA arrays (`pos/vel/radius/life/palette/active`) to generate rotated quads on CPU each frame, uploads preallocated dynamic buffers, then issues one draw call for all bullets.
 - Runtime keeps a hard fallback: when GL context/shaders/textures are unavailable, projectiles continue through the existing `SpriteBatch::renderProcedural` path.
 - If OpenGL init fails, renderer startup continues in SDL_Renderer-only mode.
+
+## Post-processing pass chain
+
+- `RendererModernPipeline` now supports a shader-based post-processing chain with explicit OpenGL render targets:
+  - `sceneBuffer` (full resolution)
+  - `bloomBuffer` (half resolution for performance)
+  - `outputBuffer` (full resolution intermediate/final)
+- Pass order at `endScene()`:
+  1. Bloom pass (threshold + 4-iteration Kawase blur + additive composite)
+  2. Vignette pass
+  3. Composite pass (tone map + grading + optional chromatic aberration/film grain/scanlines)
+- Existing SDL fake overlays are retained as fallback-only methods (`drawBloomLiteFallback`, `drawVignetteFallback`, `drawColorGradeFallback`) when OpenGL post resources are unavailable.
+- PostFx data flow:
+  - `FxPreset` values are mapped 1:1 into `PostFxSettings`.
+  - `RenderPipeline` resolves archetype/zone-driven `autoFxPreset` names and applies the resolved settings each frame through `RendererModernPipeline::setPostFx`.

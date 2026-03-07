@@ -14,13 +14,26 @@
 
 namespace engine {
 
+namespace {
+
+std::uint8_t paletteIndexFromName(const PaletteFxTemplateRegistry& registry, const std::string& paletteName, const std::uint8_t fallbackIndex) {
+    if (paletteName.empty()) return fallbackIndex;
+    const auto& palettes = registry.database().palettes;
+    const std::size_t maxRows = static_cast<std::size_t>(BulletPaletteTable::kMaxPalettes - 1);
+    const std::size_t count = std::min(palettes.size(), maxRows);
+    for (std::size_t i = 0; i < count; ++i) {
+        if (palettes[i].name == paletteName) return static_cast<std::uint8_t>(i + 1);
+    }
+    return fallbackIndex;
+}
+
+} // namespace
+
 GameplaySession::GameplaySession(EngineConfig& config)
     : frameAllocator_(1024 * 1024),
       jobSystem_(),
       rngStreams_(config.simulationSeed),
       config_(config) {
-    collisionTargets_.reserve(1024);
-    collisionEvents_.reserve(16384);
     cameraShakeEvents_.reserve(16);
     particleFx_.initialize(4096);
 }
@@ -154,10 +167,13 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         const float fireRateScale = 0.80F + (archetype.stats.fireRate + mb.fireRateBonus) * 0.05F;
         patternPlayer_.setRuntimeModifiers(tm.patternCooldownScale / fireRateScale, tm.patternExtraBullets, tm.patternJitterAddDeg);
 
-        auto emitWithRuntimeMods = [this, &tm, &archetype, &mb, &diffScalars](const ProjectileSpawn& spawn) {
+        const std::uint8_t fallbackPaletteIndex = static_cast<std::uint8_t>(std::min<std::size_t>(BulletPaletteTable::kMaxPalettes - 1U, archetypeSystem_.selectedIndex() + 1U));
+        const std::uint8_t playerPaletteIndex = paletteIndexFromName(bulletPaletteRegistry_, archetype.projectilePaletteName, fallbackPaletteIndex);
+
+        auto emitWithRuntimeMods = [this, &tm, &archetype, &mb, &diffScalars, playerPaletteIndex](const ProjectileSpawn& spawn) {
             ProjectileSpawn mod = spawn;
             mod.allegiance = ProjectileAllegiance::Player;
-            mod.paletteIndex = static_cast<std::uint8_t>(std::min<std::size_t>(BulletPaletteTable::kMaxPalettes - 1U, archetypeSystem_.selectedIndex() + 1U));
+            mod.paletteIndex = playerPaletteIndex;
             const float powerScale = 0.85F + (archetype.stats.power + mb.powerBonus) * 0.03F;
             mod.vel.x *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul * defensiveSpecial_.playerDamageMultiplier();
             mod.vel.y *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul * defensiveSpecial_.playerDamageMultiplier();
@@ -167,10 +183,10 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         if (useCompiledPatternGraph_ && !patternBank_.compiledGraphs().empty()) {
             graphVmState_.difficultyScalar = diffScalars.patternSpeed;
             graphVm_.execute(patternBank_.compiledGraphs().front(), graphVmState_, static_cast<float>(dt), {0.0F, 0.0F}, aimTarget_,
-                [this, &tm, &archetype, &mb, &diffScalars](const ProjectileSpawn& spawn) {
+                [this, &tm, &archetype, &mb, &diffScalars, playerPaletteIndex](const ProjectileSpawn& spawn) {
                     ProjectileSpawn mod = spawn;
                     mod.allegiance = ProjectileAllegiance::Player;
-                    mod.paletteIndex = static_cast<std::uint8_t>(std::min<std::size_t>(BulletPaletteTable::kMaxPalettes - 1U, archetypeSystem_.selectedIndex() + 1U));
+                    mod.paletteIndex = playerPaletteIndex;
                     const float powerScale = 0.85F + (archetype.stats.power + mb.powerBonus) * 0.03F;
                     mod.vel.x *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul;
                     mod.vel.y *= tm.projectileSpeedMul * powerScale * diffScalars.patternSpeed * tm.offensiveSpecialPowerMul;
@@ -217,13 +233,18 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 projectiles_.worldHalfExtent()
             );
         }
-        collisionTargets_.clear();
-        collisionTargets_.push_back(CollisionTarget {.pos = playerPos_, .radius = playerRadius_, .id = 0U, .team = 0U});
-        entitySystem_.appendCollisionTargets(collisionTargets_);
-        collisionEvents_.clear();
-        projectiles_.resolveCollisions(std::span<const CollisionTarget>(collisionTargets_.data(), collisionTargets_.size()), collisionEvents_);
+        collisionTargetCount_ = 0;
+        collisionTargets_[collisionTargetCount_++] = CollisionTarget {.pos = playerPos_, .radius = playerRadius_, .id = 0U, .team = 0U};
+        entitySystem_.appendCollisionTargets(collisionTargets_, collisionTargetCount_);
+        collisionEventCount_ = 0;
+        projectiles_.resolveCollisions(
+            std::span<const CollisionTarget>(collisionTargets_.data(), collisionTargetCount_),
+            collisionEvents_,
+            collisionEventCount_
+        );
         emitDespawnParticles();
-        for (const CollisionEvent& e : collisionEvents_) {
+        for (std::uint32_t collisionIndex = 0; collisionIndex < collisionEventCount_; ++collisionIndex) {
+            const CollisionEvent& e = collisionEvents_[collisionIndex];
             if (e.targetId != 0U || e.bulletIndex >= projectiles_.capacity()) continue;
             const Vec2 hitPos {projectiles_.posX()[e.bulletIndex], projectiles_.posY()[e.bulletIndex]};
             const Vec2 dir = {playerPos_.x - hitPos.x, playerPos_.y - hitPos.y};
@@ -236,7 +257,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 .damping = 12.0F,
             });
         }
-        entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(collisionEvents_.data(), collisionEvents_.size()));
+        entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(collisionEvents_.data(), collisionEventCount_));
     }
 
     particleFx_.update(static_cast<float>(dt));

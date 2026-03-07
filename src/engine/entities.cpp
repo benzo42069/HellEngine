@@ -119,6 +119,7 @@ bool EntityDatabase::loadFromFile(const std::string& path) {
             t.attackPatternName = e.value("attackPatternName", "");
             t.attackIntervalSeconds = e.value("attackIntervalSeconds", 0.5F);
             t.projectilePaletteIndex = e.value("projectilePaletteIndex", static_cast<std::uint8_t>(0));
+            t.projectilePaletteName = e.value("projectilePalette", std::string {});
 
             if (e.contains("boss") && e["boss"].is_object()) {
                 const auto& boss = e["boss"];
@@ -209,6 +210,24 @@ void EntityDatabase::loadFallbackDefaults() {
 }
 
 const std::vector<EntityTemplate>& EntityDatabase::templates() const { return templates_; }
+
+
+void EntityDatabase::resolveProjectilePaletteIndices(const PaletteFxTemplateRegistry& registry) {
+    std::unordered_map<std::string, std::uint8_t> nameToIndex;
+    const auto& palettes = registry.database().palettes;
+    const std::size_t maxRows = static_cast<std::size_t>(BulletPaletteTable::kMaxPalettes - 1);
+    const std::size_t count = std::min(palettes.size(), maxRows);
+    for (std::size_t i = 0; i < count; ++i) {
+        nameToIndex[palettes[i].name] = static_cast<std::uint8_t>(i + 1);
+    }
+    for (auto& templ : templates_) {
+        if (templ.projectilePaletteName.empty()) continue;
+        const auto found = nameToIndex.find(templ.projectilePaletteName);
+        if (found != nameToIndex.end()) {
+            templ.projectilePaletteIndex = found->second;
+        }
+    }
+}
 
 void EntitySystem::setTemplates(const std::vector<EntityTemplate>* templates) {
     templates_ = templates;
@@ -482,14 +501,15 @@ std::string toString(const EntityType type) {
 
 namespace engine {
 
-void EntitySystem::appendCollisionTargets(std::vector<CollisionTarget>& outTargets, const std::uint32_t idBase) const {
+void EntitySystem::appendCollisionTargets(const std::span<CollisionTarget> outTargets, std::uint32_t& outCount, const std::uint32_t idBase) const {
     if (!templates_) return;
     for (std::size_t i = 0; i < entities_.size(); ++i) {
         const EntityInstance& e = entities_[i];
         if (!e.alive) continue;
         const EntityTemplate& t = (*templates_)[e.templateIndex];
         if (t.type != EntityType::Enemy && t.type != EntityType::Boss && t.type != EntityType::Hazard) continue;
-        outTargets.push_back(CollisionTarget {.pos = e.position, .radius = t.interactionRadius, .id = idBase + static_cast<std::uint32_t>(i), .team = 1U});
+        if (outCount >= outTargets.size()) break;
+        outTargets[outCount++] = CollisionTarget {.pos = e.position, .radius = t.interactionRadius, .id = idBase + static_cast<std::uint32_t>(i), .team = 1U};
     }
 }
 

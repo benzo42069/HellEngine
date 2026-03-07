@@ -72,6 +72,7 @@ class RenderPipeline {
     GrayscaleSpriteAtlas spriteAtlas_ {};
     PaletteRampTexture paletteRamp_ {};
     GlBulletRenderer glBulletRenderer_ {};
+    PaletteRampTexture paletteRampTexture_ {};
 };
 
 } // namespace engine

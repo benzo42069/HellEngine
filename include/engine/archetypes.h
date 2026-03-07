@@ -25,6 +25,7 @@ struct ArchetypeDefinition {
     std::string primaryWeapon;
     std::string activeAbility;
     std::string passiveEffect;
+    std::string projectilePaletteName;
     std::uint32_t requiredUnlockTier {0};
 };
 

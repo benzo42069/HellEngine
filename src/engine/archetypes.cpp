@@ -10,6 +10,7 @@ ArchetypeDefinition makeArchetype(
     const char* primaryWeapon,
     const char* activeAbility,
     const char* passiveEffect,
+    const char* projectilePaletteName,
     const std::uint32_t requiredUnlockTier
 ) {
     return ArchetypeDefinition {
@@ -19,6 +20,7 @@ ArchetypeDefinition makeArchetype(
         .primaryWeapon = primaryWeapon,
         .activeAbility = activeAbility,
         .passiveEffect = passiveEffect,
+        .projectilePaletteName = projectilePaletteName,
         .requiredUnlockTier = requiredUnlockTier,
     };
 }
@@ -34,6 +36,7 @@ void ArchetypeSystem::initializeDefaults() {
         "Breaker Cannon",
         "Aegis Dash",
         "Bulwark: periodic barrier reduces incoming collision impact",
+        "Cyan Strike",
         0
     ));
 
@@ -44,6 +47,7 @@ void ArchetypeSystem::initializeDefaults() {
         "Twin Repeaters",
         "Fan Volley",
         "Hot Hands: sustained fire gradually boosts shot tempo",
+        "Electric Blue",
         0
     ));
 
@@ -54,6 +58,7 @@ void ArchetypeSystem::initializeDefaults() {
         "Sigil Launcher",
         "Chrono Fracture",
         "Runic Echo: effects with status damage linger longer",
+        "Plasma Violet",
         0
     ));
 
@@ -64,6 +69,7 @@ void ArchetypeSystem::initializeDefaults() {
         "Scythe Rail",
         "Soul Sever",
         "Mortal Wound: defeated foes pulse damage over time",
+        "Crimson Burst",
         1
     ));
 
@@ -74,6 +80,7 @@ void ArchetypeSystem::initializeDefaults() {
         "Drone Carbine",
         "Deploy Turret",
         "Scrapper: extra resource drops from harvest nodes",
+        "Amber Ring",
         1
     ));
 
@@ -84,6 +91,7 @@ void ArchetypeSystem::initializeDefaults() {
         "Needle Burst",
         "Shadowstep",
         "Executioner: bonus damage when striking isolated targets",
+        "Blood Nova",
         2
     ));
 
@@ -94,6 +102,7 @@ void ArchetypeSystem::initializeDefaults() {
         "Catalyst Sprayer",
         "Volatile Mix",
         "Transmute: status kills convert into bonus currency",
+        "Toxic Purple",
         2
     ));
 
@@ -104,6 +113,7 @@ void ArchetypeSystem::initializeDefaults() {
         "Prism Array",
         "Fate Weave",
         "Foretell: increased odds for rare and epic trait rolls",
+        "Sky Nova",
         2
     ));
 

@@ -20,6 +20,44 @@ namespace {
 constexpr const char* kBulletShaderName = "bullet";
 constexpr const char* kBulletVertPath = "assets/shaders/bullet_vs.glsl";
 constexpr const char* kBulletFragPath = "assets/shaders/bullet_fs.glsl";
+
+PostFxSettings resolveAutoPostFx(const GameplaySession& session) {
+    PostFxSettings fx {};
+    const auto& registry = session.bulletPaletteRegistry_;
+    const auto& db = registry.database();
+
+    const std::string& archetypePalette = session.archetypeSystem_.selected().projectilePaletteName;
+    std::string presetName;
+    for (const PaletteTemplate& templ : db.palettes) {
+        if (templ.name == archetypePalette && !templ.autoFxPreset.empty()) {
+            presetName = templ.autoFxPreset;
+            break;
+        }
+    }
+
+    if (presetName.empty()) {
+        const ZoneDefinition* zone = session.runStructure_.currentZone();
+        if (zone != nullptr) {
+            const char* zonePreset = nullptr;
+            switch (zone->type) {
+                case ZoneType::Elite: zonePreset = "Arcade Glow"; break;
+                case ZoneType::Boss: zonePreset = "Boss Pressure"; break;
+                case ZoneType::Event: zonePreset = "Calm Echo"; break;
+                case ZoneType::Combat:
+                default: zonePreset = "Arcade Glow"; break;
+            }
+            if (zonePreset != nullptr) presetName = zonePreset;
+        }
+    }
+
+    if (!presetName.empty()) {
+        if (const FxPreset* preset = registry.findFxPreset(presetName)) {
+            fx = postFxFromPreset(*preset);
+        }
+    }
+    return fx;
+}
+
 }
 
 bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, ControlCenterToolSuite& toolSuite) {
@@ -79,6 +117,12 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
         }
     }
     spriteBatch_.reserve(config_.projectileCapacity + 2048);
+
+    std::string modernError;
+    useModernRenderer_ = modernRenderer_.initialize(renderer_, camera_.viewportWidth(), camera_.viewportHeight(), &modernError);
+    if (!useModernRenderer_) {
+        logWarn("Modern renderer initialization failed: " + modernError);
+    }
     return true;
 }
 
@@ -89,6 +133,7 @@ void RenderPipeline::shutdown(ControlCenterToolSuite& toolSuite) {
     glBulletRenderer_.shutdown();
     paletteRamp_.shutdown();
     shaderCache_.shutdown();
+    paletteRampTexture_.shutdown();
     spriteAtlas_.shutdown();
     backgroundSystem_.clear();
     textures_.reset();
@@ -128,7 +173,14 @@ void RenderPipeline::refreshDisplayMetrics(SDL_Window* window) {
     dpiScaleY_ = static_cast<float>(drawableH) / static_cast<float>(windowH);
     uiTextScale_ = std::clamp((dpiScaleX_ + dpiScaleY_) * 0.5F, 1.0F, 2.0F);
     camera_.setViewport(drawableW, drawableH);
+    if (useModernRenderer_) {
+        std::string resizeError;
+        if (!modernRenderer_.resize(drawableW, drawableH, &resizeError)) {
+            logWarn("Modern renderer resize failed: " + resizeError);
+        }
+    }
 }
+
 
 
 void RenderPipeline::generateBulletSprites(const PaletteFxTemplateRegistry& registry, const BulletPaletteTable& table) {
@@ -136,6 +188,8 @@ void RenderPipeline::generateBulletSprites(const PaletteFxTemplateRegistry& regi
     BulletSpriteGenerator generator;
     const auto defaultFill = deriveProjectileFillFromCore(PaletteColor {1.0F, 1.0F, 1.0F, 1.0F});
     generator.generatePaletteSet(renderer_, *textures_, "0", defaultFill, 16);
+
+    (void)paletteRampTexture_.buildFromRegistry(registry);
 
     const auto& db = registry.database();
     std::uint8_t idx = 1;
@@ -243,8 +297,16 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
 void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frameDelta, ControlCenterToolSuite& toolSuite) {
     if (!renderContextReady_ || !renderer_ || !textures_) return;
     constexpr std::array<Uint8, 4> clearColor {20, 28, 40, 255};
-    SDL_SetRenderDrawColor(renderer_, clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
-    SDL_RenderClear(renderer_);
+
+    PostFxSettings fx = resolveAutoPostFx(snapshot.session);
+    modernRenderer_.setPostFx(fx);
+
+    if (useModernRenderer_) {
+        (void)modernRenderer_.beginScene(Color {clearColor[0], clearColor[1], clearColor[2], clearColor[3]});
+    } else {
+        SDL_SetRenderDrawColor(renderer_, clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+        SDL_RenderClear(renderer_);
+    }
     camera_.setCenter(snapshot.session.playerPos());
     for (const ShakeParams& shake : snapshot.session.consumeCameraShakeEvents()) {
         camera_.shakeSystem().trigger(shake);
@@ -264,6 +326,11 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     toolSuite.beginFrame();
     toolSuite.drawControlCenter({});
     toolSuite.endFrame();
+
+    if (useModernRenderer_) {
+        modernRenderer_.endScene();
+        modernRenderer_.present();
+    }
     SDL_RenderPresent(renderer_);
 }
 

@@ -95,7 +95,8 @@ class ProjectileSystem {
     void beginTick();
     void updateMotion(float dt, float enemyTimeScale = 1.0F, float playerTimeScale = 1.0F);
     void buildGrid();
-    void resolveCollisions(std::span<const CollisionTarget> targets, std::vector<CollisionEvent>& outEvents);
+    void resolveCollisions(std::span<const CollisionTarget> targets, std::span<CollisionEvent> outEvents, std::uint32_t& outEventCount);
+    [[deprecated("Use beginTick()/updateMotion()/buildGrid()/resolveCollisions() pipeline instead")]]
     void update(float dt, Vec2 playerPos, float playerRadius, float enemyTimeScale = 1.0F, float playerTimeScale = 1.0F);
 
     void debugDraw(DebugDraw& draw, bool drawHitboxes, bool drawGrid) const;
@@ -160,7 +161,11 @@ class ProjectileSystem {
     std::array<ProjectileSpawn, kMaxPendingSpawns> pendingSpawns_ {};
     std::uint32_t pendingSpawnCount_ {0};
 
-    std::vector<ProjectileDespawnEvent> despawnEvents_ {};
+    static constexpr std::uint32_t kMaxDespawnEvents = 4096;
+    std::array<ProjectileDespawnEvent, kMaxDespawnEvents> despawnEvents_ {};
+    std::uint32_t despawnEventCount_ {0};
+
+    std::vector<CollisionEvent> legacyCollisionEvents_ {};
 
     std::vector<std::uint32_t> freeList_;
     std::vector<std::uint32_t> activeIndices_;
