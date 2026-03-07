@@ -3,6 +3,7 @@
 #include <engine/archetypes.h>
 #include <engine/bullet_palette.h>
 #include <engine/config.h>
+#include <engine/danger_field.h>
 #include <engine/defensive_special.h>
 #include <engine/deterministic_rng.h>
 #include <engine/difficulty_scaling.h>
@@ -44,6 +45,7 @@ class GameplaySession {
     void onUpgradeNavigation(UpgradeNavAction action);
     void updateGameplay(double dt, std::uint32_t inputMask);
     void drawUpgradeSelectionUi(double frameDelta);
+    void renderDangerFieldOverlay(SDL_Renderer* renderer, const Camera2D& camera, float opacity = 0.25F) const;
 
     [[nodiscard]] Vec2 playerPos() const { return playerPos_; }
     [[nodiscard]] Vec2 aimTarget() const { return aimTarget_; }
@@ -53,6 +55,9 @@ class GameplaySession {
     [[nodiscard]] bool perfHudOpen() const { return perfHudOpen_; }
     [[nodiscard]] bool debugHudOpen() const { return debugHudOpen_; }
     [[nodiscard]] bool archetypeSelectionOpen() const { return archetypeSelectionOpen_; }
+    [[nodiscard]] bool dangerFieldEnabled() const { return dangerFieldEnabled_; }
+    void setDangerFieldEnabled(bool enabled) { dangerFieldEnabled_ = enabled; }
+    void toggleDangerField() { dangerFieldEnabled_ = !dangerFieldEnabled_; }
 
     FrameAllocator frameAllocator_;
     JobSystem jobSystem_;
@@ -61,6 +66,7 @@ class GameplaySession {
     double simClock_ {0.0};
 
     ProjectileSystem projectiles_;
+    mutable DangerFieldOverlay dangerField_ {};
     ParticleFxSystem particleFx_;
     PaletteFxTemplateRegistry bulletPaletteRegistry_ {};
     BulletPaletteTable bulletPaletteTable_ {};
@@ -108,6 +114,7 @@ class GameplaySession {
     bool archetypeSelectionOpen_ {true};
     bool perfHudOpen_ {true};
     bool debugHudOpen_ {true};
+    bool dangerFieldEnabled_ {false};
 
     bool upgradeScreenOpen_ {false};
     std::size_t focusedUpgradeIndex_ {0};

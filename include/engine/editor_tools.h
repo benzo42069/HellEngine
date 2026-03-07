@@ -87,6 +87,7 @@ struct UpgradeDebugOptions {
     int forcedRarity {-1};
     bool showInternalStatModifiers {false};
     bool showPerfHud {true};
+    bool showDangerField {false};
 };
 
 struct ControlCenterValidationIssue {
@@ -114,6 +115,7 @@ class ControlCenterToolSuite {
     void endFrame();
 
     [[nodiscard]] const UpgradeDebugOptions& upgradeDebugOptions() const;
+    UpgradeDebugOptions& upgradeDebugOptionsMutable();
     [[nodiscard]] ProjectileDebugOptions consumeProjectileDebugOptions();
     PatternGeneratorDebugState& patternGeneratorState();
     [[nodiscard]] std::string consumeGeneratedGraphPath();

@@ -108,6 +108,7 @@ add_library(engine_core STATIC
   src/engine/content_pipeline.cpp
   src/engine/deterministic_rng.cpp
   src/engine/defensive_special.cpp
+  src/engine/danger_field.cpp
   src/engine/difficulty_scaling.cpp
   src/engine/encounter_graph.cpp
   src/engine/editor_tools.cpp

@@ -153,6 +153,11 @@ int Runtime::run() {
                 session_.toolSuite_.processEvent(event);
                 input_.processEvent(event);
                 if (event.type == SDL_QUIT) running_ = false;
+                if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_v && event.key.repeat == 0) {
+                    UpgradeDebugOptions& upgradeDebug = session_.toolSuite_.upgradeDebugOptionsMutable();
+                    upgradeDebug.showDangerField = !upgradeDebug.showDangerField;
+                    session_.setDangerFieldEnabled(upgradeDebug.showDangerField);
+                }
                 if (event.type == SDL_WINDOWEVENT && (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED || event.window.event == SDL_WINDOWEVENT_DISPLAY_CHANGED)) {
                     renderPipeline_.refreshDisplayMetrics(window_);
                 }
