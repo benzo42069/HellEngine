@@ -55,6 +55,7 @@ class TraitSystem {
     static constexpr std::size_t choiceCount = 3;
 
     void initialize(std::uint64_t seed);
+    bool loadFromFile(const std::string& path);
 
     [[nodiscard]] std::array<Trait, choiceCount> rollChoices();
     [[nodiscard]] bool rerollChoices();

@@ -87,3 +87,10 @@ Reimport flow:
 See `docs/AssetImportWorkflow.md` for details and an example manifest.
 
 Animation/variant validation now also checks malformed group names, duplicate frame indices, duplicate variant names, and invalid fps/weight values.
+
+## Hot-reload workflow
+1. `ContentWatcher` tracks `last_write_time` for registered JSON files.
+2. `GameplaySession` polls watcher changes on deterministic tick intervals (default 60 ticks).
+3. For each changed file, runtime loads into temporary content objects (pattern bank/entity database/trait system/difficulty model/palette registry).
+4. Successful validation swaps content at the current tick boundary; failures log errors and retain previous content.
+

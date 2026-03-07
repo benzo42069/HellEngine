@@ -156,6 +156,7 @@ int Runtime::run() {
     session_.entitySystem_.reset();
 
     session_.traitSystem_.initialize(config_.simulationSeed);
+    (void)session_.traitSystem_.loadFromFile("data/traits.json");
     session_.archetypeSystem_.initializeDefaults();
     session_.metaProgression_.initializeDefaults();
     if (!saveProfiles.profiles.empty()) {

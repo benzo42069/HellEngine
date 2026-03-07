@@ -33,6 +33,7 @@ GameplaySession::GameplaySession(EngineConfig& config)
     : simulation_(config.simulationSeed),
       config_(config) {
     presentation_.particleFx.initialize(4096);
+    initializeContentWatcher();
 }
 
 void GameplaySession::initializeContent(PatternBank& patternBank, PatternPlayer& patternPlayer) {
@@ -72,6 +73,19 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     presentation_.cameraShakeEvents.clear();
     presentation_.pendingAudioEvents.clear();
     traitSystem_.onTick(simulation_.tickIndex);
+
+    if (simulation_.tickIndex >= nextHotReloadPollTick_) {
+        nextHotReloadPollTick_ = simulation_.tickIndex + kHotReloadPollTicks;
+        for (const ContentChange& change : contentWatcher_.pollChanges()) {
+            switch (change.type) {
+                case ContentType::Patterns: reloadPatterns(change.path); break;
+                case ContentType::Entities: reloadEntities(change.path); break;
+                case ContentType::Traits: reloadTraits(change.path); break;
+                case ContentType::Difficulty: reloadDifficulty(change.path); break;
+                case ContentType::Palettes: reloadPalettes(change.path); break;
+            }
+        }
+    }
 
     auto emitDespawnParticles = [this]() {
         for (const ProjectileDespawnEvent& event : projectiles_.despawnEvents()) {
@@ -316,6 +330,96 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     encounter_.encounterClockSeconds += static_cast<float>(dt);
     ++simulation_.tickIndex;
     profiler_.addZoneTime(PerfZone::Simulation, std::chrono::duration<double, std::milli>(Clock::now() - simStart).count());
+}
+
+void GameplaySession::initializeContentWatcher() {
+    contentWatcher_.addWatchPath("data/patterns.json", ContentType::Patterns);
+    contentWatcher_.addWatchPath("assets/patterns/sandbox_patterns.json", ContentType::Patterns);
+    contentWatcher_.addWatchPath("data/entities.json", ContentType::Entities);
+    contentWatcher_.addWatchPath("data/traits.json", ContentType::Traits);
+    contentWatcher_.addWatchPath("data/difficulty_profiles.json", ContentType::Difficulty);
+    contentWatcher_.addWatchPath("data/palettes/palette_fx_templates.json", ContentType::Palettes);
+}
+
+void GameplaySession::reloadPatterns(const std::string& path) {
+    PatternBank nextBank;
+    if (!nextBank.loadFromFile(path)) {
+        debugTools_.hotReloadErrorMessage = "Pattern reload failed: " + path;
+        logError(debugTools_.hotReloadErrorMessage);
+        return;
+    }
+
+    const std::size_t prevPatternIndex = patternPlayer_.patternIndex();
+    patternBank_ = std::move(nextBank);
+    patternPlayer_.setBank(&patternBank_);
+    const std::size_t availablePatterns = patternBank_.patterns().size();
+    patternPlayer_.setPatternIndex(availablePatterns == 0 ? 0 : std::min(prevPatternIndex, availablePatterns - 1));
+    debugTools_.hotReloadErrorMessage.clear();
+    logInfo("Pattern hot reload succeeded: " + path);
+}
+
+void GameplaySession::reloadEntities(const std::string& path) {
+    EntityDatabase nextDatabase;
+    if (!nextDatabase.loadFromFile(path)) {
+        debugTools_.hotReloadErrorMessage = "Entity reload failed: " + path;
+        logError(debugTools_.hotReloadErrorMessage);
+        return;
+    }
+
+    nextDatabase.resolveProjectilePaletteIndices(bulletPaletteRegistry_);
+    entityDatabase_ = std::move(nextDatabase);
+    entitySystem_.setTemplates(&entityDatabase_.templates());
+    debugTools_.hotReloadErrorMessage.clear();
+    logInfo("Entity hot reload succeeded: " + path);
+}
+
+void GameplaySession::reloadTraits(const std::string& path) {
+    TraitSystem nextTraits;
+    nextTraits.initialize(config_.simulationSeed);
+    if (!nextTraits.loadFromFile(path)) {
+        debugTools_.hotReloadErrorMessage = "Trait reload failed: " + path;
+        logError(debugTools_.hotReloadErrorMessage);
+        return;
+    }
+
+    traitSystem_ = std::move(nextTraits);
+    debugTools_.hotReloadErrorMessage.clear();
+    logInfo("Trait hot reload succeeded: " + path);
+}
+
+void GameplaySession::reloadDifficulty(const std::string& path) {
+    DifficultyModel nextDifficulty;
+    nextDifficulty.initializeDefaults();
+    if (!nextDifficulty.loadProfilesFromFile(path)) {
+        debugTools_.hotReloadErrorMessage = "Difficulty reload failed: " + path;
+        logError(debugTools_.hotReloadErrorMessage);
+        return;
+    }
+
+    nextDifficulty.setProfile(difficultyModel_.profile());
+    difficultyModel_ = std::move(nextDifficulty);
+    debugTools_.difficultyProfileLabelCache = difficultyModel_.profileLabel();
+    debugTools_.hotReloadErrorMessage.clear();
+    logInfo("Difficulty hot reload succeeded: " + path);
+}
+
+void GameplaySession::reloadPalettes(const std::string& path) {
+    PaletteFxTemplateRegistry nextRegistry;
+    std::string error;
+    if (!nextRegistry.loadFromJsonFile(path, &error)) {
+        debugTools_.hotReloadErrorMessage = "Palette reload failed: " + error;
+        logError(debugTools_.hotReloadErrorMessage);
+        return;
+    }
+
+    BulletPaletteTable nextTable;
+    nextTable.buildFromRegistry(nextRegistry);
+
+    bulletPaletteRegistry_ = std::move(nextRegistry);
+    bulletPaletteTable_ = std::move(nextTable);
+    entityDatabase_.resolveProjectilePaletteIndices(bulletPaletteRegistry_);
+    debugTools_.hotReloadErrorMessage.clear();
+    logInfo("Palette hot reload succeeded: " + path);
 }
 
 std::vector<ShakeParams> GameplaySession::consumeCameraShakeEvents() const {

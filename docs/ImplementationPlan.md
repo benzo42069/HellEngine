@@ -410,3 +410,6 @@ Completed items:
   - Added explicit `preparedQuadCount()` metric for render-prep profiling.
 - Validation:
   - Updated `gpu_bullets_tests` to cover renamed class usage and clear/reset bookkeeping checks.
+
+- **Phase 10 completion**: Generalized content hot-reload shipped with `ContentWatcher` across patterns/entities/traits/difficulty/palettes, deterministic tick-boundary swaps, and failure-safe preserve-on-error behavior.
+
