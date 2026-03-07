@@ -1,11 +1,11 @@
 #include <engine/pattern_graph.h>
 
+#include <catch2/catch_test_macros.hpp>
+
 #include <cmath>
-#include <cstdlib>
-#include <iostream>
 #include <vector>
 
-int main() {
+TEST_CASE("Pattern graph compile execute and roundtrip", "[pattern_graph]") {
     engine::PatternGraphAsset asset;
     asset.id = "determinism-graph";
     asset.nodes = {
@@ -17,10 +17,7 @@ int main() {
 
     engine::CompiledPatternGraph compiled;
     engine::PatternGraphCompiler compiler;
-    if (!compiler.compile(asset, compiled)) {
-        std::cerr << "compile failed\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(compiler.compile(asset, compiled));
 
     engine::PatternGraphVm vm;
     engine::PatternGraphVm::RuntimeState a;
@@ -36,35 +33,20 @@ int main() {
         vm.execute(compiled, b, 1.0F / 60.0F, {0.0F, 0.0F}, {50.0F, -10.0F}, [&](const engine::ProjectileSpawn& p) { outB.push_back(p); });
     }
 
-    if (outA.size() != outB.size()) {
-        std::cerr << "vm emit count mismatch\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(outA.size() == outB.size());
     for (std::size_t i = 0; i < outA.size(); ++i) {
-        if (std::abs(outA[i].vel.x - outB[i].vel.x) > 0.0001F || std::abs(outA[i].vel.y - outB[i].vel.y) > 0.0001F) {
-            std::cerr << "vm deterministic output mismatch\n";
-            return EXIT_FAILURE;
-        }
+        REQUIRE(std::abs(outA[i].vel.x - outB[i].vel.x) <= 0.0001F);
+        REQUIRE(std::abs(outA[i].vel.y - outB[i].vel.y) <= 0.0001F);
     }
-
 
     std::string err;
-    if (!engine::savePatternGraphsToFile("pattern_graph_roundtrip.json", {asset}, &err)) {
-        std::cerr << "failed to save graph json: " << err << "\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(engine::savePatternGraphsToFile("pattern_graph_roundtrip.json", {asset}, &err));
     std::vector<engine::PatternGraphAsset> loadedAssets;
     std::vector<engine::PatternGraphDiagnostic> loadDiag;
-    if (!engine::loadPatternGraphsFromFile("pattern_graph_roundtrip.json", loadedAssets, loadDiag) || loadedAssets.empty()) {
-        std::cerr << "failed to reload graph json\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(engine::loadPatternGraphsFromFile("pattern_graph_roundtrip.json", loadedAssets, loadDiag));
+    REQUIRE(!loadedAssets.empty());
+
     const engine::PatternGraphAsset migrated = engine::migrateLegacyPatternToGraph("migrated", 0.12F, 12, 150.0F);
     engine::CompiledPatternGraph migratedCompiled;
-    if (!compiler.compile(migrated, migratedCompiled)) {
-        std::cerr << "legacy migration compile failed\n";
-        return EXIT_FAILURE;
-    }
-    std::cout << "pattern_graph_tests passed\n";
-    return EXIT_SUCCESS;
+    REQUIRE(compiler.compile(migrated, migratedCompiled));
 }

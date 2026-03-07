@@ -410,3 +410,11 @@ Completed items:
   - Added explicit `preparedQuadCount()` metric for render-prep profiling.
 - Validation:
   - Updated `gpu_bullets_tests` to cover renamed class usage and clear/reset bookkeeping checks.
+
+## Phase 7 — Testing framework modernization (Completed)
+### Completed items
+- Integrated Catch2 v3.5.2 in CMake with `FetchContent` and `catch_discover_tests` support.
+- Migrated five core tests to Catch2 while preserving all existing assertions/validation intent.
+- Added determinism property tests (`[determinism][property]`) for seed/hash stability checks.
+- Added malformed-content fuzz test (`[fuzz]`) for pattern loader crash resilience.
+- Kept the remaining legacy test executables unchanged.

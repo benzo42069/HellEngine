@@ -1,8 +1,8 @@
 #include <engine/projectiles.h>
 
+#include <catch2/catch_test_macros.hpp>
+
 #include <algorithm>
-#include <cstdlib>
-#include <iostream>
 #include <vector>
 
 namespace {
@@ -44,8 +44,8 @@ bool sameEvents(const std::vector<engine::CollisionEvent>& a, const std::vector<
 
 } // namespace
 
-int main() {
-    {
+TEST_CASE("Collision correctness coverage", "[collision]") {
+    SECTION("Single overlap resolves one hit") {
         engine::ProjectileSystem sys;
         sys.initialize(64, 100.0F, 8, 8);
         sys.beginTick();
@@ -57,18 +57,20 @@ int main() {
         std::uint32_t eventCount = 0;
         sys.resolveCollisions(targets, events, eventCount);
         events.resize(eventCount);
-        if (events.size() != 1 || events[0].targetId != 7) return EXIT_FAILURE;
+
+        REQUIRE(events.size() == 1);
+        REQUIRE(events[0].targetId == 7);
     }
 
-    {
+    SECTION("Graze points are awarded") {
         engine::ProjectileSystem sys;
         sys.initialize(64, 100.0F, 8, 8);
         sys.beginTick();
         sys.spawn({.pos = {8.5F, 0.0F}, .vel = {0, 0}, .radius = 1.0F});
-        if (sys.collectGrazePoints({0, 0}, 6.0F, 1.0F, 4.0F, 10, 1) != 1U) return EXIT_FAILURE;
+        REQUIRE(sys.collectGrazePoints({0, 0}, 6.0F, 1.0F, 4.0F, 10, 1) == 1U);
     }
 
-    {
+    SECTION("Player allegiance excludes friendly fire target team") {
         engine::ProjectileSystem sys;
         sys.initialize(64, 100.0F, 8, 8);
         sys.beginTick();
@@ -80,10 +82,11 @@ int main() {
         std::uint32_t eventCount = 0;
         sys.resolveCollisions(targets, events, eventCount);
         events.resize(eventCount);
-        if (!events.empty()) return EXIT_FAILURE;
+
+        REQUIRE(events.empty());
     }
 
-    {
+    SECTION("Grid collision results match brute force") {
         engine::ProjectileSystem sys;
         sys.initialize(4096, 600.0F, 32, 18);
         std::vector<engine::ProjectileSpawn> bullets;
@@ -107,10 +110,11 @@ int main() {
         std::uint32_t gotCount = 0;
         sys.resolveCollisions(targets, got, gotCount);
         got.resize(gotCount);
-        if (!sameEvents(got, bruteForce(bullets, targets))) return EXIT_FAILURE;
+
+        REQUIRE(sameEvents(got, bruteForce(bullets, targets)));
     }
 
-    {
+    SECTION("Collision determinism between identical systems") {
         engine::ProjectileSystem a;
         engine::ProjectileSystem b;
         a.initialize(256, 120.0F, 12, 8);
@@ -135,9 +139,7 @@ int main() {
         b.resolveCollisions(targets, eb, ebCount);
         ea.resize(eaCount);
         eb.resize(ebCount);
-        if (!sameEvents(ea, eb)) return EXIT_FAILURE;
-    }
 
-    std::cout << "collision_correctness_tests passed\n";
-    return EXIT_SUCCESS;
+        REQUIRE(sameEvents(ea, eb));
+    }
 }

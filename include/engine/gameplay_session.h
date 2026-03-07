@@ -36,7 +36,7 @@ namespace engine {
 struct SessionSimulationState {
     FrameAllocator frameAllocator {1024 * 1024};
     JobSystem jobSystem {};
-    RngStreams rngStreams {};
+    RngStreams rngStreams;
     std::uint64_t tickIndex {0};
     double simClock {0.0};
 

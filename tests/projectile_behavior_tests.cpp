@@ -1,21 +1,33 @@
 #include <engine/projectiles.h>
 
-#include <cstdlib>
-#include <iostream>
+#include <catch2/catch_test_macros.hpp>
 
-int main() {
+TEST_CASE("Projectile behaviors remain deterministic", "[projectile][behavior]") {
     engine::ProjectileSystem a;
     engine::ProjectileSystem b;
     a.initialize(512, 420.0F, 32, 18);
     b.initialize(512, 420.0F, 32, 18);
 
-    engine::ProjectileBehavior h; h.homingTurnRateDegPerSec = 180.0F; h.homingMaxAngleStepDeg = 10.0F;
-    engine::ProjectileBehavior c; c.curvedAngularVelocityDegPerSec = 90.0F;
-    engine::ProjectileBehavior ad; ad.accelerationPerSec = 25.0F; ad.dragPerSec = 0.15F;
-    engine::ProjectileBehavior bo; bo.maxBounces = 2;
-    engine::ProjectileBehavior sp; sp.splitCount = 4; sp.splitAngleSpreadDeg = 60.0F; sp.splitDelaySeconds = 0.4F;
-    engine::ProjectileBehavior ex; ex.explodeRadius = 24.0F; ex.explodeShards = 8;
-    engine::ProjectileBehavior be; be.beamSegmentSamples = 6; be.beamDurationSeconds = 0.8F;
+    engine::ProjectileBehavior h;
+    h.homingTurnRateDegPerSec = 180.0F;
+    h.homingMaxAngleStepDeg = 10.0F;
+    engine::ProjectileBehavior c;
+    c.curvedAngularVelocityDegPerSec = 90.0F;
+    engine::ProjectileBehavior ad;
+    ad.accelerationPerSec = 25.0F;
+    ad.dragPerSec = 0.15F;
+    engine::ProjectileBehavior bo;
+    bo.maxBounces = 2;
+    engine::ProjectileBehavior sp;
+    sp.splitCount = 4;
+    sp.splitAngleSpreadDeg = 60.0F;
+    sp.splitDelaySeconds = 0.4F;
+    engine::ProjectileBehavior ex;
+    ex.explodeRadius = 24.0F;
+    ex.explodeShards = 8;
+    engine::ProjectileBehavior be;
+    be.beamSegmentSamples = 6;
+    be.beamDurationSeconds = 0.8F;
 
     const engine::ProjectileSpawn seeds[] = {
         {.pos = {0.0F, 0.0F}, .vel = {120.0F, 10.0F}, .radius = 3.0F, .behavior = h},
@@ -43,11 +55,5 @@ int main() {
         hashB ^= b.debugStateHash() + static_cast<std::uint64_t>(i);
     }
 
-    if (hashA != hashB) {
-        std::cerr << "projectile behavior determinism mismatch\n";
-        return EXIT_FAILURE;
-    }
-
-    std::cout << "projectile_behavior_tests passed\n";
-    return EXIT_SUCCESS;
+    REQUIRE(hashA == hashB);
 }

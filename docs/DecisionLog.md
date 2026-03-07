@@ -481,3 +481,9 @@
 - **Decision**: Added compact `activeSlots_` + `slotToActiveIndex_` bookkeeping so update/render loops iterate only live bullets.
 - **Rationale**: Improves scaling behavior and profiling clarity at high bullet counts while preserving deterministic update order within active set transitions.
 - **Status**: Accepted.
+
+## 2026-03-07 — Catch2 v3.5.2 test framework adoption and targeted migration
+- **Context**: Test infrastructure mixed many standalone `main()` executables with manual assertions, limiting discovery/tag filtering and making property/fuzz style tests harder to scale.
+- **Decision**: Adopt Catch2 v3.5.2 via CMake `FetchContent`, migrate five core test binaries (`projectile`, `projectile_behavior`, `pattern_graph`, `replay`, `collision_correctness`) to `TEST_CASE`/`REQUIRE`, and add determinism property and content fuzz test targets.
+- **Rationale**: Improves test ergonomics and selective execution (`[determinism]`, `[fuzz]`) while preserving existing logic and leaving non-migrated tests unchanged.
+- **Status**: Accepted.
