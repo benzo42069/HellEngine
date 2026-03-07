@@ -390,3 +390,15 @@ Completed items:
   - Updated `data/entities.json` boss phases to include pattern sequence and cadence examples.
 - Validation:
   - Updated boss and encounter tests to validate new runtime event and schedule metadata behavior.
+
+
+## Phase 5 — Reposition GPU Bullet Path to CPU Mass Render (Complete)
+- Renamed runtime terminology to remove GPU-simulation ambiguity:
+  - `BulletSimulationMode::CpuDeterministic` -> `CpuCollisionDeterministic`
+  - `BulletSimulationMode::GpuMassHybrid` -> `CpuMassRender`
+  - `GpuBulletSystem` implementation class -> `CpuMassBulletRenderSystem` (with compatibility alias retained).
+- Upgraded CPU mass path internals:
+  - Added compact active-slot tracking (`activeSlots_`, `slotToActiveIndex_`) to avoid full-capacity scans during update/render.
+  - Added explicit `preparedQuadCount()` metric for render-prep profiling.
+- Validation:
+  - Updated `gpu_bullets_tests` to cover renamed class usage and clear/reset bookkeeping checks.

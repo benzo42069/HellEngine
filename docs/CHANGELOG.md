@@ -1,3 +1,10 @@
+## Unreleased
+### Changed
+- Repositioned the old “GPU bullet” path as `CpuMassBulletRenderSystem` to reflect actual architecture (CPU-driven simulation/prep with batched geometry submission).
+- Renamed simulation modes to `CpuCollisionDeterministic` and `CpuMassRender` to remove expectation ambiguity.
+- Improved CPU mass bullet scaling via compact active-slot iteration and added prepared-quad profiling counter support.
+- Updated bullet-path tests and documentation to reflect the new ownership boundaries and scaling expectations.
+
 # Changelog
 
 ## 2026-03-07 — Animation clip import + sprite variant workflow

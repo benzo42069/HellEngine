@@ -53,5 +53,5 @@ Headless smoke run:
 - `` ` ``: debug HUD on/off
 - `F10`: perf HUD on/off
 - `F11`: compiled graph VM on/off
-- `F12`: CPU/GPU bullet mode
+- `F12`: bullet simulation mode toggle (CpuCollisionDeterministic / CpuMassRender when enabled by runtime wiring)
 

@@ -58,3 +58,12 @@ This script runs:
 - OpenGL bullet path must render **10,000 active bullets in a single draw call**.
 - Target GPU time for bullet pass: **< 1.0 ms** on the reference profiling machine.
 - CPU-side buffer rebuild remains authoritative each frame but must avoid per-frame allocations (preallocated max-capacity buffers only).
+
+
+## CPU Mass Bullet Render Path Targets
+- Classification: CPU-driven mass-bullet simulation + CPU-side quad preparation + batched renderer submission.
+- Scale target: sustain 100k active visual bullets in stress test updates without allocation churn (hardware dependent for frame time).
+- Profiling counters to monitor:
+  - `activeCount()` for live bullets.
+  - `preparedQuadCount()` for render prep output volume.
+- This path is non-authoritative for gameplay collision/replay until a dedicated hybrid ownership model is implemented.

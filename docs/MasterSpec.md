@@ -253,16 +253,16 @@ Typical designer parameters: `N, Δ, Ω, I, S, A, L, a, ωturn, phase` and varia
 - Degradation strategy preserves sim correctness first (reduce visuals/effects before sim fidelity).
 
 ## 15. Rendering Strategy
-- Custom GPU-instanced bullet renderer is preferred for 10k+ projectile throughput and debug attribution.
-- Sim emits compact render instance buffers.
-- Optional particle bridge allowed for non-critical VFX.
+- OpenGL bullet renderer (`gl_bullet_renderer`) is the primary high-throughput path for gameplay-authoritative projectiles.
+- CPU collision/determinism path (`CpuCollisionDeterministic`) remains replay-authoritative.
+- CPU mass bullet render path (`CpuMassBulletRenderSystem`) is a presentation-oriented mass-quad path, not GPU compute simulation.
 - Render remains presentation-only.
 
-
-### 15.x GpuBulletSystem Runtime Note (Phase 4)
-- `GpuBulletSystem` remains a CPU-updated simulation/render data path (not GPU compute simulation).
-- Slot management uses a free-list and cached active count for O(1) `emit()` and O(1) `activeCount()`.
-- This removes prior linear scans and improves high-count hybrid rendering throughput predictability.
+### 15.x CPU Mass Bullet Render Runtime Note (Phase 5)
+- `CpuMassBulletRenderSystem` replaces ambiguous naming previously implying GPU simulation.
+- Runtime uses O(1) free-list emission and compact active-slot iteration for update/render traversal.
+- Prepared quad count is tracked explicitly (`preparedQuadCount`) for profiling clarity.
+- Mode naming is explicit: `CpuCollisionDeterministic` vs `CpuMassRender`.
 
 ## 16. Replay, Debugging, and Introspection
 - Replay record/playback uses authoritative per-tick input stream and deterministic settings.

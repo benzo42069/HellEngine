@@ -257,7 +257,7 @@ void RenderPipeline::ensureZoneBackground(const GameplaySession& session) {
 
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
     const GameplaySession& s = snapshot.session;
-    if (s.bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
+    if (s.bulletSimMode_ == BulletSimulationMode::CpuCollisionDeterministic) {
         const bool canUseGlBullets = glReady_ && paletteRamp_.valid();
         if (canUseGlBullets) {
             const auto& posX = s.projectiles_.posX();

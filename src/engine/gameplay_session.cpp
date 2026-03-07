@@ -238,7 +238,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         profiler_.addZoneTime(PerfZone::Bullets, std::chrono::duration<double, std::milli>(Clock::now() - bulletStart).count());
     }
 
-    if (bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
+    if (bulletSimMode_ == BulletSimulationMode::CpuCollisionDeterministic) {
         projectiles_.updateMotion(static_cast<float>(dt), dilation.enemyProjectiles, dilation.playerProjectiles);
         emitDespawnParticles();
         projectiles_.buildGrid();
