@@ -482,6 +482,11 @@
 - **Rationale**: Improves scaling behavior and profiling clarity at high bullet counts while preserving deterministic update order within active set transitions.
 - **Status**: Accepted.
 
+## 2026-03-07 — Camera shake vocabulary: 6 profiles, additive blending, max 4 simultaneous
+- **Context**: A single shake mode made combat feedback feel uniform and forced simulation code to hand-tune one-off shake parameters.
+- **Decision**: Standardize camera shake around a six-profile vocabulary (`Impact`, `BossRumble`, `GrazeTremor`, `SpecialPulse`, `Explosion`, `Ambient`) implemented by `CameraShakeSystem`, with additive blending, a max of four active shakes, and total per-axis clamp to ±20 px.
+- **Rationale**: Keeps shake presentation-only and deterministic per frame while giving gameplay hooks consistent, reusable semantics across hit, graze, boss, special, and ambience events.
+- **Status**: Accepted.
 ## 2026-03-07 — GlBulletRenderer single-draw-call OpenGL bullet rendering with SpriteBatch fallback
 - **Context**: Shader cache, grayscale sprite atlas, and palette ramp texture pipeline were available but runtime bullets still defaulted to CPU SpriteBatch quads.
 - **Decision**: Wire `GlBulletRenderer` into `RenderPipeline` to rebuild one CPU vertex/index stream each frame and submit bullets + trails in a single OpenGL draw call when GL is available; keep existing `renderProcedural` fallback for non-GL/runtime-failure paths.
