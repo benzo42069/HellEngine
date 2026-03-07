@@ -48,3 +48,38 @@ Merge behavior:
 ## Reference stability
 Entity->pattern references can use `attackPatternGuid` (preferred) or `attackPatternName` (legacy fallback).
 Because references resolve by GUID-or-name, moving or renaming source JSON files does not break references.
+
+## Sprite/texture import pipeline (schema v2, packVersion 4)
+The packer now integrates authored source-art import instead of only procedural/generated art.
+
+- Source manifests use `assetManifestType: "art-import"` + `assets[]`.
+- Supported import asset kinds: `sprite`, `texture`.
+- Supported source file formats: `.png`, `.jpg/.jpeg`, `.bmp`, `.tga`.
+- Validation rejects missing source files, unsupported formats, invalid pivots, and unsupported import settings.
+
+Per-asset import settings:
+
+- classification (`kind`)
+- `colorWorkflow` (`full-color`, `grayscale`, `monochrome`) for grayscale/monochrome shader workflows
+- `pivotX`/`pivotY`
+- `collisionBoundsPolicy`
+- `atlasGroup`
+- `filter`/`mipPreference`
+- `variantGroup`
+- optional animation grouping (`animationGroup`, `animationFps`, `animationSequenceFromFilename`)
+
+Pack output adds:
+
+- `sourceAssetRegistry` (authored import source + normalized settings)
+- `importRegistry` (source/settings fingerprints + status)
+- `importInvalidations` (dependency invalidation records)
+- `atlasBuild` (atlas grouping plans by atlas group + workflow)
+
+Reimport flow:
+
+- Packer optional arg `--previous-pack <path>` loads prior `importRegistry`.
+- Current import fingerprints are compared by GUID.
+- Changed fingerprints mark assets `reimported` and emit invalidation records.
+- Unchanged fingerprints mark `up-to-date`.
+
+See `docs/AssetImportWorkflow.md` for details and an example manifest.

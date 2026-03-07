@@ -1,0 +1,41 @@
+{
+  "assetManifestType": "art-import",
+  "assets": [
+    {
+      "name": "bullet_core",
+      "kind": "sprite",
+      "source": "data/art/bullet_core.png",
+      "settings": {
+        "colorWorkflow": "grayscale",
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "collisionBoundsPolicy": "tight",
+        "atlasGroup": "projectiles",
+        "filter": "linear",
+        "mipPreference": "none",
+        "variantGroup": "bullet_core_family",
+        "animationGroup": "",
+        "animationFps": 0.0,
+        "animationSequenceFromFilename": false
+      }
+    },
+    {
+      "name": "noise_tile",
+      "kind": "texture",
+      "source": "data/art/noise_tile.png",
+      "settings": {
+        "colorWorkflow": "monochrome",
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "collisionBoundsPolicy": "none",
+        "atlasGroup": "environment",
+        "filter": "nearest",
+        "mipPreference": "generate",
+        "variantGroup": "",
+        "animationGroup": "ambient_noise",
+        "animationFps": 8.0,
+        "animationSequenceFromFilename": true
+      }
+    }
+  ]
+}

@@ -423,3 +423,11 @@
 - Clearer ownership boundaries between panel UI and shared editor services.
 - Preserved user-visible behavior while preparing plugin and panel expansion.
 - Runtime/editor split is cleaner because panel methods consume immutable runtime snapshots and mutate only editor-scoped state.
+
+## 2026-03-07 — Decision: integrate source-art import into ContentPacker
+
+- Implemented source-art import as a first-class stage in `ContentPacker` rather than standalone scripts.
+- Chosen data model: manifest-driven `art-import` JSON documents with explicit per-asset import settings.
+- Added import fingerprinting and previous-pack comparison (`--previous-pack`) to support deterministic reimport/dependency invalidation.
+- Atlas integration is represented as emitted `atlasBuild` plans keyed by `(atlasGroup, colorWorkflow)` so runtime/editor can consume build grouping deterministically.
+- Grayscale and monochrome workflows are validated/imported directly through `colorWorkflow` and represented in pack metadata to support palette/shader workflows.

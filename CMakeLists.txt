@@ -223,6 +223,11 @@ add_test(NAME content_packer_generate COMMAND ContentPacker --input ${CMAKE_SOUR
 add_test(NAME content_packer_tests COMMAND content_packer_tests ${CMAKE_BINARY_DIR}/content_test.pak)
 set_tests_properties(content_packer_tests PROPERTIES DEPENDS content_packer_generate)
 
+
+add_executable(content_import_pipeline_tests tests/content_import_pipeline_tests.cpp)
+target_link_libraries(content_import_pipeline_tests PRIVATE engine_core)
+add_test(NAME content_import_pipeline_tests COMMAND content_import_pipeline_tests)
+
 add_executable(entity_tests tests/entity_tests.cpp)
 target_link_libraries(entity_tests PRIVATE engine_core)
 add_test(NAME entity_tests COMMAND entity_tests)
