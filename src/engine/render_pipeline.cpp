@@ -35,6 +35,8 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
     (void)debugText_.init(renderer_);
     debugText_.registerTexture(*textures_, "debug_font");
     backgroundSystem_.initialize(renderer_, *textures_);
+    lastBgStageIndex_ = std::numeric_limits<std::size_t>::max();
+    lastBgZoneIndex_ = std::numeric_limits<std::size_t>::max();
     renderContextReady_ = true;
     refreshDisplayMetrics(window);
     spriteBatch_.reserve(config_.projectileCapacity + 2048);
@@ -51,6 +53,8 @@ void RenderPipeline::shutdown(ControlCenterToolSuite& toolSuite) {
         SDL_DestroyRenderer(renderer_);
         renderer_ = nullptr;
     }
+    lastBgStageIndex_ = std::numeric_limits<std::size_t>::max();
+    lastBgZoneIndex_ = std::numeric_limits<std::size_t>::max();
     renderContextReady_ = false;
 }
 
@@ -121,6 +125,30 @@ bool RenderPipeline::toggleFullscreen(SDL_Window* window) {
     return true;
 }
 
+
+void RenderPipeline::ensureZoneBackground(const GameplaySession& session) {
+    if (!renderer_ || !textures_) return;
+    const ZoneDefinition* zone = session.runStructure_.currentZone();
+    if (!zone) return;
+
+    const std::size_t stageIndex = session.runStructure_.stageIndex();
+    const std::size_t zoneIndex = session.runStructure_.zoneIndex();
+    if (stageIndex == lastBgStageIndex_ && zoneIndex == lastBgZoneIndex_) return;
+
+    const std::string textureId = levelTileGenerator_.generateForZone(
+        renderer_,
+        *textures_,
+        zone->type,
+        static_cast<std::uint32_t>(stageIndex),
+        config_.simulationSeed
+    );
+    if (!textureId.empty()) {
+        backgroundSystem_.setPrimaryLayerTexture(textureId);
+        lastBgStageIndex_ = stageIndex;
+        lastBgZoneIndex_ = zoneIndex;
+    }
+}
+
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
     const GameplaySession& s = snapshot.session;
     if (s.bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
@@ -143,6 +171,7 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
         camera_.shakeSystem().trigger(shake);
     }
     camera_.update(static_cast<float>(frameDelta));
+    ensureZoneBackground(snapshot.session);
     backgroundSystem_.update(static_cast<float>(frameDelta));
     spriteBatch_.begin(camera_);
     backgroundSystem_.render(spriteBatch_, camera_);

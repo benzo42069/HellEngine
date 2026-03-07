@@ -24,6 +24,7 @@ class BackgroundSystem {
     void addLayer(const BackgroundLayer& layer);
     void update(float frameDelta);
     void render(SpriteBatch& batch, const Camera2D& camera) const;
+    void setPrimaryLayerTexture(const std::string& textureId);
     void clear();
 
   private:
