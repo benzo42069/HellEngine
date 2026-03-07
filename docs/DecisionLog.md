@@ -442,3 +442,11 @@
   - Authors can choose explicit metadata or configured naming conventions.
   - Runtime/content packs now expose deterministic animation and variant group plans for procedural/themed selection.
   - Grayscale/palette workflow remains compatible via per-variant `paletteTemplate` annotation.
+
+## DL-0020 — Core Audio Runtime Uses Event-Queued Presentation Model
+- **Date**: 2026-03-07
+- **Decision**: Added `AudioSystem` as a runtime presentation service fed by deterministic gameplay events, with bus-based volume (`master/music/sfx`) and pack-authored clip/event routing.
+- **Rationale**: Preserves deterministic simulation boundaries while enabling commercial-grade feedback hooks for combat, boss telegraphs, and UI interactions.
+- **Consequences**:
+  - Audio authoring remains in content data (`audio` pack section), not hardcoded gameplay classes.
+  - Runtime can be expanded to ducking/mix snapshots/event middleware without altering simulation contracts.

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engine/archetypes.h>
+#include <engine/audio_system.h>
 #include <engine/bullet_palette.h>
 #include <engine/config.h>
 #include <engine/danger_field.h>
@@ -62,9 +63,10 @@ struct PresentationState {
     mutable DangerFieldOverlay dangerField {};
     ParticleFxSystem particleFx {};
     mutable std::vector<ShakeParams> cameraShakeEvents {};
+    mutable std::vector<AudioEventId> pendingAudioEvents {};
     bool dangerFieldEnabled {false};
 
-    PresentationState() { cameraShakeEvents.reserve(16); }
+    PresentationState() { cameraShakeEvents.reserve(16); pendingAudioEvents.reserve(32); }
 };
 
 struct DebugToolState {
@@ -108,6 +110,7 @@ class GameplaySession {
     void drawUpgradeSelectionUi(double frameDelta);
     void renderDangerFieldOverlay(SDL_Renderer* renderer, const Camera2D& camera, float opacity = 0.25F) const;
     [[nodiscard]] std::vector<ShakeParams> consumeCameraShakeEvents() const;
+    [[nodiscard]] std::vector<AudioEventId> consumeAudioEvents() const;
 
     [[nodiscard]] Vec2 playerPos() const { return playerState_.playerPos; }
     [[nodiscard]] Vec2 aimTarget() const { return playerState_.aimTarget; }

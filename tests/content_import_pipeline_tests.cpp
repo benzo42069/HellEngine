@@ -119,6 +119,27 @@ int main() {
         return EXIT_FAILURE;
     }
 
+
+    nlohmann::json audioDoc = {
+        {"audio", {
+            {"music", "bgm_core"},
+            {"clips", nlohmann::json::array({
+                {{"id", "bgm_core"}, {"path", "music/core.wav"}, {"bus", "music"}, {"loop", true}, {"baseGain", 0.5}},
+                {{"id", "sfx_hit"}, {"path", "sfx/hit.wav"}, {"bus", "sfx"}, {"loop", false}, {"baseGain", 1.0}}
+            })},
+            {"events", nlohmann::json::array({
+                {{"name", "hit"}, {"clip", "sfx_hit"}, {"gain", 1.0}},
+                {{"name", "boss_warning"}, {"clip", "sfx_hit"}, {"gain", 0.8}}
+            })}
+        }}
+    };
+    engine::AudioContentDatabase audioDb;
+    std::string audioError;
+    if (!engine::parseAudioContentDatabase(audioDoc, audioDb, audioError) || !audioError.empty() || audioDb.clips.size() != 2 || audioDb.events.size() != 2 || audioDb.musicClipId != "bgm_core") {
+        std::cerr << "parseAudioContentDatabase failed\n";
+        return EXIT_FAILURE;
+    }
+
     nlohmann::json pack = {
         {"importRegistry", nlohmann::json::array({
             {{"guid", imported[0].source.guid}, {"importFingerprint", imported[0].importFingerprint}},

@@ -340,3 +340,9 @@ This addresses the prior audit gap where authored art handling was underdevelope
 - **Operational impact**:
   - authored 2D animation is practical without manual per-frame runtime wiring.
   - themed/procedural visual variation is first-class in content packs.
+
+## Audit follow-up update (Audio)
+- **Status**: Addressed.
+- Implemented production baseline audio runtime with deterministic event-queue integration and content-driven routing.
+- Added bus volumes (master/music/sfx), music loop support, and gameplay/UI audio trigger hooks.
+- Added content pipeline support for `audio` metadata in packs plus runtime parsing and fallback behavior.

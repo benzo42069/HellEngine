@@ -31,3 +31,14 @@
 ### Changed
 - `content_pipeline` now exposes reusable parsing/import/fingerprint helpers for asset-import tooling.
 - `content_packer_tests` now validates generated pack import/atlas metadata shape.
+
+## Unreleased
+### Added
+- First core audio subsystem (`AudioSystem`) with SFX/music playback, event routing, and bus/category mix controls.
+- Event-driven gameplay hooks for hit, graze, player damage, enemy death, boss warning, UI click, and UI confirm.
+- Content integration for audio assets/events via pack `audio` section and `data/audio.json`.
+- Runtime volume config fields and CLI overrides for master/music/sfx.
+
+### Changed
+- `ContentPacker` now forwards `audio` blocks into built packs.
+- Runtime now initializes SDL audio and flushes queued audio events once per deterministic sim tick.

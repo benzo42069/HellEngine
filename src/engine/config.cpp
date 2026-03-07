@@ -41,6 +41,13 @@ EngineConfig loadConfigFromFile(const std::string& filePath) {
     if (json.contains("defensiveSpecialPreset")) config.defensiveSpecialPreset = json["defensiveSpecialPreset"].get<std::string>();
     if (json.contains("defensiveEnemyScaleOverride")) config.defensiveEnemyScaleOverride = json["defensiveEnemyScaleOverride"].get<float>();
     if (json.contains("defensivePlayerProjectileScaleOverride")) config.defensivePlayerProjectileScaleOverride = json["defensivePlayerProjectileScaleOverride"].get<float>();
+    if (json.contains("audio") && json["audio"].is_object()) {
+        const auto& a = json["audio"];
+        if (a.contains("masterVolume")) config.audioMasterVolume = a["masterVolume"].get<float>();
+        if (a.contains("musicVolume")) config.audioMusicVolume = a["musicVolume"].get<float>();
+        if (a.contains("sfxVolume")) config.audioSfxVolume = a["sfxVolume"].get<float>();
+    }
+
     if (json.contains("standards") && json["standards"].is_object()) {
         const auto& st = json["standards"];
         if (st.contains("playfield_width")) config.standardsPlayfieldWidth = st["playfield_width"].get<int>();
@@ -149,6 +156,20 @@ void applyCommandLineOverrides(EngineConfig& config, const int argc, char** argv
         }
         if (arg == "--render-target-height" && i + 1 < argc) {
             config.standardsRenderTargetHeight = std::stoi(argv[++i]);
+            continue;
+        }
+
+
+        if (arg == "--audio-master" && i + 1 < argc) {
+            config.audioMasterVolume = std::stof(argv[++i]);
+            continue;
+        }
+        if (arg == "--audio-music" && i + 1 < argc) {
+            config.audioMusicVolume = std::stof(argv[++i]);
+            continue;
+        }
+        if (arg == "--audio-sfx" && i + 1 < argc) {
+            config.audioSfxVolume = std::stof(argv[++i]);
             continue;
         }
 

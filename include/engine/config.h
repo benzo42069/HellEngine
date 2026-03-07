@@ -35,6 +35,9 @@ struct EngineConfig {
     int standardsPlayfieldHeight {1440};
     int standardsRenderTargetWidth {1440};
     int standardsRenderTargetHeight {1920};
+    float audioMasterVolume {1.0F};
+    float audioMusicVolume {0.75F};
+    float audioSfxVolume {0.9F};
 };
 
 EngineConfig loadConfigFromFile(const std::string& filePath);

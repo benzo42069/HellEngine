@@ -1,5 +1,6 @@
 #pragma once
 
+#include <engine/audio_system.h>
 #include <engine/config.h>
 #include <engine/gameplay_session.h>
 #include <engine/input_system.h>
@@ -27,6 +28,7 @@ class Runtime {
     SDL_Window* window_ {nullptr};
 
     InputSystem input_;
+    AudioSystem audio_;
     GameplaySession session_;
     RenderPipeline renderPipeline_;
 };
