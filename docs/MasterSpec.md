@@ -1498,7 +1498,30 @@ Headless mode contract:
 - Encounter synchronization hooks:
   - authored encounter schedule now supports `telegraph`, `hazardSync`, and `phaseGate` node types.
   - compiled encounter events carry `owner` domain metadata (`encounter`, `boss`, `hazards`) for orchestration routing.
+## Release Engineering Contract (Packaging + Distribution)
+- Canonical release validation entrypoint is `tools/release_validate.ps1`.
+- Release artifacts MUST include: runtime binaries (`EngineDemo`, `ContentPacker`), built content packs (`content.pak`, `sample-content.pak`), runtime data/assets/examples, version stamp file, and release docs.
+- Portable packaging executes in-bundle validation (sample pack rebuild + engine headless smoke run) before archive generation.
+- Runtime content compatibility is enforced by a centralized `kRuntimePackVersion` and pack compatibility bounds.
+- Deterministic release mode (`ENGINE_DETERMINISTIC_BUILD=ON`) is mandatory for candidate builds.
 
+## External Documentation Baseline (2026-03-07)
+
+The product now maintains an explicit external-user documentation set aligned with implemented workflows:
+
+- Getting started and onboarding: `docs/GettingStarted.md`
+- Asset import workflow: `docs/AssetImportWorkflow.md`
+- Pattern authoring workflow: `docs/PatternAuthoringGuide.md`
+- Boss/encounter authoring workflow: `docs/BossEncounterAuthoring.md`
+- Replay/debug workflow: `docs/ReplayAndDebugGuide.md`
+- Plugin/mod extension overview: `docs/PluginAndModOverview.md`
+- Performance guidance for creators: `docs/CreatorPerformanceGuide.md`
+- Troubleshooting: `docs/Troubleshooting.md`
+
+Documentation policy:
+- External docs must describe validated runtime/packer commands and currently implemented data boundaries.
+- Deprecated or internal-only assumptions must be labeled or moved to internal docs.
+- Docs updates for user-facing workflows must include synchronized entries in `DecisionLog`, `ImplementationPlan`, and `CHANGELOG`.
 
 ## Persistence Baseline (Settings, Profiles, Runtime Meta)
 - Persistence is **outside** deterministic simulation ownership; simulation consumes resolved runtime config/snapshots and never performs direct file I/O during deterministic tick execution.
