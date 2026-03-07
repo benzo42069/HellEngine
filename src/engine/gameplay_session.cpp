@@ -34,8 +34,6 @@ GameplaySession::GameplaySession(EngineConfig& config)
       jobSystem_(),
       rngStreams_(config.simulationSeed),
       config_(config) {
-    collisionTargets_.reserve(1024);
-    collisionEvents_.reserve(16384);
     cameraShakeEvents_.reserve(16);
     particleFx_.initialize(4096);
 }
@@ -235,13 +233,18 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 projectiles_.worldHalfExtent()
             );
         }
-        collisionTargets_.clear();
-        collisionTargets_.push_back(CollisionTarget {.pos = playerPos_, .radius = playerRadius_, .id = 0U, .team = 0U});
-        entitySystem_.appendCollisionTargets(collisionTargets_);
-        collisionEvents_.clear();
-        projectiles_.resolveCollisions(std::span<const CollisionTarget>(collisionTargets_.data(), collisionTargets_.size()), collisionEvents_);
+        collisionTargetCount_ = 0;
+        collisionTargets_[collisionTargetCount_++] = CollisionTarget {.pos = playerPos_, .radius = playerRadius_, .id = 0U, .team = 0U};
+        entitySystem_.appendCollisionTargets(collisionTargets_, collisionTargetCount_);
+        collisionEventCount_ = 0;
+        projectiles_.resolveCollisions(
+            std::span<const CollisionTarget>(collisionTargets_.data(), collisionTargetCount_),
+            collisionEvents_,
+            collisionEventCount_
+        );
         emitDespawnParticles();
-        for (const CollisionEvent& e : collisionEvents_) {
+        for (std::uint32_t collisionIndex = 0; collisionIndex < collisionEventCount_; ++collisionIndex) {
+            const CollisionEvent& e = collisionEvents_[collisionIndex];
             if (e.targetId != 0U || e.bulletIndex >= projectiles_.capacity()) continue;
             const Vec2 hitPos {projectiles_.posX()[e.bulletIndex], projectiles_.posY()[e.bulletIndex]};
             const Vec2 dir = {playerPos_.x - hitPos.x, playerPos_.y - hitPos.y};
@@ -254,7 +257,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 .damping = 12.0F,
             });
         }
-        entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(collisionEvents_.data(), collisionEvents_.size()));
+        entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(collisionEvents_.data(), collisionEventCount_));
     }
 
     particleFx_.update(static_cast<float>(dt));

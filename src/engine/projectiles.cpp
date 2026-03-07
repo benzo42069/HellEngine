@@ -69,8 +69,10 @@ void ProjectileSystem::initialize(const std::uint32_t capacity, const float worl
     collisionStampCursor_ = 1U;
 
     pendingSpawnCount_ = 0;
-    despawnEvents_.clear();
-    despawnEvents_.reserve(capacity_);
+    despawnEventCount_ = 0;
+
+    legacyCollisionEvents_.clear();
+    legacyCollisionEvents_.reserve(capacity_);
 
     stats_ = {};
     paletteAnimIds_.fill(GradientAnimator::kInvalidAnimId);
@@ -84,7 +86,7 @@ void ProjectileSystem::clear() {
     }
     activeCount_ = 0;
     pendingSpawnCount_ = 0;
-    despawnEvents_.clear();
+    despawnEventCount_ = 0;
     std::fill(trailX_.begin(), trailX_.end(), 0.0F);
     std::fill(trailY_.begin(), trailY_.end(), 0.0F);
     std::fill(trailHead_.begin(), trailHead_.end(), static_cast<std::uint8_t>(0));
@@ -159,7 +161,7 @@ void ProjectileSystem::beginTick() {
     stats_.spawnedThisTick = 0;
     stats_.broadphaseChecksThisTick = 0;
     stats_.narrowphaseChecksThisTick = 0;
-    despawnEvents_.clear();
+    despawnEventCount_ = 0;
 }
 
 void ProjectileSystem::updateMotion(const float dt, const float enemyTimeScale, const float playerTimeScale) {
@@ -168,12 +170,14 @@ void ProjectileSystem::updateMotion(const float dt, const float enemyTimeScale, 
 
     auto deactivateAt = [&](const std::uint32_t bulletIndex) {
         if (!active_[bulletIndex]) return;
-        despawnEvents_.push_back(ProjectileDespawnEvent {
-            .pos = {posX_[bulletIndex], posY_[bulletIndex]},
-            .paletteIndex = paletteIndex_[bulletIndex],
-            .allegiance = static_cast<ProjectileAllegiance>(allegiance_[bulletIndex]),
-            .explodeShards = behavior_[bulletIndex].explodeShards,
-        });
+        if (despawnEventCount_ < kMaxDespawnEvents) {
+            despawnEvents_[despawnEventCount_++] = ProjectileDespawnEvent {
+                .pos = {posX_[bulletIndex], posY_[bulletIndex]},
+                .paletteIndex = paletteIndex_[bulletIndex],
+                .allegiance = static_cast<ProjectileAllegiance>(allegiance_[bulletIndex]),
+                .explodeShards = behavior_[bulletIndex].explodeShards,
+            };
+        }
         active_[bulletIndex] = 0;
         freeList_.push_back(bulletIndex);
         const std::uint32_t pos = indexInActive_[bulletIndex];
@@ -309,9 +313,9 @@ void ProjectileSystem::buildGrid() {
     }
 }
 
-void ProjectileSystem::resolveCollisions(const std::span<const CollisionTarget> targets, std::vector<CollisionEvent>& outEvents) {
-    outEvents.clear();
-    if (targets.empty()) return;
+void ProjectileSystem::resolveCollisions(const std::span<const CollisionTarget> targets, const std::span<CollisionEvent> outEvents, std::uint32_t& outEventCount) {
+    outEventCount = 0;
+    if (targets.empty() || outEvents.empty()) return;
     ++collisionStampCursor_;
     if (collisionStampCursor_ == 0U) {
         std::fill(collisionVisitedStamp_.begin(), collisionVisitedStamp_.end(), 0U);
@@ -357,25 +361,30 @@ void ProjectileSystem::resolveCollisions(const std::span<const CollisionTarget> 
             if (dx * dx + dy * dy > rr * rr) continue;
             if (collisionHitStamp_[i] == collisionStampCursor_) continue;
             collisionHitStamp_[i] = collisionStampCursor_;
-            outEvents.push_back(CollisionEvent {.bulletIndex = i, .targetId = target.id, .graze = false});
+            if (outEventCount < outEvents.size()) {
+                outEvents[outEventCount++] = CollisionEvent {.bulletIndex = i, .targetId = target.id, .graze = false};
+            }
         }
     }
 
-    std::sort(outEvents.begin(), outEvents.end(), [](const CollisionEvent& a, const CollisionEvent& b) {
+    std::sort(outEvents.begin(), outEvents.begin() + static_cast<std::ptrdiff_t>(outEventCount), [](const CollisionEvent& a, const CollisionEvent& b) {
         if (a.targetId != b.targetId) return a.targetId < b.targetId;
         return a.bulletIndex < b.bulletIndex;
     });
 
-    for (const CollisionEvent& e : outEvents) {
+    for (std::uint32_t eventIndex = 0; eventIndex < outEventCount; ++eventIndex) {
+        const CollisionEvent& e = outEvents[eventIndex];
         if (e.bulletIndex >= capacity_ || !active_[e.bulletIndex]) continue;
         ++stats_.collisionsThisTick;
         ++stats_.totalCollisions;
-        despawnEvents_.push_back(ProjectileDespawnEvent {
-            .pos = {posX_[e.bulletIndex], posY_[e.bulletIndex]},
-            .paletteIndex = paletteIndex_[e.bulletIndex],
-            .allegiance = static_cast<ProjectileAllegiance>(allegiance_[e.bulletIndex]),
-            .explodeShards = behavior_[e.bulletIndex].explodeShards,
-        });
+        if (despawnEventCount_ < kMaxDespawnEvents) {
+            despawnEvents_[despawnEventCount_++] = ProjectileDespawnEvent {
+                .pos = {posX_[e.bulletIndex], posY_[e.bulletIndex]},
+                .paletteIndex = paletteIndex_[e.bulletIndex],
+                .allegiance = static_cast<ProjectileAllegiance>(allegiance_[e.bulletIndex]),
+                .explodeShards = behavior_[e.bulletIndex].explodeShards,
+            };
+        }
     }
 }
 
@@ -383,9 +392,9 @@ void ProjectileSystem::update(const float dt, const Vec2 playerPos, const float 
     updateMotion(dt, enemyTimeScale, playerTimeScale);
     buildGrid();
     CollisionTarget playerTarget {.pos = playerPos, .radius = playerRadius, .id = 0U, .team = 0U};
-    std::vector<CollisionEvent> events;
-    events.reserve(capacity_);
-    resolveCollisions(std::span<const CollisionTarget>(&playerTarget, 1), events);
+    std::uint32_t eventCount = 0;
+    if (legacyCollisionEvents_.size() != capacity_) legacyCollisionEvents_.resize(capacity_);
+    resolveCollisions(std::span<const CollisionTarget>(&playerTarget, 1), legacyCollisionEvents_, eventCount);
 }
 
 
@@ -539,7 +548,9 @@ void ProjectileSystem::renderProcedural(SpriteBatch& batch, const BulletPaletteT
 
 const ProjectileStats& ProjectileSystem::stats() const { return stats_; }
 
-std::span<const ProjectileDespawnEvent> ProjectileSystem::despawnEvents() const { return despawnEvents_; }
+std::span<const ProjectileDespawnEvent> ProjectileSystem::despawnEvents() const {
+    return std::span<const ProjectileDespawnEvent>(despawnEvents_.data(), despawnEventCount_);
+}
 
 std::uint32_t ProjectileSystem::collectGrazePoints(const Vec2 playerPos, const float playerRadius, const float innerPad, const float outerPad, const std::uint64_t tick, const std::uint64_t cooldownTicks) {
     const float inner = std::max(0.0F, playerRadius + innerPad);

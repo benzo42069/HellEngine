@@ -501,14 +501,15 @@ std::string toString(const EntityType type) {
 
 namespace engine {
 
-void EntitySystem::appendCollisionTargets(std::vector<CollisionTarget>& outTargets, const std::uint32_t idBase) const {
+void EntitySystem::appendCollisionTargets(const std::span<CollisionTarget> outTargets, std::uint32_t& outCount, const std::uint32_t idBase) const {
     if (!templates_) return;
     for (std::size_t i = 0; i < entities_.size(); ++i) {
         const EntityInstance& e = entities_[i];
         if (!e.alive) continue;
         const EntityTemplate& t = (*templates_)[e.templateIndex];
         if (t.type != EntityType::Enemy && t.type != EntityType::Boss && t.type != EntityType::Hazard) continue;
-        outTargets.push_back(CollisionTarget {.pos = e.position, .radius = t.interactionRadius, .id = idBase + static_cast<std::uint32_t>(i), .team = 1U});
+        if (outCount >= outTargets.size()) break;
+        outTargets[outCount++] = CollisionTarget {.pos = e.position, .radius = t.interactionRadius, .id = idBase + static_cast<std::uint32_t>(i), .team = 1U};
     }
 }
 

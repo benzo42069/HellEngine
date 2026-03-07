@@ -53,9 +53,10 @@ int main() {
         sys.updateMotion(0.0F);
         sys.buildGrid();
         std::vector<engine::CollisionTarget> targets {{.pos = {10.0F, 12.0F}, .radius = 4.0F, .id = 7, .team = 0}};
-        std::vector<engine::CollisionEvent> events;
-        events.reserve(64);
-        sys.resolveCollisions(targets, events);
+        std::vector<engine::CollisionEvent> events(64);
+        std::uint32_t eventCount = 0;
+        sys.resolveCollisions(targets, events, eventCount);
+        events.resize(eventCount);
         if (events.size() != 1 || events[0].targetId != 7) return EXIT_FAILURE;
     }
 
@@ -75,9 +76,10 @@ int main() {
         sys.updateMotion(0.0F);
         sys.buildGrid();
         std::vector<engine::CollisionTarget> targets {{.pos = {0.0F, 0.0F}, .radius = 4.0F, .id = 0, .team = 0}};
-        std::vector<engine::CollisionEvent> events;
-        events.reserve(64);
-        sys.resolveCollisions(targets, events);
+        std::vector<engine::CollisionEvent> events(64);
+        std::uint32_t eventCount = 0;
+        sys.resolveCollisions(targets, events, eventCount);
+        events.resize(eventCount);
         if (!events.empty()) return EXIT_FAILURE;
     }
 
@@ -101,9 +103,10 @@ int main() {
         sys.beginTick();
         sys.updateMotion(0.0F);
         sys.buildGrid();
-        std::vector<engine::CollisionEvent> got;
-        got.reserve(2000);
-        sys.resolveCollisions(targets, got);
+        std::vector<engine::CollisionEvent> got(2000);
+        std::uint32_t gotCount = 0;
+        sys.resolveCollisions(targets, got, gotCount);
+        got.resize(gotCount);
         if (!sameEvents(got, bruteForce(bullets, targets))) return EXIT_FAILURE;
     }
 
@@ -118,18 +121,20 @@ int main() {
             b.spawn(s);
         }
         std::vector<engine::CollisionTarget> targets {{.pos = {0, 0}, .radius = 40.0F, .id = 1, .team = 0}, {.pos = {15, 5}, .radius = 25.0F, .id = 2, .team = 0}};
-        std::vector<engine::CollisionEvent> ea;
-        std::vector<engine::CollisionEvent> eb;
-        ea.reserve(256);
-        eb.reserve(256);
+        std::vector<engine::CollisionEvent> ea(256);
+        std::vector<engine::CollisionEvent> eb(256);
         a.beginTick();
         b.beginTick();
         a.updateMotion(0.0F);
         b.updateMotion(0.0F);
         a.buildGrid();
         b.buildGrid();
-        a.resolveCollisions(targets, ea);
-        b.resolveCollisions(targets, eb);
+        std::uint32_t eaCount = 0;
+        std::uint32_t ebCount = 0;
+        a.resolveCollisions(targets, ea, eaCount);
+        b.resolveCollisions(targets, eb, ebCount);
+        ea.resize(eaCount);
+        eb.resize(ebCount);
         if (!sameEvents(ea, eb)) return EXIT_FAILURE;
     }
 

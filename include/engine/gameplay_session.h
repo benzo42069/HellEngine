@@ -99,8 +99,12 @@ class GameplaySession {
     float gpuUpdateMsFrame_ {0.0F};
     float gpuRenderMsFrame_ {0.0F};
     std::string difficultyProfileLabelCache_ {"Normal"};
-    std::vector<CollisionTarget> collisionTargets_ {};
-    std::vector<CollisionEvent> collisionEvents_ {};
+    static constexpr std::uint32_t kMaxCollisionTargets = 512;
+    static constexpr std::uint32_t kMaxCollisionEvents = 8192;
+    std::array<CollisionTarget, kMaxCollisionTargets> collisionTargets_ {};
+    std::uint32_t collisionTargetCount_ {0};
+    std::array<CollisionEvent, kMaxCollisionEvents> collisionEvents_ {};
+    std::uint32_t collisionEventCount_ {0};
     mutable std::vector<ShakeParams> cameraShakeEvents_ {};
 
   private:
