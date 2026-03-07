@@ -119,6 +119,13 @@ class ProjectileSystem {
     [[nodiscard]] const std::vector<float>& radius() const { return radius_; }
     [[nodiscard]] const std::vector<float>& life() const { return life_; }
     [[nodiscard]] const std::vector<std::uint8_t>& paletteIndex() const { return paletteIndex_; }
+    [[nodiscard]] const std::vector<std::uint8_t>& shape() const { return shape_; }
+    [[nodiscard]] const std::vector<std::uint8_t>& allegiance() const { return allegiance_; }
+    [[nodiscard]] const std::vector<std::uint8_t>& enableTrails() const { return enableTrails_; }
+    [[nodiscard]] const std::vector<float>& trailX() const { return trailX_; }
+    [[nodiscard]] const std::vector<float>& trailY() const { return trailY_; }
+    [[nodiscard]] const std::vector<std::uint8_t>& trailHead() const { return trailHead_; }
+    [[nodiscard]] const GradientAnimator& gradientAnimator() const { return gradientAnimator_; }
     [[nodiscard]] const std::vector<std::uint8_t>& active() const { return active_; }
     [[nodiscard]] const std::vector<std::uint32_t>& activeIndices() const { return activeIndices_; }
     [[nodiscard]] std::uint32_t activeCount() const { return activeCount_; }

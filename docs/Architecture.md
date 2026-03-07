@@ -78,3 +78,8 @@
 - PostFx data flow:
   - `FxPreset` values are mapped 1:1 into `PostFxSettings`.
   - `RenderPipeline` resolves archetype/zone-driven `autoFxPreset` names and applies the resolved settings each frame through `RendererModernPipeline::setPostFx`.
+
+## Rendering Pipeline Update — GL Bullet Path
+- `RenderPipeline::buildSceneOverlay` now routes projectile presentation through `GlBulletRenderer` when OpenGL is ready and the renderer is initialized.
+- `GlBulletRenderer` consumes Projectile SoA data (including trails) each frame, resolves palette/gradient color on CPU, builds preallocated quad buffers, and submits one indexed draw.
+- SpriteBatch procedural bullet rendering remains the fallback path if GL init fails or is unavailable.

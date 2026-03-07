@@ -411,6 +411,11 @@ Completed items:
 - Validation:
   - Updated `gpu_bullets_tests` to cover renamed class usage and clear/reset bookkeeping checks.
 
+## 2026-03-07 — Completion: GlBulletRenderer wiring
+- [x] Added/updated `GlBulletRenderer` interface and implementation for one-call bullet+trail rendering.
+- [x] Updated bullet shader vertex layout to screen-space position + atlas UV + pre-resolved color.
+- [x] Wired `RenderPipeline` scene overlay to use GL bullet path with SpriteBatch fallback.
+- [x] Kept simulation ownership unchanged (presentation-only integration).
 ## Documentation Pass — External Product Quality (Completed 2026-03-07)
 ### Scope delivered
 - Added external onboarding guide and compact quickstart alignment.

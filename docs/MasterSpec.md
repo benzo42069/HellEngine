@@ -1540,3 +1540,12 @@ Documentation policy:
   - Profile identity metadata (`id`, display label, last-play marker).
   - Meta progression snapshot (`progressionPoints`, purchased node IDs) for cross-run progression continuity.
   - Extension-ready counters for run-level lifetime stats (started/cleared) for future progression systems.
+
+## Section 15 (Rendering Strategy) — Runtime baseline amendment
+- Bullet presentation now supports a single-draw-call OpenGL path (`GlBulletRenderer`) using grayscale SDF atlas sampling plus palette ramp-compatible pipeline integration.
+- CPU simulation remains authoritative; GL bullet buffers are rebuilt from projectile SoA each frame with no persistent GPU gameplay state.
+- Non-GL platforms and GL init failures continue to use SpriteBatch procedural rendering fallback.
+
+## Section 27 (Implemented Runtime Baseline) — Runtime feature amendment
+- Integrated `GlBulletRenderer` into `RenderPipeline` for deterministic-sim-safe, presentation-only acceleration of bullets and trails.
+- Added per-frame CPU vertex/index rebuild with preallocated GL buffers and one draw call for active projectiles.

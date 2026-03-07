@@ -1,32 +1,48 @@
 #include <engine/gl_bullet_renderer.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
-#include <cmath>
 
 namespace engine {
 
-bool GlBulletRenderer::initialize(
-    ShaderCache& shaders,
-    const GrayscaleSpriteAtlas& atlas,
-    const PaletteRampTexture& paletteRamp,
-    const std::uint32_t maxBullets,
-    std::string* error
-) {
+namespace {
+constexpr const char* kBulletShaderName = "bullet";
+
+std::array<float, 4> toLinearColor(const Color& c) {
+    return {
+        static_cast<float>(c.r) / 255.0F,
+        static_cast<float>(c.g) / 255.0F,
+        static_cast<float>(c.b) / 255.0F,
+        static_cast<float>(c.a) / 255.0F,
+    };
+}
+
+BulletShape decodeShape(const std::uint8_t raw) {
+    switch (static_cast<BulletShape>(raw)) {
+        case BulletShape::Circle:
+        case BulletShape::Rice:
+        case BulletShape::Star:
+        case BulletShape::Diamond:
+        case BulletShape::Ring:
+        case BulletShape::Beam:
+            return static_cast<BulletShape>(raw);
+        default:
+            return BulletShape::Circle;
+    }
+}
+
+} // namespace
+
+bool GlBulletRenderer::initialize(ShaderCache& shaders, const std::uint32_t maxBullets, std::string* error) {
     shutdown();
 
-    program_ = shaders.get("bullet");
+    program_ = shaders.get(kBulletShaderName);
     if (!program_) {
         if (error) *error = "Missing bullet shader program.";
         return false;
     }
-    if (atlas.textureId() == 0 || paletteRamp.textureId() == 0) {
-        if (error) *error = "Bullet atlas or palette ramp texture is not initialized.";
-        return false;
-    }
 
-    atlas_ = &atlas;
-    paletteRamp_ = &paletteRamp;
     maxBullets_ = maxBullets;
     vertices_.resize(static_cast<std::size_t>(maxBullets_) * 4U);
     indices_.resize(static_cast<std::size_t>(maxBullets_) * 6U);
@@ -36,7 +52,7 @@ bool GlBulletRenderer::initialize(
     glGenBuffers(1, &ebo_);
 
     if (vao_ == 0 || vbo_ == 0 || ebo_ == 0) {
-        if (error) *error = "OpenGL buffer/VAO creation failed.";
+        if (error) *error = "OpenGL VAO/VBO/EBO creation failed.";
         shutdown();
         return false;
     }
@@ -54,13 +70,11 @@ bool GlBulletRenderer::initialize(
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(offsetof(BulletVertex, u)));
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(offsetof(BulletVertex, paletteRow)));
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(offsetof(BulletVertex, age)));
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(offsetof(BulletVertex, instanceId)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(offsetof(BulletVertex, r)));
 
     glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     return true;
 }
 
@@ -78,8 +92,6 @@ void GlBulletRenderer::shutdown() {
         vao_ = 0;
     }
     program_ = nullptr;
-    atlas_ = nullptr;
-    paletteRamp_ = nullptr;
     quadCount_ = 0;
     maxBullets_ = 0;
     vertices_.clear();
@@ -94,116 +106,161 @@ void GlBulletRenderer::buildVertexBuffer(
     const float* radius,
     const float* life,
     const std::uint8_t* paletteIndex,
+    const std::uint8_t* shape,
     const std::uint8_t* active,
+    const std::uint8_t* allegiance,
+    const std::uint8_t* enableTrails,
+    const float* trailX,
+    const float* trailY,
+    const std::uint8_t* trailHead,
+    const std::uint8_t trailLength,
     const std::uint32_t* activeIndices,
     const std::uint32_t activeCount,
-    const std::uint32_t capacity,
-    const BulletShape defaultShape
+    const Camera2D& camera,
+    const GrayscaleSpriteAtlas& atlas,
+    const PaletteRampTexture& paletteRamp,
+    const BulletPaletteTable& paletteTable,
+    const GradientAnimator& gradientAnimator,
+    const float simClock
 ) {
-    if (!atlas_ || !program_) return;
+    (void)velX;
+    (void)velY;
+    (void)paletteRamp;
+    if (!initialized()) return;
 
     quadCount_ = 0;
-    const std::uint32_t sourceCount = activeIndices ? activeCount : capacity;
-    const std::uint32_t count = std::min(sourceCount, maxBullets_);
+    const auto appendQuad = [this](
+                                const float x,
+                                const float y,
+                                const float drawRadius,
+                                const SpriteAtlasRegion& uv,
+                                const std::array<float, 4>& color) {
+        if (quadCount_ >= maxBullets_) return;
+        const float left = x - drawRadius;
+        const float right = x + drawRadius;
+        const float top = y - drawRadius;
+        const float bottom = y + drawRadius;
 
-    const SpriteAtlasRegion uv = atlas_->region(defaultShape);
-    for (std::uint32_t j = 0; j < count; ++j) {
-        const std::uint32_t i = activeIndices ? activeIndices[j] : j;
-        if (i >= capacity || !active[i]) continue;
+        const std::size_t v = static_cast<std::size_t>(quadCount_) * 4U;
+        const std::size_t i = static_cast<std::size_t>(quadCount_) * 6U;
+        vertices_[v + 0] = {left, top, uv.u0, uv.v0, color[0], color[1], color[2], color[3]};
+        vertices_[v + 1] = {right, top, uv.u1, uv.v0, color[0], color[1], color[2], color[3]};
+        vertices_[v + 2] = {right, bottom, uv.u1, uv.v1, color[0], color[1], color[2], color[3]};
+        vertices_[v + 3] = {left, bottom, uv.u0, uv.v1, color[0], color[1], color[2], color[3]};
 
-        const float px = posX[i];
-        const float py = posY[i];
-        const float r = radius[i];
+        const GLuint base = static_cast<GLuint>(v);
+        indices_[i + 0] = base + 0U;
+        indices_[i + 1] = base + 1U;
+        indices_[i + 2] = base + 2U;
+        indices_[i + 3] = base + 2U;
+        indices_[i + 4] = base + 3U;
+        indices_[i + 5] = base + 0U;
+        ++quadCount_;
+    };
 
-        float dirX = velX[i];
-        float dirY = velY[i];
-        const float len = std::sqrt((dirX * dirX) + (dirY * dirY));
-        if (len > 0.0001F) {
-            dirX /= len;
-            dirY /= len;
+    for (std::uint32_t j = 0; j < activeCount; ++j) {
+        const std::uint32_t i = activeIndices[j];
+        if (active[i] == 0) continue;
+
+        const std::uint8_t palette = paletteIndex[i];
+        std::array<float, 4> color;
+        if (palette > 0) {
+            const PaletteAnimationSettings& anim = paletteRamp.animationFor(palette);
+            if (anim.mode != PaletteAnimationMode::None) {
+                color = toLinearColor(gradientAnimator.sample(palette, simClock, life[i], i));
+            } else {
+                color = toLinearColor(paletteTable.get(palette).core);
+            }
         } else {
-            dirX = 1.0F;
-            dirY = 0.0F;
+            const bool enemy = allegiance[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy);
+            color = enemy ? std::array<float, 4> {1.0F, 220.0F / 255.0F, 120.0F / 255.0F, 220.0F / 255.0F}
+                          : std::array<float, 4> {120.0F / 255.0F, 220.0F / 255.0F, 1.0F, 220.0F / 255.0F};
         }
 
-        const float tangentX = -dirY;
-        const float tangentY = dirX;
+        const SpriteAtlasRegion uv = atlas.region(decodeShape(shape[i]));
+        const Vec2 screen = camera.worldToScreen({posX[i], posY[i]});
+        const float screenRadius = radius[i] * camera.zoom();
 
-        const float hx = dirX * r;
-        const float hy = dirY * r;
-        const float tx = tangentX * r;
-        const float ty = tangentY * r;
+        if (enableTrails[i] != 0) {
+            const std::uint32_t trailBase = i * trailLength;
+            for (std::uint8_t t = 0; t < trailLength; ++t) {
+                const std::uint8_t idx = static_cast<std::uint8_t>((trailHead[i] + t) % trailLength);
+                const float tx = trailX[trailBase + idx];
+                const float ty = trailY[trailBase + idx];
+                if (tx == 0.0F && ty == 0.0F) continue;
 
-        const std::size_t vBase = static_cast<std::size_t>(quadCount_) * 4U;
-        const std::size_t iBase = static_cast<std::size_t>(quadCount_) * 6U;
+                const float alpha = 0.15F + 0.15F * static_cast<float>(t);
+                const float scale = 0.6F + 0.1F * static_cast<float>(t);
+                std::array<float, 4> trailColor;
+                if (palette == 0) {
+                    trailColor = color;
+                } else {
+                    trailColor = toLinearColor(paletteTable.get(palette).trail);
+                }
+                trailColor[3] = alpha;
 
-        const float rowV = (paletteIndex && paletteRamp_) ? paletteRamp_->rowV(paletteIndex[i]) : 0.5F;
-        vertices_[vBase + 0] = BulletVertex {px - hx - tx, py - hy - ty, uv.u0, uv.v1, rowV, life ? life[i] : 0.0F, static_cast<float>(i)};
-        vertices_[vBase + 1] = BulletVertex {px + hx - tx, py + hy - ty, uv.u1, uv.v1, rowV, life ? life[i] : 0.0F, static_cast<float>(i)};
-        vertices_[vBase + 2] = BulletVertex {px + hx + tx, py + hy + ty, uv.u1, uv.v0, rowV, life ? life[i] : 0.0F, static_cast<float>(i)};
-        vertices_[vBase + 3] = BulletVertex {px - hx + tx, py - hy + ty, uv.u0, uv.v0, rowV, life ? life[i] : 0.0F, static_cast<float>(i)};
+                const Vec2 trailScreen = camera.worldToScreen({tx, ty});
+                appendQuad(trailScreen.x, trailScreen.y, screenRadius * scale, uv, trailColor);
+            }
+        }
 
-        const GLuint base = static_cast<GLuint>(quadCount_ * 4U);
-        indices_[iBase + 0] = base + 0U;
-        indices_[iBase + 1] = base + 1U;
-        indices_[iBase + 2] = base + 2U;
-        indices_[iBase + 3] = base + 2U;
-        indices_[iBase + 4] = base + 3U;
-        indices_[iBase + 5] = base + 0U;
-        ++quadCount_;
+        appendQuad(screen.x, screen.y, screenRadius, uv, color);
     }
 }
 
 void GlBulletRenderer::render(
     const Camera2D& camera,
-    const float simTime,
+    const float simClock,
+    const GrayscaleSpriteAtlas& atlas,
     const PaletteRampTexture& paletteRamp,
     const int viewportWidth,
     const int viewportHeight
 ) {
-    if (!program_ || !atlas_ || vao_ == 0 || quadCount_ == 0) return;
+    (void)camera;
+    if (!initialized() || quadCount_ == 0) return;
 
-    frameAnim_ = paletteRamp.mostCommonAnimation();
+    const float left = 0.0F;
+    const float right = static_cast<float>(viewportWidth);
+    const float top = 0.0F;
+    const float bottom = static_cast<float>(viewportHeight);
+    const float nearPlane = -1.0F;
+    const float farPlane = 1.0F;
 
+    const float ortho[16] = {
+        2.0F / (right - left), 0.0F, 0.0F, 0.0F,
+        0.0F, 2.0F / (top - bottom), 0.0F, 0.0F,
+        0.0F, 0.0F, -2.0F / (farPlane - nearPlane), 0.0F,
+        -((right + left) / (right - left)),
+        -((top + bottom) / (top - bottom)),
+        -((farPlane + nearPlane) / (farPlane - nearPlane)),
+        1.0F,
+    };
+
+    glUseProgram(program_->id);
+    glUniformMatrix4fv(program_->locViewProj, 1, GL_FALSE, ortho);
+    glUniform1f(program_->locTime, simClock);
+    glUniform1f(program_->locEmissiveBoost, 1.2F);
+    if (program_->locSpriteAtlas >= 0) glUniform1i(program_->locSpriteAtlas, 0);
+    if (program_->locPaletteRamp >= 0) glUniform1i(program_->locPaletteRamp, 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, atlas.textureId());
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, paletteRamp.textureId());
+
+    glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glBufferSubData(GL_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(quadCount_ * 4U * sizeof(BulletVertex)), vertices_.data());
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(quadCount_ * 6U * sizeof(GLuint)), indices_.data());
 
-    const float halfW = (static_cast<float>(viewportWidth) * 0.5F) / std::max(0.001F, camera.zoom());
-    const float halfH = (static_cast<float>(viewportHeight) * 0.5F) / std::max(0.001F, camera.zoom());
-    const Vec2 c = camera.center();
-    const float l = c.x - halfW;
-    const float r = c.x + halfW;
-    const float t = c.y - halfH;
-    const float b = c.y + halfH;
-
-    const float viewProj[16] = {
-        2.0F / (r - l), 0.0F, 0.0F, 0.0F,
-        0.0F, 2.0F / (t - b), 0.0F, 0.0F,
-        0.0F, 0.0F, -1.0F, 0.0F,
-        -((r + l) / (r - l)), -((t + b) / (t - b)), 0.0F, 1.0F,
-    };
-
-    glUseProgram(program_->id);
-    if (program_->locViewProj >= 0) glUniformMatrix4fv(program_->locViewProj, 1, GL_FALSE, viewProj);
-    if (program_->locTime >= 0) glUniform1f(program_->locTime, simTime);
-    if (program_->locAnimSpeed >= 0) glUniform1f(program_->locAnimSpeed, frameAnim_.speed);
-    if (program_->locPerInstanceOffset >= 0) glUniform2f(program_->locPerInstanceOffset, frameAnim_.perInstanceOffset, 0.11F);
-    if (program_->locEmissiveBoost >= 0) glUniform1f(program_->locEmissiveBoost, frameAnim_.emissiveBoost);
-    if (program_->locAnimMode >= 0) glUniform1i(program_->locAnimMode, frameAnim_.mode);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, atlas_->textureId());
-    if (program_->locSpriteAtlas >= 0) glUniform1i(program_->locSpriteAtlas, 0);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, paletteRamp.textureId());
-    if (program_->locPaletteRamp >= 0) glUniform1i(program_->locPaletteRamp, 1);
-
-    glBindVertexArray(vao_);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(quadCount_ * 6U), GL_UNSIGNED_INT, nullptr);
+
     glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glUseProgram(0);
 }
 
 } // namespace engine
