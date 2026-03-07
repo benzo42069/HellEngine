@@ -20,7 +20,8 @@ int main() {
   "projectileSpawnBurst": 64,
   "contentPackPath": "my_content.pak",
   "replayRecordPath": "record.json",
-  "replayPlaybackPath": "playback.json"
+  "replayPlaybackPath": "playback.json",
+  "audio": {"masterVolume": 0.5, "musicVolume": 0.4, "sfxVolume": 0.7}
 })";
     }
 
@@ -43,7 +44,7 @@ int main() {
     }
 
     if (config.projectileCapacity != 12345 || config.projectileSpawnBurst != 64 || config.contentPackPath != "my_content.pak"
-        || config.replayRecordPath != "record.json" || config.replayPlaybackPath != "playback.json") {
+        || config.replayRecordPath != "record.json" || config.replayPlaybackPath != "playback.json" || config.audioMasterVolume != 0.5F || config.audioMusicVolume != 0.4F || config.audioSfxVolume != 0.7F) {
         std::cerr << "Projectile config parse failed\n";
         return EXIT_FAILURE;
     }
@@ -69,9 +70,15 @@ int main() {
     char replayVerify[] = "--replay-verify";
     char replayHashPeriod[] = "--replay-hash-period";
     char replayHashPeriodVal[] = "120";
+    char audioMaster[] = "--audio-master";
+    char audioMasterVal[] = "0.8";
+    char audioMusic[] = "--audio-music";
+    char audioMusicVal[] = "0.6";
+    char audioSfx[] = "--audio-sfx";
+    char audioSfxVal[] = "0.5";
 
-    char* argv[] = {appName, headless, ticks, ticksVal, seed, seedVal, dt, dtVal, projectiles, projectilesVal, contentPack, contentPackVal, replayRecord, replayRecordVal, replayPlayback, replayPlaybackVal, stress, rendererSmoke, replayVerify, replayHashPeriod, replayHashPeriodVal};
-    engine::applyCommandLineOverrides(config, 21, argv);
+    char* argv[] = {appName, headless, ticks, ticksVal, seed, seedVal, dt, dtVal, projectiles, projectilesVal, contentPack, contentPackVal, replayRecord, replayRecordVal, replayPlayback, replayPlaybackVal, stress, rendererSmoke, replayVerify, replayHashPeriod, replayHashPeriodVal, audioMaster, audioMasterVal, audioMusic, audioMusicVal, audioSfx, audioSfxVal};
+    engine::applyCommandLineOverrides(config, 27, argv);
 
     if (!config.headless || config.targetTicks != 240 || config.simulationSeed != 999) {
         std::cerr << "Core command line override parse failed\n";
@@ -79,7 +86,7 @@ int main() {
     }
 
     if (!config.stress10k || !config.rendererSmokeTest || !config.replayVerifyMode || config.replayHashPeriodTicks != 120 || config.projectileCapacity < 10000 || config.projectileSpawnBurst != 10000 || config.contentPackPath != "override.pak"
-        || config.replayRecordPath != "session_record.json" || config.replayPlaybackPath != "session_playback.json") {
+        || config.replayRecordPath != "session_record.json" || config.replayPlaybackPath != "session_playback.json" || config.audioMasterVolume != 0.8F || config.audioMusicVolume != 0.6F || config.audioSfxVolume != 0.5F) {
         std::cerr << "Stress/projectile command line override parse failed\n";
         return EXIT_FAILURE;
     }

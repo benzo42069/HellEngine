@@ -161,6 +161,7 @@ int main(int argc, char** argv) {
     nlohmann::json mergedGradients = nlohmann::json::array();
     nlohmann::json mergedFxPresets = nlohmann::json::array();
     std::vector<std::string> conflicts;
+    nlohmann::json mergedAudio = nlohmann::json::object();
 
     std::vector<engine::SourceArtAssetRecord> sourceArtAssets;
 
@@ -228,6 +229,9 @@ int main(int argc, char** argv) {
             ensureGuids(doc["fxPresets"], "fx-preset", "fx-preset");
             mergeByGuid(doc["fxPresets"], mergedFxPresets, conflicts);
         }
+        if (doc.contains("audio") && doc["audio"].is_object()) {
+            mergedAudio = doc["audio"];
+        }
     }
 
     std::vector<engine::ImportedArtAssetRecord> importedAssets;
@@ -291,6 +295,7 @@ int main(int argc, char** argv) {
     pack["paletteTemplates"] = mergedPaletteTemplates;
     pack["gradients"] = mergedGradients;
     pack["fxPresets"] = mergedFxPresets;
+    if (!mergedAudio.empty()) pack["audio"] = mergedAudio;
     pack["assetRegistry"] = nlohmann::json::array();
     appendAssetRegistry(pack, mergedPatterns, "pattern");
     appendAssetRegistry(pack, mergedEntities, "enemy");

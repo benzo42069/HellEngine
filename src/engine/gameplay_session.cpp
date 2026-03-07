@@ -47,13 +47,14 @@ void GameplaySession::onUpgradeNavigation(const UpgradeNavAction action) {
     }
     if (!progression_.upgradeScreenOpen || !traitSystem_.hasPendingChoices()) return;
 
-    if (action == UpgradeNavAction::MoveLeft) progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + TraitSystem::choiceCount - 1) % TraitSystem::choiceCount;
-    if (action == UpgradeNavAction::MoveRight) progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + 1) % TraitSystem::choiceCount;
+    if (action == UpgradeNavAction::MoveLeft) { progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + TraitSystem::choiceCount - 1) % TraitSystem::choiceCount; presentation_.pendingAudioEvents.push_back(AudioEventId::UiClick); }
+    if (action == UpgradeNavAction::MoveRight) { progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + 1) % TraitSystem::choiceCount; presentation_.pendingAudioEvents.push_back(AudioEventId::UiClick); }
     if (action == UpgradeNavAction::SelectSlot1) progression_.focusedUpgradeIndex = 0;
     if (action == UpgradeNavAction::SelectSlot2) progression_.focusedUpgradeIndex = 1;
     if (action == UpgradeNavAction::SelectSlot3) progression_.focusedUpgradeIndex = 2;
     if (action == UpgradeNavAction::SelectSlot1 || action == UpgradeNavAction::SelectSlot2 || action == UpgradeNavAction::SelectSlot3 || action == UpgradeNavAction::Confirm) {
         if (traitSystem_.choose(progression_.focusedUpgradeIndex)) progression_.upgradeScreenOpen = false;
+        presentation_.pendingAudioEvents.push_back(AudioEventId::UiConfirm);
     }
     if (action == UpgradeNavAction::Reroll) (void)traitSystem_.rerollChoices();
 }
@@ -69,6 +70,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
 
     projectiles_.beginTick();
     presentation_.cameraShakeEvents.clear();
+    presentation_.pendingAudioEvents.clear();
     traitSystem_.onTick(simulation_.tickIndex);
 
     auto emitDespawnParticles = [this]() {
@@ -107,6 +109,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
             .frequency = 12.0F,
             .damping = 3.5F,
         });
+        presentation_.pendingAudioEvents.push_back(AudioEventId::Graze);
     }
 
     const TraitModifiers& traitModsForSpecial = traitSystem_.modifiers();
@@ -253,8 +256,15 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 .frequency = 32.0F,
                 .damping = 12.0F,
             });
+            presentation_.pendingAudioEvents.push_back(AudioEventId::PlayerDamage);
+        }
+        bool enemyHit = false;
+        for (std::uint32_t i = 0; i < encounter_.collisionEventCount; ++i) {
+            if (encounter_.collisionEvents[i].targetId >= 1000U) { enemyHit = true; break; }
         }
         entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(encounter_.collisionEvents.data(), encounter_.collisionEventCount));
+        if (encounter_.collisionEventCount > 0) presentation_.pendingAudioEvents.push_back(AudioEventId::Hit);
+        if (enemyHit) presentation_.pendingAudioEvents.push_back(AudioEventId::EnemyDeath);
     }
 
     presentation_.particleFx.update(static_cast<float>(dt));
@@ -269,6 +279,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
             .frequency = 8.0F,
             .damping = 2.0F,
         });
+        presentation_.pendingAudioEvents.push_back(AudioEventId::BossWarning);
     }
     if (zoneAfterUpdate && (zoneAfterUpdate->type == ZoneType::Combat || zoneAfterUpdate->type == ZoneType::Elite || zoneAfterUpdate->type == ZoneType::Boss)) {
         presentation_.cameraShakeEvents.push_back(ShakeParams {
@@ -290,6 +301,13 @@ std::vector<ShakeParams> GameplaySession::consumeCameraShakeEvents() const {
     out.swap(presentation_.cameraShakeEvents);
     return out;
 }
+
+std::vector<AudioEventId> GameplaySession::consumeAudioEvents() const {
+    std::vector<AudioEventId> out;
+    out.swap(presentation_.pendingAudioEvents);
+    return out;
+}
+
 
 UpgradeViewStats GameplaySession::buildCurrentViewStats() const {
     return buildUpgradeViewStats(archetypeSystem_.selected(), metaProgression_.bonuses(), traitSystem_.modifiers());
@@ -362,6 +380,7 @@ void GameplaySession::drawUpgradeSelectionUi(const double frameDelta) {
     ImGui::SameLine();
     if (ImGui::Button("Select Focused [Enter]")) {
         if (traitSystem_.choose(progression_.focusedUpgradeIndex)) progression_.upgradeScreenOpen = false;
+        presentation_.pendingAudioEvents.push_back(AudioEventId::UiConfirm);
     }
     ImGui::End();
 }

@@ -1476,3 +1476,10 @@ Headless mode contract:
 - Runtime expectations:
   - runtime/editor consume `animationBuild` and `variantBuild` directly instead of requiring per-frame manual setup.
   - procedural selection uses variant `weight` under deterministic RNG, with optional palette-template application where authored.
+
+## Audio Runtime and Event Routing
+- `AudioSystem` is a presentation-only runtime service; simulation never depends on audio state.
+- Gameplay emits deterministic audio events (`hit`, `graze`, `player_damage`, `enemy_death`, `boss_warning`, `ui_click`, `ui_confirm`) and runtime flushes them after each simulation tick.
+- Audio content is data-driven via pack `audio` section (`clips`, `events`, `music`) and loaded at runtime from content pack JSON.
+- Mix model supports buses (`master`, `music`, `sfx`) with independent volume controls (`audioMasterVolume`, `audioMusicVolume`, `audioSfxVolume`).
+- Supported source asset type is WAV via SDL decode/conversion, with deterministic fallback tones when source files are unavailable.

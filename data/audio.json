@@ -1,0 +1,24 @@
+{
+  "audio": {
+    "music": "music_main",
+    "clips": [
+      {"id": "music_main", "path": "music/main_loop.wav", "bus": "music", "loop": true, "baseGain": 0.45},
+      {"id": "sfx_hit", "path": "sfx/hit.wav", "bus": "sfx", "baseGain": 0.95},
+      {"id": "sfx_graze", "path": "sfx/graze.wav", "bus": "sfx", "baseGain": 0.6},
+      {"id": "sfx_player_damage", "path": "sfx/player_damage.wav", "bus": "sfx", "baseGain": 1.0},
+      {"id": "sfx_enemy_death", "path": "sfx/enemy_death.wav", "bus": "sfx", "baseGain": 0.9},
+      {"id": "sfx_boss_warning", "path": "sfx/boss_warning.wav", "bus": "sfx", "baseGain": 1.0},
+      {"id": "ui_click", "path": "ui/click.wav", "bus": "sfx", "baseGain": 0.7},
+      {"id": "ui_confirm", "path": "ui/confirm.wav", "bus": "sfx", "baseGain": 0.75}
+    ],
+    "events": [
+      {"name": "hit", "clip": "sfx_hit", "gain": 1.0},
+      {"name": "graze", "clip": "sfx_graze", "gain": 1.0},
+      {"name": "player_damage", "clip": "sfx_player_damage", "gain": 1.0},
+      {"name": "enemy_death", "clip": "sfx_enemy_death", "gain": 1.0},
+      {"name": "boss_warning", "clip": "sfx_boss_warning", "gain": 1.0},
+      {"name": "ui_click", "clip": "ui_click", "gain": 1.0},
+      {"name": "ui_confirm", "clip": "ui_confirm", "gain": 1.0}
+    ]
+  }
+}

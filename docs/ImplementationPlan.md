@@ -364,3 +364,10 @@ Completed items:
 - Added validation guardrails:
   - malformed naming/groups, invalid fps/frame/weights, duplicate frame indexes, duplicate variant names, inconsistent clip FPS.
 - Added tests to enforce parse/import/grouping output and pack metadata availability.
+
+## Audio subsystem implementation status
+- Implemented core `AudioSystem` runtime service with SDL audio callback mixer, content-driven clip/event registration, and music loop support.
+- Wired gameplay event hooks for: hit, graze, player damage, enemy death, boss warning, UI click, UI confirm.
+- Added content pipeline integration by allowing `ContentPacker` to include `audio` section in generated pack and by parsing audio metadata through `parseAudioContentDatabase`.
+- Added runtime config volume controls (`audioMasterVolume`, `audioMusicVolume`, `audioSfxVolume`) and command-line overrides (`--audio-master`, `--audio-music`, `--audio-sfx`).
+- Added smoke-level tests covering audio content parsing and config volume parsing/overrides.

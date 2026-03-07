@@ -1,5 +1,6 @@
 #include <engine/runtime.h>
 
+#include <engine/content_pipeline.h>
 #include <engine/logging.h>
 #include <engine/public/plugins.h>
 #include <engine/standards.h>
@@ -7,6 +8,9 @@
 
 #include <algorithm>
 #include <chrono>
+#include <fstream>
+
+#include <nlohmann/json.hpp>
 
 namespace engine {
 
@@ -29,6 +33,8 @@ void Runtime::simTick(const double dt) {
         session_.replayRecorder_.recordTickInput(inputMask);
     }
     session_.updateGameplay(dt, inputMask);
+    for (const AudioEventId event : session_.consumeAudioEvents()) audio_.queueEvent(event);
+    audio_.flushQueuedEvents();
 
     const std::uint32_t hashPeriod = session_.replayPlaybackMode_ ? session_.replayPlayer_.hashPeriodTicks() : std::max(1U, config_.replayHashPeriodTicks);
     if ((session_.simulation_.tickIndex % hashPeriod) == 0U) {
@@ -54,10 +60,52 @@ void Runtime::simTick(const double dt) {
 }
 
 int Runtime::run() {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO) != 0) {
         logError("SDL_Init failed: " + std::string(SDL_GetError()));
         return 1;
     }
+
+    audio_.initialize(!config_.headless);
+    audio_.setBusVolume(AudioBus::Master, config_.audioMasterVolume);
+    audio_.setBusVolume(AudioBus::Music, config_.audioMusicVolume);
+    audio_.setBusVolume(AudioBus::Sfx, config_.audioSfxVolume);
+
+    AudioContentDatabase audioContent;
+    {
+        std::ifstream packIn(config_.contentPackPath);
+        if (packIn.good()) {
+            nlohmann::json packJson;
+            packIn >> packJson;
+            std::string audioError;
+            if (!parseAudioContentDatabase(packJson, audioContent, audioError)) {
+                logWarn("Audio content parse failed: " + audioError);
+            }
+        }
+    }
+    if (audioContent.clips.empty()) {
+        audioContent.clips = {
+            AudioClipRecord {.id = "sfx_hit", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.9F},
+            AudioClipRecord {.id = "sfx_graze", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.6F},
+            AudioClipRecord {.id = "sfx_player_damage", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 1.0F},
+            AudioClipRecord {.id = "sfx_enemy_death", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.95F},
+            AudioClipRecord {.id = "sfx_boss_warning", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 1.0F},
+            AudioClipRecord {.id = "ui_click", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.65F},
+            AudioClipRecord {.id = "ui_confirm", .path = "", .bus = AudioBus::Sfx, .loop = false, .baseGain = 0.7F},
+            AudioClipRecord {.id = "music_main", .path = "", .bus = AudioBus::Music, .loop = true, .baseGain = 0.4F},
+        };
+        audioContent.events = {
+            AudioEventBinding {.event = AudioEventId::Hit, .clipId = "sfx_hit", .gain = 1.0F},
+            AudioEventBinding {.event = AudioEventId::Graze, .clipId = "sfx_graze", .gain = 1.0F},
+            AudioEventBinding {.event = AudioEventId::PlayerDamage, .clipId = "sfx_player_damage", .gain = 1.0F},
+            AudioEventBinding {.event = AudioEventId::EnemyDeath, .clipId = "sfx_enemy_death", .gain = 1.0F},
+            AudioEventBinding {.event = AudioEventId::BossWarning, .clipId = "sfx_boss_warning", .gain = 1.0F},
+            AudioEventBinding {.event = AudioEventId::UiClick, .clipId = "ui_click", .gain = 1.0F},
+            AudioEventBinding {.event = AudioEventId::UiConfirm, .clipId = "ui_confirm", .gain = 1.0F},
+        };
+        audioContent.musicClipId = "music_main";
+    }
+    audio_.loadContent(audioContent, "data/audio");
+    audio_.playMusic();
 
     session_.projectiles_.initialize(config_.projectileCapacity, 420.0F, 32, 18);
     session_.gpuBullets_.initialize(std::max<std::uint32_t>(config_.projectileCapacity, 500000U), 420.0F);

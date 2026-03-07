@@ -2,6 +2,8 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+#include <engine/audio_system.h>
+
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -112,5 +114,6 @@ std::vector<AnimationClipBuildPlan> buildAnimationClipPlans(const std::vector<Im
 std::vector<VariantGroupBuildPlan> buildVariantGroupPlans(const std::vector<ImportedArtAssetRecord>& importedAssets,
                                                           std::vector<ArtImportValidationError>& errors);
 std::unordered_map<std::string, std::string> extractImportFingerprintByGuid(const nlohmann::json& pack);
+bool parseAudioContentDatabase(const nlohmann::json& doc, AudioContentDatabase& out, std::string& error);
 
 } // namespace engine

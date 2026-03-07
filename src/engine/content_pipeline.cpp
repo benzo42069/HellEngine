@@ -548,4 +548,76 @@ std::unordered_map<std::string, std::string> extractImportFingerprintByGuid(cons
     return out;
 }
 
+
+
+bool parseAudioContentDatabase(const nlohmann::json& doc, AudioContentDatabase& out, std::string& error) {
+    out = {};
+    if (!doc.contains("audio") || !doc["audio"].is_object()) {
+        return true;
+    }
+
+    const auto& audio = doc["audio"];
+    if (audio.contains("clips")) {
+        if (!audio["clips"].is_array()) {
+            error = "`audio.clips` must be an array";
+            return false;
+        }
+        for (const auto& clipJson : audio["clips"]) {
+            if (!clipJson.is_object()) {
+                error = "`audio.clips[]` must be objects";
+                return false;
+            }
+            AudioClipRecord clip;
+            clip.id = clipJson.value("id", std::string());
+            clip.path = clipJson.value("path", std::string());
+            const std::string bus = toLower(clipJson.value("bus", std::string("sfx")));
+            if (bus == "music") clip.bus = AudioBus::Music;
+            else if (bus == "master") clip.bus = AudioBus::Master;
+            else clip.bus = AudioBus::Sfx;
+            clip.loop = clipJson.value("loop", false);
+            clip.baseGain = clipJson.value("baseGain", 1.0F);
+            if (clip.id.empty()) {
+                error = "audio clip id cannot be empty";
+                return false;
+            }
+            out.clips.push_back(std::move(clip));
+        }
+    }
+
+    if (audio.contains("events")) {
+        if (!audio["events"].is_array()) {
+            error = "`audio.events` must be an array";
+            return false;
+        }
+        for (const auto& eventJson : audio["events"]) {
+            if (!eventJson.is_object()) {
+                error = "`audio.events[]` must be objects";
+                return false;
+            }
+            AudioEventBinding binding;
+            const std::string name = toLower(eventJson.value("name", std::string()));
+            if (name == "hit") binding.event = AudioEventId::Hit;
+            else if (name == "graze") binding.event = AudioEventId::Graze;
+            else if (name == "player_damage") binding.event = AudioEventId::PlayerDamage;
+            else if (name == "enemy_death") binding.event = AudioEventId::EnemyDeath;
+            else if (name == "boss_warning") binding.event = AudioEventId::BossWarning;
+            else if (name == "ui_click") binding.event = AudioEventId::UiClick;
+            else if (name == "ui_confirm") binding.event = AudioEventId::UiConfirm;
+            else {
+                error = "unsupported audio event name: " + name;
+                return false;
+            }
+            binding.clipId = eventJson.value("clip", std::string());
+            binding.gain = eventJson.value("gain", 1.0F);
+            if (binding.clipId.empty()) {
+                error = "audio event clip id cannot be empty";
+                return false;
+            }
+            out.events.push_back(std::move(binding));
+        }
+    }
+
+    out.musicClipId = audio.value("music", std::string());
+    return true;
+}
 } // namespace engine
