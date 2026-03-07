@@ -450,3 +450,16 @@
 - **Consequences**:
   - Audio authoring remains in content data (`audio` pack section), not hardcoded gameplay classes.
   - Runtime can be expanded to ducking/mix snapshots/event middleware without altering simulation contracts.
+
+## DL-0021 — Enemy/Boss Runtime Eventization and Phase-Orchestrated Patterns
+- **Date**: 2026-03-07
+- **Context**: Enemy/boss runtime behavior mixed authoring concerns, state mutation, and presentation trigger logic in a shallow prototype structure.
+- **Decision**:
+  - Added boss phase multi-pattern authoring (`patternSequence`) and per-phase cadence (`patternCadenceSeconds`).
+  - Added deterministic runtime event stream from `EntitySystem` (`BossIntroStarted`, `BossPhaseStarted`, `BossPhaseCompleted`, `BossDefeated`, `Telegraph`, `HazardSync`).
+  - Moved presentation reactions to gameplay-session ownership by consuming runtime events there.
+  - Extended encounter compiler node model with `telegraph`, `hazardSync`, and `phaseGate`, and annotated scheduled events with owner domains.
+- **Consequences**:
+  - Cleaner ownership boundary between simulation behavior and combat presentation.
+  - Better future tooling integration: timeline/encounter editors can target explicit phase and hazard sync hooks.
+  - Determinism preserved via deterministic sequence cursoring and per-tick event flush.

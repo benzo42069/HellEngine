@@ -13,6 +13,9 @@ enum class EncounterNodeType {
     Event,
     BossTrigger,
     DifficultyScalar,
+    HazardSync,
+    Telegraph,
+    PhaseGate,
 };
 
 struct EncounterNode {
@@ -33,7 +36,9 @@ struct EncounterScheduleEvent {
     float atSeconds {0.0F};
     EncounterNodeType type {EncounterNodeType::Wave};
     float value {0.0F};
+    float durationSeconds {0.0F};
     std::string payload;
+    std::string owner;
 };
 
 struct EncounterCompileDiagnostic {

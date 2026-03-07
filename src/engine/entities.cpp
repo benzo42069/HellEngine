@@ -43,6 +43,13 @@ void parseResourceYield(const nlohmann::json& json, ResourceYield& y) {
     y.healthRecovery = json.value("healthRecovery", 0.0F);
     y.buffDurationSeconds = json.value("buffDurationSeconds", 0.0F);
 }
+
+std::string resolvePatternIdentity(const BossPhase& phase) {
+    if (!phase.attackPatternGuid.empty()) return phase.attackPatternGuid;
+    if (!phase.attackPatternName.empty()) return phase.attackPatternName;
+    if (!phase.patternSequence.empty()) return phase.patternSequence.front();
+    return {};
+}
 } // namespace
 
 bool EntityDatabase::loadFromFile(const std::string& path) {
@@ -136,6 +143,14 @@ bool EntityDatabase::loadFromFile(const std::string& path) {
                         phase.movement = parseMovement(p.value("movement", "static"));
                         phase.durationSeconds = p.value("durationSeconds", 4.0F);
                         phase.difficultyScale = p.value("difficultyScale", 1.0F);
+                        phase.patternCadenceSeconds = p.value("patternCadenceSeconds", 0.0F);
+                        if (p.contains("patternSequence") && p["patternSequence"].is_array()) {
+                            for (const auto& patternRef : p["patternSequence"]) {
+                                if (patternRef.is_string()) {
+                                    phase.patternSequence.push_back(patternRef.get<std::string>());
+                                }
+                            }
+                        }
                         t.boss.phases.push_back(phase);
                     }
                 }
@@ -200,8 +215,8 @@ void EntityDatabase::loadFallbackDefaults() {
     boss.boss.enabled = true;
     boss.boss.introDurationSeconds = 1.5F;
     boss.boss.phases = {
-        BossPhase {.attackPatternGuid = stableGuidForAsset("pattern", "Wave Weave"), .attackPatternName = "Wave Weave", .movement = MovementBehavior::Linear, .durationSeconds = 4.0F, .difficultyScale = 1.0F},
-        BossPhase {.attackPatternGuid = stableGuidForAsset("pattern", "Composed Helix"), .attackPatternName = "Composed Helix", .movement = MovementBehavior::Chase, .durationSeconds = 5.0F, .difficultyScale = 1.3F},
+        BossPhase {.attackPatternGuid = stableGuidForAsset("pattern", "Wave Weave"), .attackPatternName = "Wave Weave", .patternSequence = {"Wave Weave", "Composed Helix"}, .movement = MovementBehavior::Linear, .durationSeconds = 4.0F, .difficultyScale = 1.0F, .patternCadenceSeconds = 0.35F},
+        BossPhase {.attackPatternGuid = stableGuidForAsset("pattern", "Composed Helix"), .attackPatternName = "Composed Helix", .patternSequence = {"Composed Helix", "Wave Weave"}, .movement = MovementBehavior::Chase, .durationSeconds = 5.0F, .difficultyScale = 1.3F, .patternCadenceSeconds = 0.3F},
     };
     boss.boss.rewardDrop = ResourceYield {.upgradeCurrency = 100.0F, .healthRecovery = 20.0F, .buffDurationSeconds = 4.0F};
     boss.spawnRule = SpawnRule {.enabled = true, .initialDelaySeconds = 6.0F, .intervalSeconds = 20.0F, .maxAlive = 1};
@@ -241,6 +256,8 @@ void EntitySystem::setRunSeed(const std::uint64_t seed) { rng_ = DeterministicRn
 void EntitySystem::reset() {
     entities_.clear();
     stats_ = {};
+    runtimeEvents_.clear();
+    runtimeClock_ = 0.0F;
     for (auto& s : spawnerState_) {
         s = SpawnerState {};
     }
@@ -266,8 +283,46 @@ void EntitySystem::spawnEntity(const std::size_t templateIndex, const float enem
     e.introPlaying = t.type == EntityType::Boss && t.boss.enabled;
     if (e.introPlaying) {
         e.phaseTimeRemaining = std::max(0.0F, t.boss.introDurationSeconds);
+        e.telegraphLeadTimer = 0.0F;
+        e.phaseTelegraphSent = false;
+        recordRuntimeEvent(EntityRuntimeEventType::BossIntroStarted, e, t, entities_.size(), 0, t.name + ":intro");
     }
     entities_.push_back(e);
+}
+
+void EntitySystem::recordRuntimeEvent(
+    const EntityRuntimeEventType type,
+    const EntityInstance& e,
+    const EntityTemplate& t,
+    const std::size_t entityInstanceIndex,
+    const std::size_t phaseIndex,
+    std::string payload
+) {
+    runtimeEvents_.push_back(EntityRuntimeEvent {
+        .type = type,
+        .templateIndex = e.templateIndex,
+        .entityInstanceIndex = entityInstanceIndex,
+        .bossPhaseIndex = phaseIndex,
+        .simTimeSeconds = runtimeClock_,
+        .payload = payload.empty() ? t.name : std::move(payload),
+    });
+}
+
+void EntitySystem::emitBossPhasePattern(
+    EntityInstance& e,
+    const EntityTemplate& t,
+    const BossPhase& phase,
+    const Vec2 playerPos,
+    ProjectileSystem& projectiles,
+    const EntityRuntimeModifiers& runtimeMods
+) {
+    if (!phase.patternSequence.empty()) {
+        const std::size_t cursor = e.phasePatternCursor % phase.patternSequence.size();
+        emitPatternFromTemplate(t, phase.patternSequence[cursor], e.position, playerPos, projectiles, runtimeMods, phase.difficultyScale);
+        e.phasePatternCursor = (e.phasePatternCursor + 1U) % phase.patternSequence.size();
+        return;
+    }
+    emitPatternFromTemplate(t, resolvePatternIdentity(phase), e.position, playerPos, projectiles, runtimeMods, phase.difficultyScale);
 }
 
 void EntitySystem::applyHarvest(const EntityTemplate& t, const EntityRuntimeModifiers& runtimeMods) {
@@ -336,6 +391,8 @@ void EntitySystem::emitPatternFromTemplate(
 void EntitySystem::update(const float dt, ProjectileSystem& projectiles, const Vec2 playerPos, const EntityRuntimeModifiers& runtimeMods) {
     if (!templates_) return;
 
+    runtimeClock_ += dt;
+    runtimeEvents_.clear();
     stats_.buffTimeRemaining = std::max(0.0F, stats_.buffTimeRemaining - dt);
 
     for (std::size_t i = 0; i < templates_->size(); ++i) {
@@ -369,6 +426,7 @@ void EntitySystem::update(const float dt, ProjectileSystem& projectiles, const V
         MovementBehavior movement = t.movement;
         std::string attackPattern = !t.attackPatternGuid.empty() ? t.attackPatternGuid : t.attackPatternName;
         float difficultyScale = 1.0F;
+        bool useBossPhaseOrchestration = false;
 
         if (t.type == EntityType::Boss && t.boss.enabled && !t.boss.phases.empty()) {
             if (e.introPlaying) {
@@ -377,23 +435,44 @@ void EntitySystem::update(const float dt, ProjectileSystem& projectiles, const V
                     e.introPlaying = false;
                     e.activeBossPhase = 0;
                     e.phaseTimeRemaining = std::max(0.4F, t.boss.phases[0].durationSeconds);
+                    e.telegraphLeadTimer = std::max(0.15F, std::min(0.6F, e.phaseTimeRemaining * 0.25F));
+                    e.phaseTelegraphSent = false;
+                    e.patternCadenceTimer = 0.0F;
+                    e.phasePatternCursor = 0;
+                    recordRuntimeEvent(EntityRuntimeEventType::BossPhaseStarted, e, t, static_cast<std::size_t>(&e - entities_.data()), e.activeBossPhase, t.name + ":phase-start");
                 }
             } else {
                 const BossPhase& phase = t.boss.phases[e.activeBossPhase];
                 movement = phase.movement;
-                attackPattern = !phase.attackPatternGuid.empty() ? phase.attackPatternGuid : phase.attackPatternName;
+                attackPattern = resolvePatternIdentity(phase);
                 difficultyScale = phase.difficultyScale;
+                useBossPhaseOrchestration = true;
+
                 e.phaseTimeRemaining -= dt;
+                if (!e.phaseTelegraphSent && e.phaseTimeRemaining <= e.telegraphLeadTimer) {
+                    e.phaseTelegraphSent = true;
+                    stats_.telegraphEvents += 1;
+                    stats_.hazardSyncEvents += 1;
+                    recordRuntimeEvent(EntityRuntimeEventType::Telegraph, e, t, static_cast<std::size_t>(&e - entities_.data()), e.activeBossPhase, t.name + ":telegraph");
+                    recordRuntimeEvent(EntityRuntimeEventType::HazardSync, e, t, static_cast<std::size_t>(&e - entities_.data()), e.activeBossPhase, t.name + ":hazard-sync");
+                }
 
                 if (e.phaseTimeRemaining <= 0.0F) {
                     if (e.activeBossPhase + 1 < t.boss.phases.size()) {
+                        recordRuntimeEvent(EntityRuntimeEventType::BossPhaseCompleted, e, t, static_cast<std::size_t>(&e - entities_.data()), e.activeBossPhase, t.name + ":phase-complete");
                         ++e.activeBossPhase;
                         stats_.bossPhaseTransitions += 1;
                         e.phaseTimeRemaining = std::max(0.4F, t.boss.phases[e.activeBossPhase].durationSeconds);
+                        e.telegraphLeadTimer = std::max(0.15F, std::min(0.6F, e.phaseTimeRemaining * 0.25F));
+                        e.phaseTelegraphSent = false;
+                        e.patternCadenceTimer = 0.0F;
+                        e.phasePatternCursor = 0;
+                        recordRuntimeEvent(EntityRuntimeEventType::BossPhaseStarted, e, t, static_cast<std::size_t>(&e - entities_.data()), e.activeBossPhase, t.name + ":phase-start");
                     } else {
                         e.alive = false;
                         stats_.defeatedBosses += 1;
                         applyRewardDrop(t.boss.rewardDrop, runtimeMods);
+                        recordRuntimeEvent(EntityRuntimeEventType::BossDefeated, e, t, static_cast<std::size_t>(&e - entities_.data()), e.activeBossPhase, t.name + ":defeated");
                         continue;
                     }
                 }
@@ -439,10 +518,18 @@ void EntitySystem::update(const float dt, ProjectileSystem& projectiles, const V
             const float fireRateBuff = stats_.buffTimeRemaining > 0.0F ? 0.75F : 1.0F;
             const float traitFireScale = std::max(runtimeMods.enemyFireRateScale, 0.1F);
             const float difficultyFireScale = std::max(0.4F, difficultyScale);
+            const float baseCooldown = std::max(t.attackIntervalSeconds * fireRateBuff * traitFireScale / difficultyFireScale, 0.05F);
             e.fireCooldown -= dt;
             if (e.fireCooldown <= 0.0F) {
-                emitPatternFromTemplate(t, attackPattern, e.position, playerPos, projectiles, runtimeMods, difficultyScale);
-                e.fireCooldown += std::max(t.attackIntervalSeconds * fireRateBuff * traitFireScale / difficultyFireScale, 0.05F);
+                if (useBossPhaseOrchestration) {
+                    const BossPhase& phase = t.boss.phases[e.activeBossPhase];
+                    emitBossPhasePattern(e, t, phase, playerPos, projectiles, runtimeMods);
+                    const float cadence = phase.patternCadenceSeconds > 0.0F ? phase.patternCadenceSeconds : baseCooldown;
+                    e.fireCooldown += std::max(cadence, 0.04F);
+                } else {
+                    emitPatternFromTemplate(t, attackPattern, e.position, playerPos, projectiles, runtimeMods, difficultyScale);
+                    e.fireCooldown += baseCooldown;
+                }
             }
         }
 
@@ -532,5 +619,7 @@ void EntitySystem::processCollisionEvents(const std::span<const CollisionEvent> 
         }
     }
 }
+
+std::span<const EntityRuntimeEvent> EntitySystem::runtimeEvents() const { return runtimeEvents_; }
 
 } // namespace engine

@@ -371,3 +371,22 @@ Completed items:
 - Added content pipeline integration by allowing `ContentPacker` to include `audio` section in generated pack and by parsing audio metadata through `parseAudioContentDatabase`.
 - Added runtime config volume controls (`audioMasterVolume`, `audioMusicVolume`, `audioSfxVolume`) and command-line overrides (`--audio-master`, `--audio-music`, `--audio-sfx`).
 - Added smoke-level tests covering audio content parsing and config volume parsing/overrides.
+
+## 2026-03-07 — Gameplay authoring architecture expansion (enemy/boss/encounter runtime)
+- Implemented enemy runtime decomposition improvements:
+  - Added richer boss phase state in runtime instances (telegraph lead, cadence timer, sequence cursor, intro/phase transitions).
+  - Added explicit `EntityRuntimeEvent` channel for simulation-to-presentation hooks.
+- Boss architecture upgrades:
+  - Multi-pattern sequence support per phase (`patternSequence`).
+  - Per-phase cadence support (`patternCadenceSeconds`).
+  - Deterministic phase lifecycle events + aggregate counters (`telegraphEvents`, `hazardSyncEvents`).
+- Encounter system upgrades:
+  - Extended graph types to include `Telegraph`, `HazardSync`, and `PhaseGate` nodes.
+  - Compiler now emits owner metadata for routing (`boss`, `hazards`, `encounter`) and preserves deterministic ordering.
+- Session integration:
+  - Gameplay session now consumes `EntityRuntimeEvent` stream and maps it to audio/camera presentation hooks.
+  - Encounter runtime state now tracks encounter clock and synchronization counters.
+- Authoring integration:
+  - Updated `data/entities.json` boss phases to include pattern sequence and cadence examples.
+- Validation:
+  - Updated boss and encounter tests to validate new runtime event and schedule metadata behavior.

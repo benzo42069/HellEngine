@@ -16,6 +16,9 @@ std::string toString(const EncounterNodeType t) {
         case EncounterNodeType::Event: return "event";
         case EncounterNodeType::BossTrigger: return "boss";
         case EncounterNodeType::DifficultyScalar: return "difficulty";
+        case EncounterNodeType::HazardSync: return "hazardSync";
+        case EncounterNodeType::Telegraph: return "telegraph";
+        case EncounterNodeType::PhaseGate: return "phaseGate";
     }
     return "wave";
 }
@@ -27,6 +30,9 @@ EncounterNodeType parseType(const std::string& s) {
     if (s == "event") return EncounterNodeType::Event;
     if (s == "boss") return EncounterNodeType::BossTrigger;
     if (s == "difficulty") return EncounterNodeType::DifficultyScalar;
+    if (s == "hazardSync") return EncounterNodeType::HazardSync;
+    if (s == "telegraph") return EncounterNodeType::Telegraph;
+    if (s == "phaseGate") return EncounterNodeType::PhaseGate;
     return EncounterNodeType::Wave;
 }
 } // namespace
@@ -59,8 +65,15 @@ bool EncounterCompiler::compile(const EncounterGraphAsset& asset, EncounterSched
         if (n.type == EncounterNodeType::Wave && n.value > 150.0F) {
             out.diagnostics.push_back(EncounterCompileDiagnostic {.nodeId = n.id, .message = "wave value exceeds readability threshold", .warning = true});
         }
+        if (n.type == EncounterNodeType::Telegraph && n.durationSeconds <= 0.0F) {
+            out.diagnostics.push_back(EncounterCompileDiagnostic {.nodeId = n.id, .message = "telegraph should define durationSeconds", .warning = true});
+        }
 
-        out.events.push_back(EncounterScheduleEvent {.atSeconds = std::max(at, cursor), .type = n.type, .value = n.value, .payload = n.payload});
+        const float scheduledAt = std::max(at, cursor);
+        std::string owner = "encounter";
+        if (n.type == EncounterNodeType::BossTrigger || n.type == EncounterNodeType::PhaseGate || n.type == EncounterNodeType::Telegraph) owner = "boss";
+        if (n.type == EncounterNodeType::HazardSync) owner = "hazards";
+        out.events.push_back(EncounterScheduleEvent {.atSeconds = scheduledAt, .type = n.type, .value = n.value, .durationSeconds = n.durationSeconds, .payload = n.payload, .owner = owner});
     }
 
     std::sort(out.events.begin(), out.events.end(), [](const EncounterScheduleEvent& a, const EncounterScheduleEvent& b) {
@@ -84,6 +97,7 @@ bool saveEncounterGraphJson(const EncounterGraphAsset& asset, const std::string&
                 {"durationSeconds", n.durationSeconds},
                 {"value", n.value},
                 {"payload", n.payload},
+                {"owner", "encounter"},
             });
         }
         std::ofstream(path) << root.dump(2);

@@ -1483,3 +1483,18 @@ Headless mode contract:
 - Audio content is data-driven via pack `audio` section (`clips`, `events`, `music`) and loaded at runtime from content pack JSON.
 - Mix model supports buses (`master`, `music`, `sfx`) with independent volume controls (`audioMasterVolume`, `audioMusicVolume`, `audioSfxVolume`).
 - Supported source asset type is WAV via SDL decode/conversion, with deterministic fallback tones when source files are unavailable.
+
+## Enemy/Boss Runtime Ownership Model (DL-0021)
+- Enemy authoring data (`EntityTemplate`, `BossPhase`) is immutable runtime input loaded from content packs.
+- Behavior state is isolated in `EntitySystem::EntityInstance` (phase timers, telegraph lead timers, phase pattern cursor, cooldown state).
+- Pattern firing/orchestration is split between:
+  - generic `emitPatternFromTemplate` for normal entities.
+  - boss-specific `emitBossPhasePattern` for phase sequence/cadence orchestration.
+- Encounter ownership boundary is explicit:
+  - `EntitySystem` owns enemy/boss lifecycle + deterministic runtime events.
+  - `GameplaySession` owns presentation reactions (camera shake + audio) to runtime events.
+- Combat presentation hooks are eventized via `EntityRuntimeEvent` (`Telegraph`, `HazardSync`, `BossPhaseStarted`, `BossDefeated`, etc.).
+- Boss phases support multi-pattern sequence authoring with per-phase cadence (`patternSequence`, `patternCadenceSeconds`) while preserving deterministic update order.
+- Encounter synchronization hooks:
+  - authored encounter schedule now supports `telegraph`, `hazardSync`, and `phaseGate` node types.
+  - compiled encounter events carry `owner` domain metadata (`encounter`, `boss`, `hazards`) for orchestration routing.

@@ -92,6 +92,9 @@ struct EncounterRuntimeState {
     float prevHealthRecoveryAccum {0.0F};
     float collisionRateAccumulator {0.0F};
     float collisionRateWindowSeconds {0.0F};
+    float encounterClockSeconds {0.0F};
+    std::uint32_t telegraphCount {0};
+    std::uint32_t hazardSyncCount {0};
 };
 
 class GameplaySession {

@@ -72,21 +72,36 @@
             "movement": "linear",
             "durationSeconds": 4.0,
             "difficultyScale": 1.0,
-            "attackPatternGuid": "pattern-7305ed346ff7c0ae"
+            "attackPatternGuid": "pattern-7305ed346ff7c0ae",
+            "patternSequence": [
+              "Wave Weave",
+              "Composed Helix"
+            ],
+            "patternCadenceSeconds": 0.3
           },
           {
             "attackPatternName": "Composed Helix",
             "movement": "sine",
             "durationSeconds": 5.0,
             "difficultyScale": 1.3,
-            "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
+            "attackPatternGuid": "pattern-9b5229bbb5bf6fe9",
+            "patternSequence": [
+              "Composed Helix",
+              "Wave Weave"
+            ],
+            "patternCadenceSeconds": 0.35
           },
           {
             "attackPatternName": "Wave Weave",
             "movement": "chase",
             "durationSeconds": 5.0,
             "difficultyScale": 1.6,
-            "attackPatternGuid": "pattern-7305ed346ff7c0ae"
+            "attackPatternGuid": "pattern-7305ed346ff7c0ae",
+            "patternSequence": [
+              "Wave Weave",
+              "Composed Helix"
+            ],
+            "patternCadenceSeconds": 0.4
           }
         ],
         "rewardDrop": {
@@ -133,21 +148,36 @@
             "movement": "sine",
             "durationSeconds": 4.5,
             "difficultyScale": 1.1,
-            "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
+            "attackPatternGuid": "pattern-9b5229bbb5bf6fe9",
+            "patternSequence": [
+              "Composed Helix",
+              "Wave Weave"
+            ],
+            "patternCadenceSeconds": 0.3
           },
           {
             "attackPatternName": "Wave Weave",
             "movement": "chase",
             "durationSeconds": 4.5,
             "difficultyScale": 1.5,
-            "attackPatternGuid": "pattern-7305ed346ff7c0ae"
+            "attackPatternGuid": "pattern-7305ed346ff7c0ae",
+            "patternSequence": [
+              "Wave Weave",
+              "Composed Helix"
+            ],
+            "patternCadenceSeconds": 0.35
           },
           {
             "attackPatternName": "Composed Helix",
             "movement": "linear",
             "durationSeconds": 5.0,
             "difficultyScale": 1.8,
-            "attackPatternGuid": "pattern-9b5229bbb5bf6fe9"
+            "attackPatternGuid": "pattern-9b5229bbb5bf6fe9",
+            "patternSequence": [
+              "Composed Helix",
+              "Wave Weave"
+            ],
+            "patternCadenceSeconds": 0.4
           }
         ],
         "rewardDrop": {
