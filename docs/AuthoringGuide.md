@@ -1,5 +1,11 @@
 # Authoring Guide
 
+> Note: External creator docs are now split by workflow for faster onboarding:
+> - `docs/PatternAuthoringGuide.md`
+> - `docs/BossEncounterAuthoring.md`
+> - `docs/CreatorPerformanceGuide.md`
+> - `docs/ReplayAndDebugGuide.md`
+
 This guide covers authoring for:
 - patterns (legacy layered)
 - graph patterns (compiled VM)

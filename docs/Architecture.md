@@ -84,3 +84,12 @@
 - Reload checks run on fixed tick boundaries (~1 second cadence at 60 ticks) so replay hash behavior is not affected by wall-clock jitter.
 - Reload flow is **validate into temporary object -> swap on success -> preserve previous content on failure** with errors surfaced through runtime logging/editor console channel.
 
+## Audio subsystem (presentation-only)
+- `AudioSystem` now uses SDL_mixer and is owned by `Runtime`.
+- `GameplaySession` emits lightweight `AudioEvent` records during simulation, but playback dispatch is performed by `Runtime` outside `simTick()`.
+- Missing `.wav` assets or mixer initialization failure degrade to silent no-op playback and do not alter simulation state or replay determinism.
+
+## Rendering Pipeline Update — GL Bullet Path
+- `RenderPipeline::buildSceneOverlay` now routes projectile presentation through `GlBulletRenderer` when OpenGL is ready and the renderer is initialized.
+- `GlBulletRenderer` consumes Projectile SoA data (including trails) each frame, resolves palette/gradient color on CPU, builds preallocated quad buffers, and submits one indexed draw.
+- SpriteBatch procedural bullet rendering remains the fallback path if GL init fails or is unavailable.

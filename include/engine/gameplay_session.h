@@ -1,8 +1,8 @@
 #pragma once
 
 #include <engine/archetypes.h>
-#include <engine/audio_system.h>
 #include <engine/bullet_palette.h>
+#include <engine/camera_shake.h>
 #include <engine/config.h>
 #include <engine/content_watcher.h>
 #include <engine/danger_field.h>
@@ -37,7 +37,7 @@ namespace engine {
 struct SessionSimulationState {
     FrameAllocator frameAllocator {1024 * 1024};
     JobSystem jobSystem {};
-    RngStreams rngStreams {};
+    RngStreams rngStreams;
     std::uint64_t tickIndex {0};
     double simClock {0.0};
 
@@ -60,11 +60,23 @@ struct ProgressionState {
     std::size_t stageIndexMemo {0};
 };
 
+enum class AudioEventType : std::uint8_t {
+    Hit = 0,
+    Graze,
+    BossPhaseTransition,
+    DefensiveSpecialActivated,
+};
+
+struct AudioEvent {
+    AudioEventType type {AudioEventType::Hit};
+    Vec2 position {0.0F, 0.0F};
+};
+
 struct PresentationState {
     mutable DangerFieldOverlay dangerField {};
     ParticleFxSystem particleFx {};
     mutable std::vector<ShakeParams> cameraShakeEvents {};
-    mutable std::vector<AudioEventId> pendingAudioEvents {};
+    mutable std::vector<AudioEvent> pendingAudioEvents {};
     bool dangerFieldEnabled {false};
 
     PresentationState() { cameraShakeEvents.reserve(16); pendingAudioEvents.reserve(32); }
@@ -114,7 +126,7 @@ class GameplaySession {
     void drawUpgradeSelectionUi(double frameDelta);
     void renderDangerFieldOverlay(SDL_Renderer* renderer, const Camera2D& camera, float opacity = 0.25F) const;
     [[nodiscard]] std::vector<ShakeParams> consumeCameraShakeEvents() const;
-    [[nodiscard]] std::vector<AudioEventId> consumeAudioEvents() const;
+    [[nodiscard]] std::vector<AudioEvent> consumeAudioEvents() const;
 
     [[nodiscard]] Vec2 playerPos() const { return playerState_.playerPos; }
     [[nodiscard]] Vec2 aimTarget() const { return playerState_.aimTarget; }

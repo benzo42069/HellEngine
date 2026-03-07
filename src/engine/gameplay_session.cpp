@@ -48,14 +48,13 @@ void GameplaySession::onUpgradeNavigation(const UpgradeNavAction action) {
     }
     if (!progression_.upgradeScreenOpen || !traitSystem_.hasPendingChoices()) return;
 
-    if (action == UpgradeNavAction::MoveLeft) { progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + TraitSystem::choiceCount - 1) % TraitSystem::choiceCount; presentation_.pendingAudioEvents.push_back(AudioEventId::UiClick); }
-    if (action == UpgradeNavAction::MoveRight) { progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + 1) % TraitSystem::choiceCount; presentation_.pendingAudioEvents.push_back(AudioEventId::UiClick); }
+    if (action == UpgradeNavAction::MoveLeft) { progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + TraitSystem::choiceCount - 1) % TraitSystem::choiceCount; }
+    if (action == UpgradeNavAction::MoveRight) { progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + 1) % TraitSystem::choiceCount; }
     if (action == UpgradeNavAction::SelectSlot1) progression_.focusedUpgradeIndex = 0;
     if (action == UpgradeNavAction::SelectSlot2) progression_.focusedUpgradeIndex = 1;
     if (action == UpgradeNavAction::SelectSlot3) progression_.focusedUpgradeIndex = 2;
     if (action == UpgradeNavAction::SelectSlot1 || action == UpgradeNavAction::SelectSlot2 || action == UpgradeNavAction::SelectSlot3 || action == UpgradeNavAction::Confirm) {
         if (traitSystem_.choose(progression_.focusedUpgradeIndex)) progression_.upgradeScreenOpen = false;
-        presentation_.pendingAudioEvents.push_back(AudioEventId::UiConfirm);
     }
     if (action == UpgradeNavAction::Reroll) (void)traitSystem_.rerollChoices();
 }
@@ -101,7 +100,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 const Vec2 dir = len > 0.0001F ? Vec2 {event.pos.x / len, event.pos.y / len} : Vec2 {0.0F, -1.0F};
                 presentation_.cameraShakeEvents.push_back(ShakeParams {
                     .profile = ShakeProfile::Explosion,
-                    .amplitude = 4.0F,
+                    .amplitude = 3.0F,
                     .duration = 0.18F,
                     .direction = dir,
                     .frequency = 36.0F,
@@ -117,13 +116,13 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     if ((inputMask & InputDefensiveSpecial) != 0U && defensiveSpecial_.tryActivate()) {
         presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::SpecialPulse,
-            .amplitude = 5.0F,
+            .amplitude = 2.0F,
             .duration = 0.45F,
             .direction = {0.0F, 0.0F},
             .frequency = 12.0F,
             .damping = 3.5F,
         });
-        presentation_.pendingAudioEvents.push_back(AudioEventId::Graze);
+        presentation_.pendingAudioEvents.push_back(AudioEvent {.type = AudioEventType::DefensiveSpecialActivated, .position = playerState_.playerPos});
     }
 
     const TraitModifiers& traitModsForSpecial = traitSystem_.modifiers();
@@ -137,12 +136,13 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         defensiveSpecial_.addGrazePoints(grazePoints);
         presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::GrazeTremor,
-            .amplitude = 0.8F,
+            .amplitude = 0.5F,
             .duration = 0.10F,
             .direction = {0.0F, 0.0F},
             .frequency = 110.0F,
             .damping = 22.0F,
         });
+        presentation_.pendingAudioEvents.push_back(AudioEvent {.type = AudioEventType::Graze, .position = playerState_.playerPos});
     }
 
     const float moveStep = static_cast<float>(dt) * 120.0F;
@@ -231,7 +231,6 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         for (const EntityRuntimeEvent& runtimeEvent : entitySystem_.runtimeEvents()) {
             if (runtimeEvent.type == EntityRuntimeEventType::Telegraph) {
                 ++encounter_.telegraphCount;
-                presentation_.pendingAudioEvents.push_back(AudioEventId::BossWarning);
                 presentation_.cameraShakeEvents.push_back(ShakeParams {
                     .profile = ShakeProfile::Ambient,
                     .amplitude = 0.85F,
@@ -243,10 +242,8 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
             }
             if (runtimeEvent.type == EntityRuntimeEventType::HazardSync) {
                 ++encounter_.hazardSyncCount;
-                presentation_.pendingAudioEvents.push_back(AudioEventId::EnemyDeath);
             }
             if (runtimeEvent.type == EntityRuntimeEventType::BossDefeated) {
-                presentation_.pendingAudioEvents.push_back(AudioEventId::EnemyDeath);
             }
         }
         profiler_.addZoneTime(PerfZone::Bullets, std::chrono::duration<double, std::milli>(Clock::now() - bulletStart).count());
@@ -291,15 +288,19 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
                 .frequency = 32.0F,
                 .damping = 12.0F,
             });
-            presentation_.pendingAudioEvents.push_back(AudioEventId::PlayerDamage);
         }
         bool enemyHit = false;
         for (std::uint32_t i = 0; i < encounter_.collisionEventCount; ++i) {
             if (encounter_.collisionEvents[i].targetId >= 1000U) { enemyHit = true; break; }
         }
         entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(encounter_.collisionEvents.data(), encounter_.collisionEventCount));
-        if (encounter_.collisionEventCount > 0) presentation_.pendingAudioEvents.push_back(AudioEventId::Hit);
-        if (enemyHit) presentation_.pendingAudioEvents.push_back(AudioEventId::EnemyDeath);
+        for (std::uint32_t i = 0; i < encounter_.collisionEventCount; ++i) {
+            const CollisionEvent& e = encounter_.collisionEvents[i];
+            if (e.bulletIndex >= projectiles_.capacity()) continue;
+            const Vec2 hitPos {projectiles_.posX()[e.bulletIndex], projectiles_.posY()[e.bulletIndex]};
+            presentation_.pendingAudioEvents.push_back(AudioEvent {.type = AudioEventType::Hit, .position = hitPos});
+        }
+        (void)enemyHit;
     }
 
     presentation_.particleFx.update(static_cast<float>(dt));
@@ -308,18 +309,18 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     if (zoneBeforeUpdate && zoneAfterUpdate && zoneBeforeUpdate->type != zoneAfterUpdate->type && zoneAfterUpdate->type == ZoneType::Boss) {
         presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::BossRumble,
-            .amplitude = 7.5F,
-            .duration = 1.2F,
+            .amplitude = 4.0F,
+            .duration = 0.4F,
             .direction = {0.0F, 0.0F},
             .frequency = 8.0F,
             .damping = 2.0F,
         });
-        presentation_.pendingAudioEvents.push_back(AudioEventId::BossWarning);
+        presentation_.pendingAudioEvents.push_back(AudioEvent {.type = AudioEventType::BossPhaseTransition, .position = playerState_.playerPos});
     }
     if (zoneAfterUpdate && (zoneAfterUpdate->type == ZoneType::Combat || zoneAfterUpdate->type == ZoneType::Elite || zoneAfterUpdate->type == ZoneType::Boss)) {
         presentation_.cameraShakeEvents.push_back(ShakeParams {
             .profile = ShakeProfile::Ambient,
-            .amplitude = 0.18F,
+            .amplitude = 0.12F,
             .duration = 0.0F,
             .direction = {0.0F, 0.0F},
             .frequency = 2.0F,
@@ -428,8 +429,8 @@ std::vector<ShakeParams> GameplaySession::consumeCameraShakeEvents() const {
     return out;
 }
 
-std::vector<AudioEventId> GameplaySession::consumeAudioEvents() const {
-    std::vector<AudioEventId> out;
+std::vector<AudioEvent> GameplaySession::consumeAudioEvents() const {
+    std::vector<AudioEvent> out;
     out.swap(presentation_.pendingAudioEvents);
     return out;
 }
@@ -506,7 +507,6 @@ void GameplaySession::drawUpgradeSelectionUi(const double frameDelta) {
     ImGui::SameLine();
     if (ImGui::Button("Select Focused [Enter]")) {
         if (traitSystem_.choose(progression_.focusedUpgradeIndex)) progression_.upgradeScreenOpen = false;
-        presentation_.pendingAudioEvents.push_back(AudioEventId::UiConfirm);
     }
     ImGui::End();
 }

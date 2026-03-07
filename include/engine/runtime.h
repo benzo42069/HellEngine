@@ -22,6 +22,7 @@ class Runtime {
 
   private:
     void simTick(double dt);
+    void dispatchAudioEvents();
 
     EngineConfig config_;
     bool running_ {true};
@@ -29,6 +30,10 @@ class Runtime {
 
     InputSystem input_;
     AudioSystem audio_;
+    AudioSystem::SoundId hitSoundId_ {AudioSystem::kInvalidSound};
+    AudioSystem::SoundId grazeSoundId_ {AudioSystem::kInvalidSound};
+    AudioSystem::SoundId phaseWarnSoundId_ {AudioSystem::kInvalidSound};
+    AudioSystem::SoundId specialSoundId_ {AudioSystem::kInvalidSound};
     GameplaySession session_;
     RenderPipeline renderPipeline_;
 };

@@ -413,3 +413,54 @@ Completed items:
 
 - **Phase 10 completion**: Generalized content hot-reload shipped with `ContentWatcher` across patterns/entities/traits/difficulty/palettes, deterministic tick-boundary swaps, and failure-safe preserve-on-error behavior.
 
+
+## Phase 9 — Audio System Integration (Complete)
+### What changed
+- Added SDL_mixer dependency through CMake `FetchContent` and linked it into `engine_core`.
+- Replaced prior audio path with SDL_mixer `AudioSystem` (`loadSound`, `playSound`, positional playback, graceful shutdown/failure behavior).
+- Added presentation-only gameplay audio event queue consumed by `Runtime` outside `simTick()`.
+
+### Verification
+- Engine builds with fetched SDL_mixer.
+- Runtime tolerates missing audio files and audio init failures as no-op playback.
+- Replay hash path remains simulation-only (audio dispatch is outside deterministic tick).
+## Phase 7 — Testing framework modernization (Completed)
+### Completed items
+- Integrated Catch2 v3.5.2 in CMake with `FetchContent` and `catch_discover_tests` support.
+- Migrated five core tests to Catch2 while preserving all existing assertions/validation intent.
+- Added determinism property tests (`[determinism][property]`) for seed/hash stability checks.
+- Added malformed-content fuzz test (`[fuzz]`) for pattern loader crash resilience.
+- Kept the remaining legacy test executables unchanged.
+## 2026-03-07 — Camera shake vocabulary rollout (Completed)
+- Added a dedicated `CameraShakeSystem` module (`camera_shake.h/.cpp`) with six profiles, additive blending, max 4 simultaneous instances, and ±20 px clamped aggregate offsets.
+- Updated render integration so frame-time camera updates consume emitted shake events through profile-based `ShakeParams` instead of single-mode shake usage.
+- Wired gameplay event mappings to the new shake vocabulary:
+  - Player hit → `Impact`
+  - Graze → `GrazeTremor` (`amplitude = 0.5`)
+  - Boss transition → `BossRumble` (`amplitude = 4.0`, `duration = 0.4`)
+  - Defensive special → `SpecialPulse` (`amplitude = 2.0`)
+  - Bullet explosion shards → `Explosion` (`amplitude = 3.0`)
+  - Ambient periodic shake remains low-amplitude `Ambient` profile.
+- Deprecated legacy `Camera2D::setShake()` in favor of profile-driven `shakeSystem().trigger()` usage.
+## 2026-03-07 — Completion: GlBulletRenderer wiring
+- [x] Added/updated `GlBulletRenderer` interface and implementation for one-call bullet+trail rendering.
+- [x] Updated bullet shader vertex layout to screen-space position + atlas UV + pre-resolved color.
+- [x] Wired `RenderPipeline` scene overlay to use GL bullet path with SpriteBatch fallback.
+- [x] Kept simulation ownership unchanged (presentation-only integration).
+## Documentation Pass — External Product Quality (Completed 2026-03-07)
+### Scope delivered
+- Added external onboarding guide and compact quickstart alignment.
+- Added dedicated creator guides for pattern authoring, boss/encounter authoring, replay/debug workflow, plugin/mod extension overview, and creator-oriented performance guidance.
+- Updated troubleshooting to include content, replay, and extension-specific failure paths.
+- Updated asset import workflow intro for external creator onboarding.
+
+### Validation intent
+- All published commands and workflows are aligned with current binaries (`EngineDemo`, `ContentPacker`) and existing runtime behavior.
+- Documentation logs/spec are synchronized in this same change-set (`MasterSpec`, `DecisionLog`, `CHANGELOG`, audit report).
+## Phase 10 — Release hardening closure update
+Completed release-engineering closure work:
+- Upgraded `build_release` flow from compile-only to full gate (tests, benchmark thresholds, content build, replay verify).
+- Upgraded `package_dist` flow with dependency/content bundling and in-bundle executable validation.
+- Added `release_validate` orchestration script for deterministic clean release checks.
+- Centralized runtime pack version enforcement to prevent compatibility drift.
+- Added release documentation for packaging assumptions and artifact expectations.
