@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-07 — Pattern signature textures
+- **Context**: Graph-authored patterns needed a compact visual fingerprint for editor/library browsing and optional per-pattern projectile identity.
+- **Decision**: Generate a 64×64 signature texture per compiled pattern graph at load time by running a short throwaway VM simulation and rasterizing emitted projectile trajectories into a blurred radial density map.
+- **Rationale**: Provides deterministic, low-memory visual identity per pattern without affecting live simulation state.
+- **Status**: Accepted.
+
 ## 2026-03-06 — Danger field overlay
 - **Context**: Players need lightweight subconscious guidance about bullet density without changing deterministic simulation behavior.
 - **Decision**: Add a presentation-only, low-resolution danger field overlay generated from projectile collision-grid occupancy, smoothed with a box blur, gradient-mapped (blue→yellow→red), and additively blended over the scene.

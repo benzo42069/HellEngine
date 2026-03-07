@@ -125,6 +125,7 @@ add_library(engine_core STATIC
   src/engine/plugin_registry.cpp
   src/engine/pattern_generator.cpp
   src/engine/pattern_graph.cpp
+  src/engine/pattern_signature.cpp
   src/engine/patterns.cpp
   src/engine/particle_fx.cpp
   src/engine/palette_fx_templates.cpp

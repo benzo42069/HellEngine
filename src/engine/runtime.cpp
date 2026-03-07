@@ -130,6 +130,7 @@ int Runtime::run() {
         if (!window_) return 1;
         if (!renderPipeline_.initialize(window_, config_, session_.toolSuite_)) return 1;
         renderPipeline_.generateBulletSprites(session_.bulletPaletteRegistry_, session_.bulletPaletteTable_);
+        renderPipeline_.generatePatternSignatures(session_.patternBank_, config_.simulationSeed);
         if (config_.rendererSmokeTest) {
             SDL_SetRenderDrawColor(renderPipeline_.renderer(), 12, 12, 16, 255);
             SDL_RenderClear(renderPipeline_.renderer());
