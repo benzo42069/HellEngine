@@ -79,6 +79,7 @@ void RenderPipeline::shutdown(ControlCenterToolSuite& toolSuite) {
     toolSuite.shutdown();
     modernRenderer_.shutdown();
     shaderCache_.shutdown();
+    paletteRampTexture_.shutdown();
     spriteAtlas_.shutdown();
     backgroundSystem_.clear();
     textures_.reset();
@@ -126,6 +127,8 @@ void RenderPipeline::generateBulletSprites(const PaletteFxTemplateRegistry& regi
     BulletSpriteGenerator generator;
     const auto defaultFill = deriveProjectileFillFromCore(PaletteColor {1.0F, 1.0F, 1.0F, 1.0F});
     generator.generatePaletteSet(renderer_, *textures_, "0", defaultFill, 16);
+
+    (void)paletteRampTexture_.buildFromRegistry(registry);
 
     const auto& db = registry.database();
     std::uint8_t idx = 1;
