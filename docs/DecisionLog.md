@@ -1,6 +1,12 @@
 # Decision Log
 
 
+## 2026-03-07 — Projectile hot-path allocation cleanup
+- **Context**: The legacy `ProjectileSystem::update()` compatibility wrapper and procedural fallback renderer still had allocation risks in hot paths.
+- **Decision**: Keep `update()` for test compatibility but preallocate `legacyCollisionEvents_` to capacity during `initialize()`, and precompute all procedural bullet texture IDs (`64 palettes × 6 shapes`) once during initialization for indexed lookup in `renderProcedural()`.
+- **Rationale**: Removes per-tick/per-frame heap churn while preserving compatibility and deterministic behavior across legacy and fallback execution paths.
+- **Status**: Accepted.
+
 ## 2026-03-07 — Persistence schema and fallback contract
 - **Context**: Save/profile/settings persistence existed in isolated paths but lacked a single migration strategy and corrupted-data fallback baseline.
 - **Decision**: Add a dedicated persistence module with explicit schema versions (`v2` current), hard rejection of unknown future schemas, and explicit v1→v2 migrators for settings/profiles.

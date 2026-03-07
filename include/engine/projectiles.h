@@ -9,6 +9,7 @@
 #include <array>
 #include <cstdint>
 #include <span>
+#include <string>
 #include <vector>
 
 namespace engine {
@@ -166,6 +167,9 @@ class ProjectileSystem {
     std::uint32_t despawnEventCount_ {0};
 
     std::vector<CollisionEvent> legacyCollisionEvents_ {};
+
+    static constexpr std::size_t kBulletShapeCount = 6;
+    std::array<std::string, BulletPaletteTable::kMaxPalettes * kBulletShapeCount> proceduralTextureIds_ {};
 
     std::vector<std::uint32_t> freeList_;
     std::vector<std::uint32_t> activeIndices_;
