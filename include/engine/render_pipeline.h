@@ -7,6 +7,7 @@
 #include <engine/modern_renderer.h>
 #include <engine/palette_fx_templates.h>
 #include <engine/render2d.h>
+#include <engine/patterns.h>
 
 #include <SDL.h>
 
@@ -33,6 +34,7 @@ class RenderPipeline {
     [[nodiscard]] float uiTextScale() const { return uiTextScale_; }
     bool toggleFullscreen(SDL_Window* window);
     void generateBulletSprites(const PaletteFxTemplateRegistry& registry, const BulletPaletteTable& table);
+    void generatePatternSignatures(const PatternBank& bank, std::uint64_t seed);
 
   private:
     void buildSceneOverlay(const SimSnapshot& snapshot, double frameDelta);

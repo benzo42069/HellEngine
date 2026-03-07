@@ -88,6 +88,8 @@ Supported authoring node types in current runtime include:
 
 Loop count is bounded (`<=64`) by compiler validation.
 
+Pattern signatures are auto-generated at load time for compiled graph patterns as `sig_<graphId>` textures. These are derived from an offline mini-simulation and can be used by tooling as pattern thumbnails or unique micro-sprites.
+
 ---
 
 ## Projectiles and entities

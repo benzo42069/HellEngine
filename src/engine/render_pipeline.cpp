@@ -3,12 +3,14 @@
 #include <engine/bullet_sprite_gen.h>
 
 #include <engine/logging.h>
+#include <engine/pattern_signature.h>
 
 #include <imgui.h>
 
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <functional>
 #include <sstream>
 
 namespace engine {
@@ -99,6 +101,14 @@ void RenderPipeline::generateBulletSprites(const PaletteFxTemplateRegistry& regi
     }
 }
 
+
+void RenderPipeline::generatePatternSignatures(const PatternBank& bank, const std::uint64_t seed) {
+    if (!renderer_ || !textures_) return;
+    PatternSignatureGenerator generator;
+    for (const CompiledPatternGraph& graph : bank.compiledGraphs()) {
+        (void)generator.generate(renderer_, *textures_, graph, seed ^ static_cast<std::uint64_t>(std::hash<std::string> {}(graph.id)));
+    }
+}
 bool RenderPipeline::toggleFullscreen(SDL_Window* window) {
     if (!window) return false;
     const Uint32 mode = fullscreen_ ? 0U : SDL_WINDOW_FULLSCREEN_DESKTOP;
