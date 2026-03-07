@@ -67,3 +67,11 @@ This script runs:
   - `activeCount()` for live bullets.
   - `preparedQuadCount()` for render prep output volume.
 - This path is non-authoritative for gameplay collision/replay until a dedicated hybrid ownership model is implemented.
+
+
+## Additional Runtime Targets (Phase 7)
+- GL bullet renderer: **10,000 bullets < 1.0 ms** GPU time on reference machine.
+- Post-processing chain (bloom + vignette + composite): **all passes combined < 2.0 ms at 1080p**.
+- Content hot-reload responsiveness:
+  - detection latency: **< 100 ms**
+  - runtime swap/apply latency: **< 50 ms**

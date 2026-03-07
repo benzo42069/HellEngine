@@ -4,6 +4,12 @@
 - Visual Studio 2022 (Desktop development with C++)
 - CMake 3.28+
 - Git
+- SDL2 (fetched via CMake FetchContent)
+- Dear ImGui (fetched via CMake FetchContent)
+- nlohmann_json (fetched via CMake FetchContent)
+- GLAD (vendored at `third_party/glad`)
+- Catch2 (**not currently used**; test binaries are custom `main()` executables wired through CTest)
+- SDL_mixer (**not currently used**; audio runtime uses SDL audio callback mixer in `AudioSystem`)
 
 ## Configure
 ```powershell
@@ -33,6 +39,32 @@ cmake --build build --config Debug
 ## Run (Renderer Smoke Test)
 ```powershell
 .\build\Debug\EngineDemo.exe --renderer-smoke-test
+```
+
+
+## Run (Replay Record)
+```powershell
+.\build\Debug\EngineDemo.exe --replay-record runs\sample.rpl --headless --ticks 1200 --seed 1337 --content-pack content.pak
+```
+
+## Run (Replay Playback)
+```powershell
+.\build\Debug\EngineDemo.exe --replay-playback runs\sample.rpl --headless --ticks 1200 --seed 1337 --content-pack content.pak
+```
+
+## Run (Modern Renderer Path)
+```powershell
+.\build\Debug\EngineDemo.exe --modern-renderer
+```
+
+## Run (Legacy Renderer Path)
+```powershell
+.\build\Debug\EngineDemo.exe --legacy-renderer
+```
+
+## Run (Audio Volume Override Smoke)
+```powershell
+.\build\Debug\EngineDemo.exe --audio-master 0.8 --audio-music 0.5 --audio-sfx 1.0
 ```
 
 ## Build ContentPacker
@@ -185,4 +217,27 @@ Run performance check:
 ## Local CI Health Check
 ```powershell
 ./tools/ci_local.ps1
+```
+
+
+## Audio content paths
+Runtime audio metadata is authored in:
+- `data/audio.json`
+
+Current clip paths in pack metadata:
+- `music/main_loop.wav`
+- `sfx/hit.wav`
+- `sfx/graze.wav`
+- `sfx/player_damage.wav`
+- `sfx/enemy_death.wav`
+- `sfx/boss_warning.wav`
+- `ui/click.wav`
+- `ui/confirm.wav`
+
+## Catch2 tag filtering note
+Catch2-style tag filtering is not currently applicable because the repository test harness uses standalone test executables + CTest entries rather than Catch2.
+
+Equivalent filtering uses CTest regex selection:
+```powershell
+ctest --test-dir build -C Debug -R "pattern|collision|audio" --output-on-failure
 ```

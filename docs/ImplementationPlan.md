@@ -16,6 +16,26 @@
 
 
 
+
+
+## Completion Ledger (Phases 1-10)
+- Phase 1 — Spec Ingestion: **Completed**
+- Phase 2 — CoreRuntime + Deterministic Clock Scaffold: **Completed (baseline in repo)**
+- Phase 3 — Deterministic Kernel + Replay Hash Backbone: **Completed**
+- Phase 4 — Bullet Motion Math + Emission Primitives: **Completed**
+- Phase 5 — Hybrid ECS + Bullet World + Physics Core Vertical Slice: **Completed**
+- Phase 6 — Pattern IR/VM + Authoring Runtime Binding: **Completed**
+- Phase 7 — Gameplay Systems + Boss/Encounter Runtime Integration: **Completed**
+- Phase 8 — Rendering + Debug/Profiler Introspection + Scalability Pass: **Completed**
+- Phase 9 — Editor, Content Pipeline, and Commercial Tooling: **Completed**
+- Phase 10 — Polish, Release Readiness, and Optional Extensions: **Completed (baseline docs and runtime scaffolding in place; optional items remain feature-flagged/roadmap tracked)**
+
+### Graphics/shader delivery status
+- OpenGL bullet rendering path (`GlBulletRenderer`) implemented.
+- Shader management (`ShaderCache`) implemented.
+- Grayscale atlas + palette ramp shader colorization path implemented.
+- Modern post-processing chain (bloom/vignette/composite) implemented with fallback behavior.
+
 ## Program Milestones (Cross-Phase Gates)
 - **M0 Architecture Lock**: determinism plan, bullet/collision architecture, Pattern Graph/IR specs approved.
 - **M1 First Playable Simulation**: fixed-step loop + sandbox rendering + input movement.
@@ -77,7 +97,7 @@ git status
 ```powershell
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Debug
-.\build\Debug\EngineApp.exe --headless --ticks 300
+.\build\Debug\EngineDemo.exe --headless --ticks 300
 ```
 
 ## Phase 3 — Deterministic Kernel + Replay Hash Backbone
@@ -94,8 +114,8 @@ cmake --build build --config Debug
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Debug
 ctest --test-dir build -C Debug --output-on-failure
-.\build\Debug\EngineApp.exe --record replay.rpl --ticks 3600
-.\build\Debug\EngineApp.exe --playback replay.rpl --verify-hash
+.\build\Debug\EngineDemo.exe --record replay.rpl --ticks 3600
+.\build\Debug\EngineDemo.exe --playback replay.rpl --verify-hash
 ```
 
 ## Phase 4 — Bullet Motion Math + Emission Primitives
@@ -115,7 +135,7 @@ ctest --test-dir build -C Debug --output-on-failure
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Debug
 ctest --test-dir build -C Debug --output-on-failure -R Motion|Emission
-.\build\Debug\EngineApp.exe --scene motion_validation --verify-hash
+.\build\Debug\EngineDemo.exe --scene motion_validation --verify-hash
 ```
 
 ## Phase 5 — Hybrid ECS + Bullet World + Physics Core Vertical Slice
@@ -133,8 +153,8 @@ ctest --test-dir build -C Debug --output-on-failure -R Motion|Emission
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Debug
 ctest --test-dir build -C Debug --output-on-failure -R Collision|BulletWorld|Graze|Physics
-.\build\Debug\EngineApp.exe --scene bullet_world_stress --verify-hash
-.\build\Debug\EngineApp.exe --scene collision_stress_lab --verify-hash --report collision_profile.json
+.\build\Debug\EngineDemo.exe --scene bullet_world_stress --verify-hash
+.\build\Debug\EngineDemo.exe --scene collision_stress_lab --verify-hash --report collision_profile.json
 ```
 
 ## Phase 6 — Pattern IR/VM + DSL + Parameter Binding
@@ -152,7 +172,7 @@ ctest --test-dir build -C Debug --output-on-failure -R Collision|BulletWorld|Gra
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Debug
 ctest --test-dir build -C Debug --output-on-failure -R PatternIR|PatternVM|DSL
-.\build\Debug\EngineApp.exe --scene pattern_vm_demo --verify-hash
+.\build\Debug\EngineDemo.exe --scene pattern_vm_demo --verify-hash
 ```
 
 ## Phase 7 — Gameplay Systems (Enemy/Boss/Wave/Event + PBAGS + WorldGen Core)
@@ -171,10 +191,10 @@ ctest --test-dir build -C Debug --output-on-failure -R PatternIR|PatternVM|DSL
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Debug
 ctest --test-dir build -C Debug --output-on-failure -R Boss|Gameplay|Replay
-.\build\Debug\EngineApp.exe --scene boss_prototype --record boss_run.rpl
-.\build\Debug\EngineApp.exe --playback boss_run.rpl --verify-hash
-.\build\Debug\EngineApp.exe --generate-boss-plan helix_regent --difficulty Hard --verify-constraints
-.\build\Debug\EngineApp.exe --generate-world-run --seed 12345 --verify-constraints --report worldgen_report.json
+.\build\Debug\EngineDemo.exe --scene boss_prototype --record boss_run.rpl
+.\build\Debug\EngineDemo.exe --playback boss_run.rpl --verify-hash
+.\build\Debug\EngineDemo.exe --generate-boss-plan helix_regent --difficulty Hard --verify-constraints
+.\build\Debug\EngineDemo.exe --generate-world-run --seed 12345 --verify-constraints --report worldgen_report.json
 ```
 
 ## Phase 8 — Rendering + Debug/Profiler Introspection + Scalability Pass
@@ -191,7 +211,7 @@ ctest --test-dir build -C Debug --output-on-failure -R Boss|Gameplay|Replay
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config RelWithDebInfo
 ctest --test-dir build -C RelWithDebInfo --output-on-failure
-.\build\RelWithDebInfo\EngineApp.exe --scene debug_overlay_demo
+.\build\RelWithDebInfo\EngineDemo.exe --scene debug_overlay_demo
 ```
 
 ## Phase 9 — Editor, Content Pipeline, and Commercial Tooling
