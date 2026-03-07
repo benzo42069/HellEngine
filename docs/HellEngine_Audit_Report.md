@@ -352,3 +352,14 @@ This addresses the prior audit gap where authored art handling was underdevelope
 - Clarified that this path is CPU-driven update + quad preparation with batched submission, not GPU compute projectile simulation.
 - Improved scalability by switching update/render traversal to compact active-slot iteration (`activeSlots_`) while keeping O(1) free-list emission.
 - Added explicit render-prep telemetry surface (`preparedQuadCount`) and refreshed benchmark/render-path documentation.
+## Release Engineering Follow-up (2026-03-07)
+Status: **Addressed** for packaging/release workflow closure.
+
+Implemented closures:
+- Build release script now performs end-to-end release checks (tests, benchmarks, content pack build, replay verify).
+- Packaging script now validates portable output by running bundled binaries in-place.
+- New orchestration script (`tools/release_validate.ps1`) enforces artifact presence and archive output.
+- Runtime pack-version enforcement was centralized to remove duplicated compatibility constants.
+
+Residual risk:
+- Installer generation still depends on external NSIS tooling; workflow now degrades with explicit diagnostics when unavailable.

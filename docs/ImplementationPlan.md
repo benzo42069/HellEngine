@@ -410,3 +410,10 @@ Completed items:
   - Added explicit `preparedQuadCount()` metric for render-prep profiling.
 - Validation:
   - Updated `gpu_bullets_tests` to cover renamed class usage and clear/reset bookkeeping checks.
+## Phase 10 — Release hardening closure update
+Completed release-engineering closure work:
+- Upgraded `build_release` flow from compile-only to full gate (tests, benchmark thresholds, content build, replay verify).
+- Upgraded `package_dist` flow with dependency/content bundling and in-bundle executable validation.
+- Added `release_validate` orchestration script for deterministic clean release checks.
+- Centralized runtime pack version enforcement to prevent compatibility drift.
+- Added release documentation for packaging assumptions and artifact expectations.
