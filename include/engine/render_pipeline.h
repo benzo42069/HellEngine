@@ -28,6 +28,7 @@ class RenderPipeline {
     void renderFrame(const SimSnapshot& snapshot, double frameDelta, ControlCenterToolSuite& toolSuite);
     [[nodiscard]] bool contextReady() const { return renderContextReady_; }
     [[nodiscard]] SDL_Renderer* renderer() const { return renderer_; }
+    [[nodiscard]] TextureStore* textures() const { return textures_.get(); }
     [[nodiscard]] Camera2D& camera() { return camera_; }
     [[nodiscard]] float dpiScaleX() const { return dpiScaleX_; }
     [[nodiscard]] float dpiScaleY() const { return dpiScaleY_; }

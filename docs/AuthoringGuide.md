@@ -184,3 +184,18 @@ Authoring flow:
 3. Run the engine; bullet textures are generated automatically at startup.
 
 Texture IDs are emitted in the form `bullet_<paletteName>_<shape>` (sanitized palette name) and index-compatible aliases (`bullet_<index>_<shape>`) for runtime lookup.
+
+
+### Palette animation modes for projectile gradients
+
+`data/palettes/palette_fx_templates.json` supports per-palette animation under `animation`:
+
+- `None`: static palette color behavior.
+- `HueShift`: samples gradient with age+phase and shifts hue over time.
+- `GradientCycle`: cycles through gradient as a whole over time.
+- `PulseBrightness`: keeps gradient color but modulates brightness with a pulse curve.
+- `PhaseScroll`: scrolls gradient phase per bullet instance (using `perInstanceOffset`) to create wave motion across ring emissions.
+
+Wave authoring tip:
+- For a 16-bullet ring, set `perInstanceOffset` to a small positive value (for example `0.03` to `0.08`).
+- Each bullet receives `phase += instanceIndex * perInstanceOffset`, so adjacent bullets are color-shifted and the wave appears to rotate as `speed` advances phase over time.

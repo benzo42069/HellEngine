@@ -129,6 +129,9 @@ int Runtime::run() {
         window_ = SDL_CreateWindow(config_.windowTitle.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, config_.windowWidth, config_.windowHeight, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
         if (!window_) return 1;
         if (!renderPipeline_.initialize(window_, config_, session_.toolSuite_)) return 1;
+        if (renderPipeline_.renderer() && renderPipeline_.textures()) {
+            session_.projectiles_.configurePaletteAnimations(renderPipeline_.renderer(), *renderPipeline_.textures(), session_.bulletPaletteRegistry_);
+        }
         renderPipeline_.generateBulletSprites(session_.bulletPaletteRegistry_, session_.bulletPaletteTable_);
         renderPipeline_.generatePatternSignatures(session_.patternBank_, config_.simulationSeed);
         if (config_.rendererSmokeTest) {

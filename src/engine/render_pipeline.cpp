@@ -124,7 +124,7 @@ bool RenderPipeline::toggleFullscreen(SDL_Window* window) {
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
     const GameplaySession& s = snapshot.session;
     if (s.bulletSimMode_ == BulletSimulationMode::CpuDeterministic) {
-        s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_);
+        s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_, static_cast<float>(s.simClock_));
         s.particleFx_.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
         s.projectiles_.debugDraw(debugDraw_, true, true);
     }
