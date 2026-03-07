@@ -196,6 +196,23 @@ void BackgroundSystem::render(SpriteBatch& batch, const Camera2D& camera) const 
     }
 }
 
+
+void BackgroundSystem::setPrimaryLayerTexture(const std::string& textureId) {
+    if (textureId.empty()) return;
+    if (layers_.empty()) {
+        addLayer(BackgroundLayer {
+            .textureId = textureId,
+            .parallaxFactor = 0.1F,
+            .scrollSpeedX = 2.0F,
+            .scrollSpeedY = 0.8F,
+            .opacity = 1.0F,
+            .tint = {255, 255, 255, 255},
+        });
+        return;
+    }
+    layers_.front().textureId = textureId;
+}
+
 void BackgroundSystem::clear() {
     layers_.clear();
     scrollOffset_ = 0.0F;

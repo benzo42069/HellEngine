@@ -117,6 +117,7 @@ add_library(engine_core STATIC
   src/engine/gradient_animator.cpp
   src/engine/input_system.cpp
   src/engine/job_system.cpp
+  src/engine/level_tile_gen.cpp
   src/engine/logging.cpp
   src/engine/memory.cpp
   src/engine/meta_progression.cpp

@@ -199,3 +199,21 @@ Texture IDs are emitted in the form `bullet_<paletteName>_<shape>` (sanitized pa
 Wave authoring tip:
 - For a 16-bullet ring, set `perInstanceOffset` to a small positive value (for example `0.03` to `0.08`).
 - Each bullet receives `phase += instanceIndex * perInstanceOffset`, so adjacent bullets are color-shifted and the wave appears to rotate as `speed` advances phase over time.
+
+---
+
+## Procedural level tile generation (run-seed + zone driven)
+
+Background base tiles can now be generated procedurally at runtime from run seed + stage index + zone type.
+
+- Determinism: identical `simulationSeed` + progression order yields identical background tiles.
+- Rule mapping:
+  - Combat -> CaveFormation (organic blobs)
+  - Elite -> CrystalGrowth (sharper structures)
+  - Event -> OrganicNoise (smoother fill)
+  - Boss -> CircuitBoard (grid/channel look)
+- Color derivation uses a deterministic accent color and the existing `deriveBackgroundFillFromAccent()` palette transform.
+
+Generation runs when run structure transitions to a new zone (not per frame), then the background system swaps the primary tile layer texture.
+
+Designer override path: stage definitions/tools can opt to provide explicit tile generation parameters or custom authored textures per stage/zone to replace the default zone-type mapping.

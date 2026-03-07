@@ -377,3 +377,9 @@
 - **Decision**: Add `GradientAnimator` with precomputed LUT sampling and per-bullet phase offset (`instanceIndex * perInstanceOffset`) applied at render time, then route animated palettes through this sampler in projectile rendering.
 - **Rationale**: Produces the signature rotating wave look across emitted rings while keeping simulation deterministic and unchanged.
 - **Status**: Accepted.
+
+## 2026-03-07 — Procedural level tiles: cellular automata + zone-typed rules, seed-deterministic, 256px tileable
+- **Context**: Stage/zone transitions needed stronger visual identity without authored texture dependencies.
+- **Decision**: Add `LevelTileGenerator` to create deterministic, tileable 256x256 background textures at zone transitions using wrapped cellular automata/value-noise and zone-type-to-rule mapping.
+- **Rationale**: Preserves deterministic replay behavior while giving each stage/zone distinct palette-driven presentation from run seed alone.
+- **Status**: Accepted.

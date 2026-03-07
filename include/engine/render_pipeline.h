@@ -4,6 +4,7 @@
 #include <engine/config.h>
 #include <engine/editor_tools.h>
 #include <engine/gameplay_session.h>
+#include <engine/level_tile_gen.h>
 #include <engine/modern_renderer.h>
 #include <engine/palette_fx_templates.h>
 #include <engine/render2d.h>
@@ -11,6 +12,7 @@
 
 #include <SDL.h>
 
+#include <limits>
 #include <memory>
 
 namespace engine {
@@ -39,6 +41,7 @@ class RenderPipeline {
 
   private:
     void buildSceneOverlay(const SimSnapshot& snapshot, double frameDelta);
+    void ensureZoneBackground(const GameplaySession& session);
 
     SDL_Renderer* renderer_ {nullptr};
     bool renderContextReady_ {false};
@@ -55,6 +58,9 @@ class RenderPipeline {
     DebugDraw debugDraw_;
     DebugText debugText_;
     BackgroundSystem backgroundSystem_ {};
+    LevelTileGenerator levelTileGenerator_ {};
+    std::size_t lastBgStageIndex_ {std::numeric_limits<std::size_t>::max()};
+    std::size_t lastBgZoneIndex_ {std::numeric_limits<std::size_t>::max()};
     EngineConfig config_ {};
 };
 
