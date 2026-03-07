@@ -10,6 +10,14 @@
 
 # Changelog
 
+
+## 2026-03-07 — Persistence foundations (settings + profiles + migration)
+- Added persistence module for user settings and profile/save-slot baselines with explicit schema versioning (`schemaVersion: 2`) and migration from legacy v1 JSON layouts.
+- Added corrupted-save fallback behavior that returns load status + fallback/migration flags instead of crashing on malformed files.
+- Added runtime hooks to load settings/profiles on boot and persist settings + active-profile progression at shutdown.
+- Extended meta progression with snapshot import/export hooks so future progression systems can persist independently of deterministic simulation internals.
+- Added `persistence_tests` coverage for roundtrip save/load, v1→v2 migration, and corrupted JSON fallback behavior.
+
 ## 2026-03-07 — Animation clip import + sprite variant workflow
 - Added data-driven animation clip grouping in the content pipeline with explicit metadata (`animationSet`, `animationState`, `animationDirection`, `animationFrame`) and optional filename parsing via configurable regex (`animationNamingRegex`).
 - Added sprite variant grouping metadata (`variantName`, `variantWeight`, `paletteTemplate`) with optional regex-based group/variant extraction (`variantNamingRegex`).

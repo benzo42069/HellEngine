@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include <engine/persistence.h>
+
 namespace engine {
 
 struct MetaBonuses {
@@ -39,6 +41,9 @@ class MetaProgression {
 
     [[nodiscard]] bool purchaseNode(std::size_t index);
     void grantRunProgress(std::uint32_t amount);
+
+    void applyProgressSnapshot(const RuntimeProgressSnapshot& snapshot);
+    [[nodiscard]] RuntimeProgressSnapshot makeProgressSnapshot() const;
 
     [[nodiscard]] const std::vector<MetaUpgradeNode>& tree() const;
     [[nodiscard]] const std::vector<std::size_t>& purchasedNodeIndices() const;

@@ -2,6 +2,7 @@
 
 #include <engine/content_pipeline.h>
 #include <engine/logging.h>
+#include <engine/persistence.h>
 #include <engine/public/plugins.h>
 #include <engine/standards.h>
 #include <engine/timing.h>
@@ -63,6 +64,24 @@ int Runtime::run() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO) != 0) {
         logError("SDL_Init failed: " + std::string(SDL_GetError()));
         return 1;
+    }
+
+    UserSettings userSettings;
+    const PersistenceLoadResult settingsLoad = loadUserSettingsFromFile("user_settings.json", userSettings);
+    if (settingsLoad.ok) {
+        config_.audioMasterVolume = userSettings.audioMasterVolume;
+        config_.audioMusicVolume = userSettings.audioMusicVolume;
+        config_.audioSfxVolume = userSettings.audioSfxVolume;
+        config_.enableModernRenderer = userSettings.enableModernRenderer;
+        if (!userSettings.difficultyProfile.empty()) config_.difficultyProfile = userSettings.difficultyProfile;
+    } else if (settingsLoad.usedFallback) {
+        logWarn("User settings fallback applied: " + settingsLoad.error);
+    }
+
+    SaveProfilesFile saveProfiles;
+    const PersistenceLoadResult profilesLoad = loadSaveProfilesFromFile("profiles.json", saveProfiles);
+    if (!profilesLoad.ok && profilesLoad.usedFallback) {
+        logWarn("Profile fallback applied: " + profilesLoad.error);
     }
 
     audio_.initialize(!config_.headless);
@@ -139,7 +158,17 @@ int Runtime::run() {
     session_.traitSystem_.initialize(config_.simulationSeed);
     session_.archetypeSystem_.initializeDefaults();
     session_.metaProgression_.initializeDefaults();
-    (void)session_.metaProgression_.loadFromFile("meta_progression.json");
+    if (!saveProfiles.profiles.empty()) {
+        const auto it = std::find_if(saveProfiles.profiles.begin(), saveProfiles.profiles.end(), [this, &saveProfiles](const SaveProfile& p) {
+            if (saveProfiles.activeProfileId.empty()) return true;
+            return p.id == saveProfiles.activeProfileId;
+        });
+        if (it != saveProfiles.profiles.end()) {
+            session_.metaProgression_.applyProgressSnapshot(it->progression);
+        }
+    } else {
+        (void)session_.metaProgression_.loadFromFile("meta_progression.json");
+    }
     session_.archetypeSystem_.setUnlockTier(session_.metaProgression_.bonuses().archetypeUnlockTier);
     session_.runStructure_.initializeDefaults();
     session_.difficultyModel_.initializeDefaults();
@@ -231,6 +260,37 @@ int Runtime::run() {
     }
 
     if (!config_.replayRecordPath.empty()) (void)session_.replayRecorder_.save(config_.replayRecordPath);
+
+    UserSettings toSaveSettings;
+    toSaveSettings.audioMasterVolume = config_.audioMasterVolume;
+    toSaveSettings.audioMusicVolume = config_.audioMusicVolume;
+    toSaveSettings.audioSfxVolume = config_.audioSfxVolume;
+    toSaveSettings.enableModernRenderer = config_.enableModernRenderer;
+    toSaveSettings.difficultyProfile = config_.difficultyProfile;
+    std::string settingsSaveError;
+    if (!saveUserSettingsToFile("user_settings.json", toSaveSettings, &settingsSaveError)) {
+        logWarn("Failed to persist user settings: " + settingsSaveError);
+    }
+
+    if (saveProfiles.profiles.empty()) {
+        SaveProfile profile;
+        profile.id = "profile-1";
+        profile.displayName = "Profile 1";
+        saveProfiles.activeProfileId = profile.id;
+        saveProfiles.profiles.push_back(profile);
+    }
+    for (auto& profile : saveProfiles.profiles) {
+        if (profile.id == saveProfiles.activeProfileId) {
+            profile.progression = session_.metaProgression_.makeProgressSnapshot();
+            profile.lastPlayedUtc = "runtime-local";
+        }
+    }
+
+    std::string profilesSaveError;
+    if (!saveSaveProfilesToFile("profiles.json", saveProfiles, &profilesSaveError)) {
+        logWarn("Failed to persist save profiles: " + profilesSaveError);
+    }
+
     return session_.replayVerificationFailed_ ? 2 : 0;
 }
 

@@ -1,6 +1,14 @@
 # Implementation Plan
 
 ## Planning Constraints
+
+## Execution Status Update (Persistence Baseline)
+- Added `engine/persistence` module for product-oriented settings + profiles/save-slot file ownership.
+- Defined schema-versioned load/save behavior with explicit migrators for legacy v1 documents.
+- Added runtime integration hooks to load persisted settings/profiles at startup and write active profile/settings at shutdown.
+- Added meta-progression snapshot hooks (`applyProgressSnapshot`/`makeProgressSnapshot`) to decouple progression persistence from runtime internals.
+- Added persistence-focused tests for migration/roundtrip/corrupted fallback paths.
+
 - Additive implementation only; keep repository buildable at each phase.
 - Never rename modules once introduced.
 - Deterministic sim/replay/hash verification precede advanced features.

@@ -1516,3 +1516,21 @@ Documentation policy:
 - External docs must describe validated runtime/packer commands and currently implemented data boundaries.
 - Deprecated or internal-only assumptions must be labeled or moved to internal docs.
 - Docs updates for user-facing workflows must include synchronized entries in `DecisionLog`, `ImplementationPlan`, and `CHANGELOG`.
+
+## Persistence Baseline (Settings, Profiles, Runtime Meta)
+- Persistence is **outside** deterministic simulation ownership; simulation consumes resolved runtime config/snapshots and never performs direct file I/O during deterministic tick execution.
+- Two baseline persisted products:
+  - **User settings** (`user_settings.json`): audio/video/gameplay preferences with schema versioning.
+  - **Profiles** (`profiles.json`): save-slot list, active profile pointer, and runtime/meta progression snapshot payload.
+- Schema policy:
+  - Each persisted document includes `schemaVersion`.
+  - Current baseline schema is `2`.
+  - Loader must run explicit migration for known legacy versions (v1→v2).
+  - Unknown future versions must fail safely with fallback behavior (do not silently coerce unknown schemas).
+- Corruption policy:
+  - Invalid JSON or structurally invalid persisted files must return a fallback load status and default in-memory state, not crash runtime startup.
+  - Runtime should log fallback reasons for diagnostics/QA triage.
+- Save-slot baseline payload contains minimum product scaffolding:
+  - Profile identity metadata (`id`, display label, last-play marker).
+  - Meta progression snapshot (`progressionPoints`, purchased node IDs) for cross-run progression continuity.
+  - Extension-ready counters for run-level lifetime stats (started/cleared) for future progression systems.
