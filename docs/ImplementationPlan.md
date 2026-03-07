@@ -422,3 +422,25 @@ Completed items:
   - Bullet explosion shards → `Explosion` (`amplitude = 3.0`)
   - Ambient periodic shake remains low-amplitude `Ambient` profile.
 - Deprecated legacy `Camera2D::setShake()` in favor of profile-driven `shakeSystem().trigger()` usage.
+## 2026-03-07 — Completion: GlBulletRenderer wiring
+- [x] Added/updated `GlBulletRenderer` interface and implementation for one-call bullet+trail rendering.
+- [x] Updated bullet shader vertex layout to screen-space position + atlas UV + pre-resolved color.
+- [x] Wired `RenderPipeline` scene overlay to use GL bullet path with SpriteBatch fallback.
+- [x] Kept simulation ownership unchanged (presentation-only integration).
+## Documentation Pass — External Product Quality (Completed 2026-03-07)
+### Scope delivered
+- Added external onboarding guide and compact quickstart alignment.
+- Added dedicated creator guides for pattern authoring, boss/encounter authoring, replay/debug workflow, plugin/mod extension overview, and creator-oriented performance guidance.
+- Updated troubleshooting to include content, replay, and extension-specific failure paths.
+- Updated asset import workflow intro for external creator onboarding.
+
+### Validation intent
+- All published commands and workflows are aligned with current binaries (`EngineDemo`, `ContentPacker`) and existing runtime behavior.
+- Documentation logs/spec are synchronized in this same change-set (`MasterSpec`, `DecisionLog`, `CHANGELOG`, audit report).
+## Phase 10 — Release hardening closure update
+Completed release-engineering closure work:
+- Upgraded `build_release` flow from compile-only to full gate (tests, benchmark thresholds, content build, replay verify).
+- Upgraded `package_dist` flow with dependency/content bundling and in-bundle executable validation.
+- Added `release_validate` orchestration script for deterministic clean release checks.
+- Centralized runtime pack version enforcement to prevent compatibility drift.
+- Added release documentation for packaging assumptions and artifact expectations.

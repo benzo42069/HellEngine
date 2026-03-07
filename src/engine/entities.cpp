@@ -92,9 +92,9 @@ bool EntityDatabase::loadFromFile(const std::string& path) {
             logError("Entity pack metadata error: " + metaError + " path=" + packPath);
             return false;
         }
-        constexpr int kRuntimePackVersion = 3;
-        if (kRuntimePackVersion < metadata.minRuntimePackVersion || kRuntimePackVersion > metadata.maxRuntimePackVersion) {
-            logError("Entity pack compatibility mismatch for pack=" + metadata.packId + " path=" + packPath + " runtimeVersion=" + std::to_string(kRuntimePackVersion));
+        const int runtimePackVersion = kRuntimePackVersion;
+        if (runtimePackVersion < metadata.minRuntimePackVersion || runtimePackVersion > metadata.maxRuntimePackVersion) {
+            logError("Entity pack compatibility mismatch for pack=" + metadata.packId + " path=" + packPath + " runtimeVersion=" + std::to_string(runtimePackVersion));
             return false;
         }
 
