@@ -402,3 +402,14 @@ Completed items:
   - Added explicit `preparedQuadCount()` metric for render-prep profiling.
 - Validation:
   - Updated `gpu_bullets_tests` to cover renamed class usage and clear/reset bookkeeping checks.
+
+## Documentation Pass — External Product Quality (Completed 2026-03-07)
+### Scope delivered
+- Added external onboarding guide and compact quickstart alignment.
+- Added dedicated creator guides for pattern authoring, boss/encounter authoring, replay/debug workflow, plugin/mod extension overview, and creator-oriented performance guidance.
+- Updated troubleshooting to include content, replay, and extension-specific failure paths.
+- Updated asset import workflow intro for external creator onboarding.
+
+### Validation intent
+- All published commands and workflows are aligned with current binaries (`EngineDemo`, `ContentPacker`) and existing runtime behavior.
+- Documentation logs/spec are synchronized in this same change-set (`MasterSpec`, `DecisionLog`, `CHANGELOG`, audit report).

@@ -474,3 +474,9 @@
 - **Decision**: Added compact `activeSlots_` + `slotToActiveIndex_` bookkeeping so update/render loops iterate only live bullets.
 - **Rationale**: Improves scaling behavior and profiling clarity at high bullet counts while preserving deterministic update order within active set transitions.
 - **Status**: Accepted.
+
+## 2026-03-07 — External-facing creator documentation baseline
+- **Context**: Documentation quality was strong for internal engineering, but external onboarding and creator workflow coverage was fragmented.
+- **Decision**: Establish a dedicated external documentation set covering getting started, asset import, pattern authoring, boss/encounter authoring, replay/debug, plugin/mod extension overview, creator performance guidance, and troubleshooting.
+- **Rationale**: Improves product readiness for creators/integrators while keeping documentation aligned to implemented runtime and content-pipeline behavior.
+- **Status**: Accepted.

@@ -1498,3 +1498,21 @@ Headless mode contract:
 - Encounter synchronization hooks:
   - authored encounter schedule now supports `telegraph`, `hazardSync`, and `phaseGate` node types.
   - compiled encounter events carry `owner` domain metadata (`encounter`, `boss`, `hazards`) for orchestration routing.
+
+## External Documentation Baseline (2026-03-07)
+
+The product now maintains an explicit external-user documentation set aligned with implemented workflows:
+
+- Getting started and onboarding: `docs/GettingStarted.md`
+- Asset import workflow: `docs/AssetImportWorkflow.md`
+- Pattern authoring workflow: `docs/PatternAuthoringGuide.md`
+- Boss/encounter authoring workflow: `docs/BossEncounterAuthoring.md`
+- Replay/debug workflow: `docs/ReplayAndDebugGuide.md`
+- Plugin/mod extension overview: `docs/PluginAndModOverview.md`
+- Performance guidance for creators: `docs/CreatorPerformanceGuide.md`
+- Troubleshooting: `docs/Troubleshooting.md`
+
+Documentation policy:
+- External docs must describe validated runtime/packer commands and currently implemented data boundaries.
+- Deprecated or internal-only assumptions must be labeled or moved to internal docs.
+- Docs updates for user-facing workflows must include synchronized entries in `DecisionLog`, `ImplementationPlan`, and `CHANGELOG`.
