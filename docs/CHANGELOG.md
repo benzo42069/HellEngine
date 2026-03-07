@@ -1,5 +1,8 @@
 ## Unreleased
 ### Changed
+- Major external-facing documentation pass for creators/integrators, including new onboarding, pattern authoring, boss/encounter authoring, replay/debug, plugin/mod overview, and creator performance guides.
+- Updated `Quickstart`, `AssetImportWorkflow`, and `Troubleshooting` to align external instructions with current `EngineDemo` + `ContentPacker` workflows.
+- Synchronized documentation governance across `MasterSpec`, `DecisionLog`, `ImplementationPlan`, and audit report references for external doc quality tracking.
 - Repositioned the old “GPU bullet” path as `CpuMassBulletRenderSystem` to reflect actual architecture (CPU-driven simulation/prep with batched geometry submission).
 - Renamed simulation modes to `CpuCollisionDeterministic` and `CpuMassRender` to remove expectation ambiguity.
 - Improved CPU mass bullet scaling via compact active-slot iteration and added prepared-quad profiling counter support.
