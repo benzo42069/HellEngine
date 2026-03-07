@@ -1,5 +1,11 @@
 # Implementation Plan
 
+
+## 2026-03-07 — Build hotfix: ContentPacker SDL_mixer include failure
+- Root cause: `ContentPacker` compiled content pipeline units that transitively include `audio_system.h`, but the target lacked SDL2_mixer dependency propagation.
+- Fix applied: Updated `target_link_libraries(ContentPacker ...)` to include `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` in addition to existing JSON dependency.
+- Validation: Reconfigured CMake, built `ContentPacker` successfully, and attempted `engine_core` verification (currently blocked by pre-existing unrelated compile errors in `palette_ramp.h`/`gl_bullet_renderer.cpp`).
+
 ## Planning Constraints
 
 ## Execution Status Update (Persistence Baseline)

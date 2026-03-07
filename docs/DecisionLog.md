@@ -1,6 +1,13 @@
 # Decision Log
 
 
+## 2026-03-07 — ContentPacker SDL_mixer dependency propagation fix
+- **Context**: Visual Studio/CMake/Ninja builds failed in `ContentPacker` with `fatal error C1083: Cannot open include file: 'SDL_mixer.h'` when compiling content pipeline sources that include audio system headers.
+- **Decision**: Keep `engine_core` dependencies unchanged and explicitly link `ContentPacker` to `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer`.
+- **Rationale**: `ContentPacker` compiles `content_pipeline.cpp` transitively requiring SDL audio include/link usage; explicit target linkage is the smallest safe fix.
+- **Status**: Accepted.
+
+
 ## 2026-03-07 — Projectile hot-path allocation cleanup
 - **Context**: The legacy `ProjectileSystem::update()` compatibility wrapper and procedural fallback renderer still had allocation risks in hot paths.
 - **Decision**: Keep `update()` for test compatibility but preallocate `legacyCollisionEvents_` to capacity during `initialize()`, and precompute all procedural bullet texture IDs (`64 palettes × 6 shapes`) once during initialization for indexed lookup in `renderProcedural()`.
