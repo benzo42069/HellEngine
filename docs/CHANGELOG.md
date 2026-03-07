@@ -42,3 +42,16 @@
 ### Changed
 - `ContentPacker` now forwards `audio` blocks into built packs.
 - Runtime now initializes SDL audio and flushes queued audio events once per deterministic sim tick.
+
+## Unreleased
+### Added
+- Enemy/boss runtime event channel (`EntityRuntimeEvent`) with phase lifecycle + telegraph/hazard sync event types.
+- Boss phase authoring support for multi-pattern sequencing (`patternSequence`) and phase cadence (`patternCadenceSeconds`).
+- Encounter graph node support for `telegraph`, `hazardSync`, and `phaseGate` with owner-domain schedule metadata.
+- Gameplay-session hooks that consume runtime combat events for camera/audio presentation sync.
+
+### Changed
+- Refactored `EntitySystem` runtime state to better separate immutable authoring data from mutable behavior execution state.
+- Boss phase transitions now emit explicit runtime events and counters for tool/runtime observability.
+- Sample boss entries in `data/entities.json` now demonstrate sequence/cadence phase authoring flow.
+- Encounter compiler now emits duration and owner data per schedule event to support hazard/telegraph orchestration.

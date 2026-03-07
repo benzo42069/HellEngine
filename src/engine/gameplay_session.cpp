@@ -214,6 +214,27 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         profiler_.addZoneTime(PerfZone::Patterns, std::chrono::duration<double, std::milli>(Clock::now() - patternStart).count());
         const auto bulletStart = Clock::now();
         entitySystem_.update(static_cast<float>(dt) * dilation.enemyMovement, projectiles_, playerState_.playerPos, em);
+        for (const EntityRuntimeEvent& runtimeEvent : entitySystem_.runtimeEvents()) {
+            if (runtimeEvent.type == EntityRuntimeEventType::Telegraph) {
+                ++encounter_.telegraphCount;
+                presentation_.pendingAudioEvents.push_back(AudioEventId::BossWarning);
+                presentation_.cameraShakeEvents.push_back(ShakeParams {
+                    .profile = ShakeProfile::Ambient,
+                    .amplitude = 0.85F,
+                    .duration = 0.15F,
+                    .direction = {0.0F, 0.0F},
+                    .frequency = 12.0F,
+                    .damping = 6.0F,
+                });
+            }
+            if (runtimeEvent.type == EntityRuntimeEventType::HazardSync) {
+                ++encounter_.hazardSyncCount;
+                presentation_.pendingAudioEvents.push_back(AudioEventId::EnemyDeath);
+            }
+            if (runtimeEvent.type == EntityRuntimeEventType::BossDefeated) {
+                presentation_.pendingAudioEvents.push_back(AudioEventId::EnemyDeath);
+            }
+        }
         profiler_.addZoneTime(PerfZone::Bullets, std::chrono::duration<double, std::milli>(Clock::now() - bulletStart).count());
     }
 
@@ -292,6 +313,7 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         });
     }
     simulation_.simClock += dt;
+    encounter_.encounterClockSeconds += static_cast<float>(dt);
     ++simulation_.tickIndex;
     profiler_.addZoneTime(PerfZone::Simulation, std::chrono::duration<double, std::milli>(Clock::now() - simStart).count());
 }

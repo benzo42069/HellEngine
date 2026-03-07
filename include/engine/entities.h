@@ -44,9 +44,11 @@ struct ResourceYield {
 struct BossPhase {
     std::string attackPatternGuid;
     std::string attackPatternName;
+    std::vector<std::string> patternSequence;
     MovementBehavior movement {MovementBehavior::Static};
     float durationSeconds {4.0F};
     float difficultyScale {1.0F};
+    float patternCadenceSeconds {0.0F};
 };
 
 struct BossDefinition {
@@ -117,6 +119,26 @@ struct EntityStats {
     float upgradeCurrency {0.0F};
     float healthRecoveryAccum {0.0F};
     float buffTimeRemaining {0.0F};
+    std::uint32_t telegraphEvents {0};
+    std::uint32_t hazardSyncEvents {0};
+};
+
+enum class EntityRuntimeEventType {
+    BossIntroStarted,
+    BossPhaseStarted,
+    BossPhaseCompleted,
+    BossDefeated,
+    Telegraph,
+    HazardSync,
+};
+
+struct EntityRuntimeEvent {
+    EntityRuntimeEventType type {EntityRuntimeEventType::Telegraph};
+    std::size_t templateIndex {0};
+    std::size_t entityInstanceIndex {0};
+    std::size_t bossPhaseIndex {0};
+    float simTimeSeconds {0.0F};
+    std::string payload;
 };
 
 class EntitySystem {
@@ -132,6 +154,7 @@ class EntitySystem {
     void processCollisionEvents(std::span<const CollisionEvent> events);
 
     [[nodiscard]] const EntityStats& stats() const;
+    [[nodiscard]] std::span<const EntityRuntimeEvent> runtimeEvents() const;
 
   private:
     struct EntityInstance {
@@ -142,7 +165,11 @@ class EntitySystem {
       float fireCooldown {0.0F};
       std::size_t activeBossPhase {0};
       float phaseTimeRemaining {0.0F};
+      float telegraphLeadTimer {0.0F};
+      float patternCadenceTimer {0.0F};
+      std::size_t phasePatternCursor {0};
       bool introPlaying {false};
+      bool phaseTelegraphSent {false};
       bool alive {true};
     };
 
@@ -155,6 +182,8 @@ class EntitySystem {
     void applyHarvest(const EntityTemplate& t, const EntityRuntimeModifiers& runtimeMods);
     void applyRewardDrop(const ResourceYield& reward, const EntityRuntimeModifiers& runtimeMods);
     void emitPatternFromTemplate(const EntityTemplate& t, const std::string& patternOverride, Vec2 origin, Vec2 playerPos, ProjectileSystem& projectiles, const EntityRuntimeModifiers& runtimeMods, float difficultyScale);
+    void emitBossPhasePattern(EntityInstance& e, const EntityTemplate& t, const BossPhase& phase, Vec2 playerPos, ProjectileSystem& projectiles, const EntityRuntimeModifiers& runtimeMods);
+    void recordRuntimeEvent(EntityRuntimeEventType type, const EntityInstance& e, const EntityTemplate& t, std::size_t entityInstanceIndex, std::size_t phaseIndex, std::string payload = {});
 
     const std::vector<EntityTemplate>* templates_ {nullptr};
     const PatternBank* patternBank_ {nullptr};
@@ -164,6 +193,8 @@ class EntitySystem {
 
     DeterministicRng rng_ {1337};
     EntityStats stats_ {};
+    std::vector<EntityRuntimeEvent> runtimeEvents_;
+    float runtimeClock_ {0.0F};
 };
 
 std::string toString(EntityType type);
