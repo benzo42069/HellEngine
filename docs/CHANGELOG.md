@@ -84,3 +84,9 @@
 - Improved `build_installer.ps1` diagnostics and output handling around NSIS availability and path resolution.
 - Centralized runtime content compatibility version (`kRuntimePackVersion = 4`) and aligned loader enforcement.
 - Extended `content_packer_tests` with pack metadata compatibility assertions.
+
+## Unreleased
+### Fixed
+- Corrected `PaletteRampTexture` declaration/definition duplication causing compile failures (`textureId`, `rowV`, `shutdown`, and `texture_` duplicates removed).
+- Restored `GlBulletRenderer` access to `PaletteRampTexture::animationFor` through the class public interface.
+- Fixed `ProjectileAllegiance::Enemy` symbol resolution in `gl_bullet_renderer.cpp` by including the canonical projectile allegiance definition.
