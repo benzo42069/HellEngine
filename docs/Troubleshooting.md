@@ -9,64 +9,86 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j 4
 ```
 
-### SDL/audio dependency warnings
-
-On Linux containers, optional backends (ALSA/Pulse/JACK/Wayland) may be unavailable.
-This is usually non-fatal for headless and test runs.
+### Optional SDL/audio backend warnings
+On Linux containers, optional ALSA/Pulse/JACK/Wayland backends may be unavailable.
+This is often non-fatal for headless and test runs.
 
 ---
 
-## Runtime/content issues
+## Content pipeline issues
 
-### Engine logs `error_report=...content_load_failed...`
-
-Cause: malformed or incompatible JSON pack.
+### `error_report=...content_load_failed...`
+Cause: malformed or incompatible JSON/pack metadata.
 
 Fix:
-1. Validate JSON syntax.
-2. Ensure metadata fields exist (`schemaVersion`, `packVersion`, compatibility).
-3. Repack:
+1. Validate JSON syntax and required metadata (`schemaVersion`, `packVersion`, compatibility).
+2. Repack:
 
 ```bash
 ./build/ContentPacker --input data --output content.pak
 ```
 
-Runtime should fall back to safe/default content instead of hard-crashing.
+Runtime should fall back to last-good/default content rather than hard-crashing.
 
-### Hot reload failed
+### Art import validation failures
+Cause: missing source files, unsupported source formats, or invalid import settings.
 
-You will see on-screen `HotReloadError: ...` and structured log entry.
-Runtime keeps last-good content; fix the file and reload again.
+Fix:
+- Confirm manifest points to valid files.
+- Ensure source extension is supported (`.png`, `.jpg/.jpeg`, `.bmp`, `.tga`).
+- Rebuild pack after manifest correction.
 
 ---
 
-## Replay verify failures
+## Replay and determinism issues
 
-Run:
+### Replay verify mismatch
 
 ```bash
 ./build/EngineDemo --replay-verify --headless --ticks 1200 --seed 1337 --content-pack content.pak
 ```
 
-If mismatch occurs, logs include first divergence tick + subsystem.
-Check recent content/script changes affecting deterministic order.
+If mismatch occurs, logs include divergence tick + subsystem.
+Check recent edits to patterns/entities/encounters and reintroduce changes incrementally.
+
+### Hot reload failed
+Runtime displays `HotReloadError: ...` and logs details.
+Fix the authored file and reload; runtime retains last-good content while failing asset is corrected.
+
+---
+
+## Extension issues (plugins/mods)
+
+### Plugin compiles but breaks after engine update
+Likely cause: dependency on internal headers.
+
+Fix:
+- Restrict integration to `include/engine/public/*` APIs.
+- Rebuild against current runtime version and check deprecation notices.
+
+### Unexpected content override behavior with multiple packs
+Likely cause: pack load-order assumption.
+
+Fix:
+- Remember merge is left-to-right; later pack wins by GUID.
+- Validate your `--content-pack` ordering and GUID uniqueness.
 
 ---
 
 ## Crash reports
-
 In Release builds, fatal crashes write reports to `crashes/`:
-- `crash_report_*.txt` (build stamp + log tail + structured crash error)
-- Windows also: `crash_dump_*.dmp`
+- `crash_report_*.txt`
+- Windows may also include `crash_dump_*.dmp`
+
+Attach crash report + seed + pack version when filing issues.
 
 ---
 
-## “Out of the box” sanity check
+## Out-of-box sanity check
 
 ```bash
 ./build/ContentPacker --input examples/content_packs --output content.pak --pack-id starter
 ./build/EngineDemo --headless --ticks 300 --content-pack content.pak
 ```
 
-If these pass, your environment + content pipeline is operational.
-
+If this passes, environment + core content pipeline are operational.
