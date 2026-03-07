@@ -56,28 +56,49 @@ bool MetaProgression::loadFromFile(const std::string& path) {
     std::ifstream in(path);
     if (!in.good()) return false;
 
-    nlohmann::json json;
-    in >> json;
+    try {
+        nlohmann::json json;
+        in >> json;
 
-    progressionPoints_ = json.value("progressionPoints", 0U);
-    purchased_.clear();
-    if (json.contains("purchased") && json["purchased"].is_array()) {
-        for (const auto& idx : json["purchased"]) {
-            const auto i = idx.get<std::size_t>();
-            if (i < tree_.size()) purchased_.push_back(i);
+        RuntimeProgressSnapshot snapshot;
+        const std::uint32_t schemaVersion = json.value("schemaVersion", 1U);
+        if (schemaVersion <= 1U) {
+            snapshot.progressionPoints = json.value("progressionPoints", 0U);
+            if (json.contains("purchased") && json["purchased"].is_array()) {
+                for (const auto& idx : json["purchased"]) {
+                    snapshot.purchasedNodes.push_back(idx.get<std::size_t>());
+                }
+            }
+        } else if (schemaVersion == 2U && json.contains("progression") && json["progression"].is_object()) {
+            const auto& p = json["progression"];
+            snapshot.progressionPoints = p.value("progressionPoints", 0U);
+            snapshot.lifetimeRunsStarted = p.value("lifetimeRunsStarted", 0U);
+            snapshot.lifetimeRunsCleared = p.value("lifetimeRunsCleared", 0U);
+            if (p.contains("purchasedNodes") && p["purchasedNodes"].is_array()) {
+                for (const auto& idx : p["purchasedNodes"]) {
+                    snapshot.purchasedNodes.push_back(idx.get<std::size_t>());
+                }
+            }
+        } else {
+            return false;
         }
-    }
-    std::sort(purchased_.begin(), purchased_.end());
-    purchased_.erase(std::unique(purchased_.begin(), purchased_.end()), purchased_.end());
 
-    rebuildBonuses();
-    return true;
+        applyProgressSnapshot(snapshot);
+        return true;
+    } catch (const std::exception&) {
+        return false;
+    }
 }
 
 bool MetaProgression::saveToFile(const std::string& path) const {
-    nlohmann::json json;
-    json["progressionPoints"] = progressionPoints_;
-    json["purchased"] = purchased_;
+    const RuntimeProgressSnapshot snapshot = makeProgressSnapshot();
+    nlohmann::json json = {
+        {"schemaVersion", 2},
+        {"progression", {{"progressionPoints", snapshot.progressionPoints}}},
+    };
+    json["progression"]["purchasedNodes"] = snapshot.purchasedNodes;
+    json["progression"]["lifetimeRunsStarted"] = snapshot.lifetimeRunsStarted;
+    json["progression"]["lifetimeRunsCleared"] = snapshot.lifetimeRunsCleared;
 
     std::ofstream out(path);
     if (!out.good()) return false;
@@ -99,6 +120,24 @@ bool MetaProgression::purchaseNode(const std::size_t index) {
 }
 
 void MetaProgression::grantRunProgress(const std::uint32_t amount) { progressionPoints_ += amount; }
+
+void MetaProgression::applyProgressSnapshot(const RuntimeProgressSnapshot& snapshot) {
+    progressionPoints_ = snapshot.progressionPoints;
+    purchased_.clear();
+    for (const std::size_t idx : snapshot.purchasedNodes) {
+        if (idx < tree_.size()) purchased_.push_back(idx);
+    }
+    std::sort(purchased_.begin(), purchased_.end());
+    purchased_.erase(std::unique(purchased_.begin(), purchased_.end()), purchased_.end());
+    rebuildBonuses();
+}
+
+RuntimeProgressSnapshot MetaProgression::makeProgressSnapshot() const {
+    RuntimeProgressSnapshot snapshot;
+    snapshot.progressionPoints = progressionPoints_;
+    snapshot.purchasedNodes = purchased_;
+    return snapshot;
+}
 
 void MetaProgression::rebuildBonuses() {
     bonuses_ = {};

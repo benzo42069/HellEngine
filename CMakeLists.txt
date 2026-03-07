@@ -135,6 +135,7 @@ add_library(engine_core STATIC
   src/engine/patterns.cpp
   src/engine/particle_fx.cpp
   src/engine/palette_fx_templates.cpp
+  src/engine/persistence.cpp
   src/engine/palette_ramp.cpp
   src/engine/projectiles.cpp
   src/engine/replay.cpp
@@ -252,6 +253,10 @@ add_test(NAME run_structure_tests COMMAND run_structure_tests)
 add_executable(meta_progression_tests tests/meta_progression_tests.cpp)
 target_link_libraries(meta_progression_tests PRIVATE engine_core)
 add_test(NAME meta_progression_tests COMMAND meta_progression_tests)
+
+add_executable(persistence_tests tests/persistence_tests.cpp)
+target_link_libraries(persistence_tests PRIVATE engine_core)
+add_test(NAME persistence_tests COMMAND persistence_tests)
 
 add_executable(editor_tools_tests tests/editor_tools_tests.cpp)
 target_link_libraries(editor_tools_tests PRIVATE engine_core)

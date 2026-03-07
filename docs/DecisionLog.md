@@ -1,5 +1,12 @@
 # Decision Log
 
+
+## 2026-03-07 — Persistence schema and fallback contract
+- **Context**: Save/profile/settings persistence existed in isolated paths but lacked a single migration strategy and corrupted-data fallback baseline.
+- **Decision**: Add a dedicated persistence module with explicit schema versions (`v2` current), hard rejection of unknown future schemas, and explicit v1→v2 migrators for settings/profiles.
+- **Rationale**: Keeps deterministic simulation decoupled from storage concerns while making future product-grade progression saves extensible and safe.
+- **Status**: Accepted.
+
 ## 2026-03-07 — Camera shake vocabulary
 - **Context**: A single sine-wave shake mode could not convey distinct gameplay feedback for hits, grazes, boss transitions, specials, and explosions.
 - **Decision**: Introduce a six-profile camera shake vocabulary (`Impact`, `BossRumble`, `GrazeTremor`, `SpecialPulse`, `Explosion`, `Ambient`) implemented with additive blending, max 4 simultaneous active shakes, and ±20px clamp.
