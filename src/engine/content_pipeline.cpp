@@ -3,9 +3,12 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <cctype>
 #include <filesystem>
 #include <map>
+#include <regex>
+#include <set>
 #include <sstream>
 
 namespace engine {
@@ -46,6 +49,76 @@ bool isKnownMipPreference(const std::string& mipPreference) {
 
 std::string jsonFingerprint(const nlohmann::json& value) {
     return fnv1a64Hex(value.dump());
+}
+
+
+bool isIdentifierLike(const std::string& value) {
+    if (value.empty()) return false;
+    for (const char c : value) {
+        const bool ok = std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_' || c == '.';
+        if (!ok) return false;
+    }
+    return true;
+}
+
+bool hasValidWeight(float weight) {
+    return std::isfinite(weight) && weight > 0.0F;
+}
+
+bool parseAnimationFromFilename(const std::string& sourcePath,
+                                const std::string& regexPattern,
+                                std::string& outSet,
+                                std::string& outState,
+                                std::string& outDirection,
+                                int& outFrame,
+                                std::string& error) {
+    try {
+        const std::regex pattern(regexPattern);
+        const std::string stem = std::filesystem::path(sourcePath).stem().string();
+        std::smatch match;
+        if (!std::regex_match(stem, match, pattern)) {
+            error = "filename `" + stem + "` does not match animationNamingRegex";
+            return false;
+        }
+        if (match.size() < 5) {
+            error = "animationNamingRegex must provide 4 capture groups: set/state/direction/frame";
+            return false;
+        }
+        outSet = match[1].str();
+        outState = match[2].str();
+        outDirection = match[3].str();
+        outFrame = std::stoi(match[4].str());
+        return true;
+    } catch (const std::exception& ex) {
+        error = std::string("invalid animationNamingRegex: ") + ex.what();
+        return false;
+    }
+}
+
+bool parseVariantFromFilename(const std::string& sourcePath,
+                              const std::string& regexPattern,
+                              std::string& outGroup,
+                              std::string& outVariant,
+                              std::string& error) {
+    try {
+        const std::regex pattern(regexPattern);
+        const std::string stem = std::filesystem::path(sourcePath).stem().string();
+        std::smatch match;
+        if (!std::regex_match(stem, match, pattern)) {
+            error = "filename `" + stem + "` does not match variantNamingRegex";
+            return false;
+        }
+        if (match.size() < 3) {
+            error = "variantNamingRegex must provide 2 capture groups: group/variant";
+            return false;
+        }
+        outGroup = match[1].str();
+        outVariant = match[2].str();
+        return true;
+    } catch (const std::exception& ex) {
+        error = std::string("invalid variantNamingRegex: ") + ex.what();
+        return false;
+    }
 }
 
 } // namespace
@@ -178,6 +251,15 @@ bool parseSourceArtManifest(const nlohmann::json& manifest,
             rec.settings.animationGroup = s.value("animationGroup", rec.settings.animationGroup);
             rec.settings.animationFps = s.value("animationFps", rec.settings.animationFps);
             rec.settings.animationSequenceFromFilename = s.value("animationSequenceFromFilename", rec.settings.animationSequenceFromFilename);
+            rec.settings.animationNamingRegex = s.value("animationNamingRegex", rec.settings.animationNamingRegex);
+            rec.settings.animationSet = s.value("animationSet", rec.settings.animationSet);
+            rec.settings.animationState = s.value("animationState", rec.settings.animationState);
+            rec.settings.animationDirection = s.value("animationDirection", rec.settings.animationDirection);
+            rec.settings.animationFrame = s.value("animationFrame", rec.settings.animationFrame);
+            rec.settings.variantNamingRegex = s.value("variantNamingRegex", rec.settings.variantNamingRegex);
+            rec.settings.variantName = s.value("variantName", rec.settings.variantName);
+            rec.settings.variantWeight = s.value("variantWeight", rec.settings.variantWeight);
+            rec.settings.paletteTemplate = s.value("paletteTemplate", rec.settings.paletteTemplate);
         }
 
         if (!isKnownColorWorkflow(rec.settings.colorWorkflow)) {
@@ -198,6 +280,38 @@ bool parseSourceArtManifest(const nlohmann::json& manifest,
         }
         if (rec.settings.pivotX < 0.0F || rec.settings.pivotX > 1.0F || rec.settings.pivotY < 0.0F || rec.settings.pivotY > 1.0F) {
             errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` pivot must be in [0,1]"});
+            ok = false;
+        }
+        if (!rec.settings.animationGroup.empty() && !isIdentifierLike(rec.settings.animationGroup)) {
+            errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` animationGroup contains unsupported characters"});
+            ok = false;
+        }
+        if (!rec.settings.animationSet.empty() && !isIdentifierLike(rec.settings.animationSet)) {
+            errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` animationSet contains unsupported characters"});
+            ok = false;
+        }
+        if (!rec.settings.animationState.empty() && !isIdentifierLike(rec.settings.animationState)) {
+            errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` animationState contains unsupported characters"});
+            ok = false;
+        }
+        if (!rec.settings.animationDirection.empty() && !isIdentifierLike(rec.settings.animationDirection)) {
+            errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` animationDirection contains unsupported characters"});
+            ok = false;
+        }
+        if (!rec.settings.variantGroup.empty() && !isIdentifierLike(rec.settings.variantGroup)) {
+            errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` variantGroup contains unsupported characters"});
+            ok = false;
+        }
+        if (!rec.settings.variantName.empty() && !isIdentifierLike(rec.settings.variantName)) {
+            errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` variantName contains unsupported characters"});
+            ok = false;
+        }
+        if (!hasValidWeight(rec.settings.variantWeight)) {
+            errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` variantWeight must be > 0"});
+            ok = false;
+        }
+        if (rec.settings.animationFps < 0.0F || !std::isfinite(rec.settings.animationFps)) {
+            errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` animationFps must be >= 0"});
             ok = false;
         }
 
@@ -250,6 +364,15 @@ bool importSourceArtAssets(const std::vector<SourceArtAssetRecord>& sourceAssets
             {"animationGroup", source.settings.animationGroup},
             {"animationFps", source.settings.animationFps},
             {"animationSequenceFromFilename", source.settings.animationSequenceFromFilename},
+            {"animationNamingRegex", source.settings.animationNamingRegex},
+            {"animationSet", source.settings.animationSet},
+            {"animationState", source.settings.animationState},
+            {"animationDirection", source.settings.animationDirection},
+            {"animationFrame", source.settings.animationFrame},
+            {"variantNamingRegex", source.settings.variantNamingRegex},
+            {"variantName", source.settings.variantName},
+            {"variantWeight", source.settings.variantWeight},
+            {"paletteTemplate", source.settings.paletteTemplate},
         };
 
         record.sourceFingerprint = fnv1a64Hex(source.sourcePath + ":" + std::to_string(fileSize) + ":" + std::to_string(writeTime));
@@ -279,6 +402,134 @@ std::vector<AtlasBuildPlan> buildAtlasPlans(const std::vector<ImportedArtAssetRe
     for (auto& [key, plan] : plans) {
         (void)key;
         out.push_back(plan);
+    }
+    return out;
+}
+
+
+std::vector<AnimationClipBuildPlan> buildAnimationClipPlans(const std::vector<ImportedArtAssetRecord>& importedAssets,
+                                                            std::vector<ArtImportValidationError>& errors) {
+    std::map<std::string, std::map<int, std::string>> groupedFrames;
+    std::map<std::string, AnimationClipBuildPlan> plans;
+
+    for (const auto& asset : importedAssets) {
+        std::string set = asset.source.settings.animationSet;
+        std::string state = asset.source.settings.animationState;
+        std::string direction = asset.source.settings.animationDirection;
+        int frame = asset.source.settings.animationFrame;
+
+        if (asset.source.settings.animationSequenceFromFilename) {
+            const std::string pattern = asset.source.settings.animationNamingRegex.empty()
+                                            ? std::string("^([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)_([0-9]+)$")
+                                            : asset.source.settings.animationNamingRegex;
+            std::string parseError;
+            if (!parseAnimationFromFilename(asset.source.sourcePath, pattern, set, state, direction, frame, parseError)) {
+                errors.push_back({asset.source.manifestPath, "asset `" + asset.source.sourcePath + "` " + parseError});
+                continue;
+            }
+        } else if (!asset.source.settings.animationGroup.empty() && (set.empty() || state.empty())) {
+            std::string parseError;
+            const std::string pattern = "^([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)(?:_([A-Za-z0-9_-]+))?_([0-9]+)$";
+            if (!parseAnimationFromFilename(asset.source.sourcePath, pattern, set, state, direction, frame, parseError)) {
+                errors.push_back({asset.source.manifestPath,
+                                  "asset `" + asset.source.sourcePath + "` animationGroup requires animationSet/animationState/animationFrame or filename convention"});
+                continue;
+            }
+        }
+
+        if (set.empty() || state.empty()) continue;
+        if (frame < 0) {
+            errors.push_back({asset.source.manifestPath,
+                              "asset `" + asset.source.sourcePath + "` animation clip frame index must be provided"});
+            continue;
+        }
+
+        const float fps = asset.source.settings.animationFps > 0.0F ? asset.source.settings.animationFps : 12.0F;
+        const std::string key = set + ":" + state + ":" + direction;
+        auto& plan = plans[key];
+        if (plan.animationSet.empty()) {
+            plan.animationSet = set;
+            plan.state = state;
+            plan.direction = direction;
+            plan.fps = fps;
+        } else if (std::abs(plan.fps - fps) > 0.001F) {
+            errors.push_back({asset.source.manifestPath,
+                              "animation clip `" + key + "` has inconsistent FPS across frames"});
+            continue;
+        }
+
+        auto& frameMap = groupedFrames[key];
+        if (frameMap.find(frame) != frameMap.end()) {
+            errors.push_back({asset.source.manifestPath,
+                              "animation clip `" + key + "` duplicates frame index " + std::to_string(frame)});
+            continue;
+        }
+        frameMap[frame] = asset.source.guid;
+    }
+
+    std::vector<AnimationClipBuildPlan> out;
+    for (auto& [key, plan] : plans) {
+        (void)key;
+        const auto frameIt = groupedFrames.find(plan.animationSet + ":" + plan.state + ":" + plan.direction);
+        if (frameIt == groupedFrames.end()) continue;
+        int expected = 0;
+        for (const auto& [frame, guid] : frameIt->second) {
+            if (frame != expected) {
+                errors.push_back({"animation-plan", "animation clip `" + plan.animationSet + ":" + plan.state + ":" + plan.direction
+                    + "` has non-contiguous frame index at " + std::to_string(frame) + ", expected " + std::to_string(expected)});
+                expected = frame;
+            }
+            plan.frameAssetGuids.push_back(guid);
+            ++expected;
+        }
+        out.push_back(plan);
+    }
+    return out;
+}
+
+std::vector<VariantGroupBuildPlan> buildVariantGroupPlans(const std::vector<ImportedArtAssetRecord>& importedAssets,
+                                                          std::vector<ArtImportValidationError>& errors) {
+    std::map<std::string, VariantGroupBuildPlan> groups;
+    std::map<std::string, std::set<std::string>> variantNamesByGroup;
+
+    for (const auto& asset : importedAssets) {
+        std::string group = asset.source.settings.variantGroup;
+        std::string variant = asset.source.settings.variantName;
+
+        if (!asset.source.settings.variantNamingRegex.empty()) {
+            std::string parseError;
+            if (!parseVariantFromFilename(asset.source.sourcePath, asset.source.settings.variantNamingRegex, group, variant, parseError)) {
+                errors.push_back({asset.source.manifestPath, "asset `" + asset.source.sourcePath + "` " + parseError});
+                continue;
+            }
+        }
+
+        if (group.empty()) continue;
+        if (variant.empty()) variant = std::filesystem::path(asset.source.sourcePath).stem().string();
+
+        auto& build = groups[group];
+        build.group = group;
+        if (variantNamesByGroup[group].find(variant) != variantNamesByGroup[group].end()) {
+            errors.push_back({asset.source.manifestPath,
+                              "variant group `" + group + "` has duplicate variant name `" + variant + "`"});
+            continue;
+        }
+        variantNamesByGroup[group].insert(variant);
+
+        build.options.push_back({
+            asset.source.guid,
+            variant,
+            asset.source.settings.variantWeight,
+            asset.source.settings.paletteTemplate,
+        });
+    }
+
+    std::vector<VariantGroupBuildPlan> out;
+    out.reserve(groups.size());
+    for (auto& [name, group] : groups) {
+        (void)name;
+        if (group.options.empty()) continue;
+        out.push_back(group);
     }
     return out;
 }

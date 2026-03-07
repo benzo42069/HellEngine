@@ -329,3 +329,14 @@ The content pipeline now includes a real source-art import workflow for sprite/t
 - Atlas-group planning output keyed by atlas group and color workflow, including grayscale/monochrome support metadata.
 
 This addresses the prior audit gap where authored art handling was underdeveloped relative to pack/schema infrastructure.
+
+
+## 2026-03-07 Pipeline Audit Update — Animation/Variant Import
+- **Closed gap**: Source-art import now emits runtime-ready animation clip grouping and variant grouping metadata.
+- **What was added**:
+  - animation clip plan generation (`animationBuild`) with state/direction/frame timing output.
+  - variant group plan generation (`variantBuild`) with weighted options and palette-template compatibility hints.
+  - naming/grouping validation for malformed identifiers and duplicate/ambiguous grouping.
+- **Operational impact**:
+  - authored 2D animation is practical without manual per-frame runtime wiring.
+  - themed/procedural visual variation is first-class in content packs.

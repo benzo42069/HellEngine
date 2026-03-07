@@ -431,3 +431,14 @@
 - Added import fingerprinting and previous-pack comparison (`--previous-pack`) to support deterministic reimport/dependency invalidation.
 - Atlas integration is represented as emitted `atlasBuild` plans keyed by `(atlasGroup, colorWorkflow)` so runtime/editor can consume build grouping deterministically.
 - Grayscale and monochrome workflows are validated/imported directly through `colorWorkflow` and represented in pack metadata to support palette/shader workflows.
+
+
+## 2026-03-07 — Data-driven animation/variant grouping in art import
+- **Context**: Source-art import had basic registry/fingerprints but no production-ready animation clip or variant grouping output.
+- **Decision**: Introduce explicit settings for animation/variant identity plus optional regex-based filename extraction so naming conventions remain configurable rather than hardcoded.
+- **Decision**: Emit `animationBuild` (set/state/direction/fps/frame GUID list) and `variantBuild` (group/options/weights/palette template) into packs as canonical runtime/editor metadata.
+- **Decision**: Reject malformed/ambiguous groups (invalid identifiers, duplicate variant names, duplicate frame indices, inconsistent clip FPS).
+- **Consequences**:
+  - Authors can choose explicit metadata or configured naming conventions.
+  - Runtime/content packs now expose deterministic animation and variant group plans for procedural/themed selection.
+  - Grayscale/palette workflow remains compatible via per-variant `paletteTemplate` annotation.

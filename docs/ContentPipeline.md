@@ -74,6 +74,8 @@ Pack output adds:
 - `importRegistry` (source/settings fingerprints + status)
 - `importInvalidations` (dependency invalidation records)
 - `atlasBuild` (atlas grouping plans by atlas group + workflow)
+- `animationBuild` (animation clip plans grouped by set/state/direction + ordered frame GUIDs + fps)
+- `variantBuild` (variant group plans with weighted options + palette-template compatibility metadata)
 
 Reimport flow:
 
@@ -83,3 +85,5 @@ Reimport flow:
 - Unchanged fingerprints mark `up-to-date`.
 
 See `docs/AssetImportWorkflow.md` for details and an example manifest.
+
+Animation/variant validation now also checks malformed group names, duplicate frame indices, duplicate variant names, and invalid fps/weight values.

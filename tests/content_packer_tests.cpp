@@ -47,6 +47,14 @@ int main(int argc, char** argv) {
         std::cerr << "generated pak missing atlasBuild metadata\n";
         return EXIT_FAILURE;
     }
+    if (!pakJson.contains("animationBuild") || !pakJson["animationBuild"].is_array()) {
+        std::cerr << "generated pak missing animationBuild metadata\n";
+        return EXIT_FAILURE;
+    }
+    if (!pakJson.contains("variantBuild") || !pakJson["variantBuild"].is_array()) {
+        std::cerr << "generated pak missing variantBuild metadata\n";
+        return EXIT_FAILURE;
+    }
 
     std::cout << "content_packer_tests passed\n";
     return EXIT_SUCCESS;

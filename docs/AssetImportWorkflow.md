@@ -62,3 +62,32 @@ Generated packs now include:
 - `atlasBuild`
 
 And imported art assets are appended into the global `assetRegistry`.
+
+
+## Animation naming/grouping rules
+Animation clips are grouped by `(animationSet, animationState, animationDirection)`.
+
+Authoring options:
+- explicit fields: `animationSet`, `animationState`, `animationDirection`, `animationFrame`
+- or filename extraction with `animationSequenceFromFilename: true` and `animationNamingRegex`
+
+Default filename fallback pattern (when extraction is enabled but regex is omitted):
+- `^([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)_([0-9]+)$`
+- capture groups map to: set, state, direction, frame
+
+Validation:
+- frame indexes must be non-negative and unique per clip
+- clips should use consistent FPS
+- malformed group/state/direction identifiers are rejected
+
+## Variant grouping rules
+Variant groups are authored via `variantGroup` and `variantName` (or filename-derived through `variantNamingRegex`).
+
+Rules:
+- `variantWeight` must be > 0
+- variant names must be unique within a group
+- `paletteTemplate` is optional metadata used for grayscale/palette-template compatibility
+
+Runtime usage expectations:
+- runtime selects variants deterministically using group weights
+- runtime/editor can consume `animationBuild` and `variantBuild` metadata directly from pack JSON
