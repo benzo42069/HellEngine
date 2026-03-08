@@ -7,6 +7,11 @@
 
 # Implementation Plan
 
+## 2026-03-08 — ContentPacker SDL2_mixer dependency audit/removal
+- [x] Audited `tools_content_packer` and content pipeline sources for SDL/SDL_mixer usage.
+- [x] Confirmed `ContentPacker` path uses `audio_content.h` schema parsing and does not require runtime playback APIs.
+- [x] Removed `ContentPacker` linkage to `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` and dropped SDL include-directory injection.
+- [x] Reconfigured and rebuilt `ContentPacker` to verify clean build with reduced dependency surface.
 ## 2026-03-08 — Build reliability verification (clean + incremental)
 - Risks checked:
   - Generated header flow (`generated/engine/version.h`) and version-file-driven configure drift.
