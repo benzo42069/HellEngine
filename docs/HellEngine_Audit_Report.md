@@ -5,6 +5,12 @@
 **Codebase snapshot:** HellEngine-main (v0.2.0)  
 **Total implementation:** ~7,700 LOC engine source, ~2,600 LOC headers, ~1,800 LOC tests, ~480K total including third-party
 
+
+## Audit Follow-up Update (2026-03-08)
+- A product-validation vertical slice was authored and documented to close the previously noted "engine-only" perception risk.
+- Validation runbook now covers combat readability, enemy encounter progression, boss phase flow, deterministic replay, content pack pipeline, HUD/upgrade UI visibility, audio event wiring, and packaging script viability.
+- Follow-up recommendation: preserve this slice as a standing RC smoke gate and add golden replay artifacts to CI.
+
 ---
 
 ## A) Repo Snapshot

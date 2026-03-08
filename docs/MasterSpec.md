@@ -6,6 +6,12 @@
 - 2026-03-07: Clean rebuild workflow baseline is now: remove build tree, reconfigure out-of-source, build, then run tests (`cmake -E remove_directory build`, `cmake -S . -B build ...`, `cmake --build build ...`, `ctest --test-dir build ...`).
 
 
+
+## Vertical Slice Validation Baseline (2026-03-08)
+- The product validation slice is defined as **Ember Crossing** (combat lanes + boss) and **Seraph Rematch** (replay-focused boss rematch) authored in pack content (`data/entities.json`, `data/patterns.json`, `data/encounters.json`, `data/audio.json`).
+- Required validation coverage for this slice: player combat cadence, projectile readability (palette/shape differentiation + danger field), staged enemy encounters, boss multi-phase sequencing, deterministic replay record/playback, content pack compile/load, runtime audio events, HUD/upgrade UI flow, and packaging scripts.
+- This slice is the release-candidate smoke baseline for product coherence checks and must remain data-authored (no one-off runtime hacks).
+
 ## 1. Scope and Authority
 This is the merged authoritative specification for a standalone Windows bullet-hell engine. All provided design documents are source-of-truth and must be integrated additively.
 

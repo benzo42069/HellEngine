@@ -1,5 +1,6 @@
 ## Unreleased
 ### Changed
+- Added a polished product-validation vertical slice definition via authored encounter/audio content and a dedicated sample runbook covering combat readability, enemy/boss flow, replay, UI, audio, and packaging checks.
 - Hardened CMake build hygiene: reject in-source builds, explicitly create generated include output directory before configured-header emission, and remove duplicate `FetchContent_MakeAvailable` dependency materialization to improve clean/incremental rebuild consistency.
 - Fixed Visual Studio/CMake/Ninja `ContentPacker` build failure (`SDL_mixer.h` not found) by explicitly linking `ContentPacker` with `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` while preserving `engine_core` dependency setup.
 - Major external-facing documentation pass for creators/integrators, including new onboarding, pattern authoring, boss/encounter authoring, replay/debug, plugin/mod overview, and creator performance guides.

@@ -3,9 +3,114 @@
   "packVersion": 3,
   "encounters": [
     {
-      "id": "stage_01_intro",
-      "name": "Stage 01 Intro",
-      "guid": "encounter-8a9d891cf73c4871"
+      "id": "sample_slice_stage_01",
+      "name": "Vertical Slice - Ember Crossing",
+      "guid": "encounter-8a9d891cf73c4871",
+      "description": "Three combat lanes culminating in the Asterion Dreadnought boss test.",
+      "zones": [
+        {
+          "zoneId": "lane_intro",
+          "type": "combat",
+          "durationSeconds": 45.0,
+          "enemySet": [
+            "Basic Enemy Shooter"
+          ],
+          "targetThreat": 1.0
+        },
+        {
+          "zoneId": "lane_elite",
+          "type": "elite",
+          "durationSeconds": 55.0,
+          "enemySet": [
+            "Basic Enemy Shooter"
+          ],
+          "targetThreat": 1.35
+        },
+        {
+          "zoneId": "lane_event",
+          "type": "event",
+          "durationSeconds": 35.0,
+          "enemySet": [
+            "Currency Crystal",
+            "Med Bloom",
+            "Overclock Node"
+          ],
+          "targetThreat": 0.65
+        },
+        {
+          "zoneId": "lane_boss",
+          "type": "boss",
+          "durationSeconds": 120.0,
+          "enemySet": [
+            "Asterion Dreadnought"
+          ],
+          "targetThreat": 1.8
+        }
+      ],
+      "bossFlow": {
+        "bossEntity": "Asterion Dreadnought",
+        "phaseOrder": [
+          "Wave Weave",
+          "Composed Helix",
+          "Wave Weave"
+        ],
+        "phaseChangeAudioEvent": "boss_warning",
+        "phaseGateRewards": [
+          {
+            "atPhase": 1,
+            "upgradeCurrency": 50.0
+          },
+          {
+            "atPhase": 2,
+            "upgradeCurrency": 65.0
+          }
+        ]
+      },
+      "replayPreset": {
+        "seed": 1337,
+        "targetTicks": 7200,
+        "recordPath": "runs/vertical_slice_sample.rpl"
+      }
+    },
+    {
+      "id": "sample_slice_stage_02",
+      "name": "Vertical Slice - Seraph Rematch",
+      "guid": "encounter-f2ddf12c4af222e1",
+      "description": "Replay-focused rematch with an alternate boss profile.",
+      "zones": [
+        {
+          "zoneId": "surge_combat",
+          "type": "combat",
+          "durationSeconds": 40.0,
+          "enemySet": [
+            "Basic Enemy Shooter"
+          ],
+          "targetThreat": 1.2
+        },
+        {
+          "zoneId": "surge_boss",
+          "type": "boss",
+          "durationSeconds": 130.0,
+          "enemySet": [
+            "Nyx Seraph"
+          ],
+          "targetThreat": 2.0
+        }
+      ],
+      "bossFlow": {
+        "bossEntity": "Nyx Seraph",
+        "phaseOrder": [
+          "Composed Helix",
+          "Wave Weave",
+          "Composed Helix"
+        ],
+        "phaseChangeAudioEvent": "boss_warning"
+      },
+      "replayPreset": {
+        "seed": 2024,
+        "targetTicks": 7200,
+        "recordPath": "runs/vertical_slice_rematch.rpl"
+      }
     }
   ]
 }

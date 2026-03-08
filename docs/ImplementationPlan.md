@@ -1,5 +1,17 @@
 # Implementation Plan
 
+## 2026-03-08 — Vertical slice completion plan (product validation)
+- Scope delivered:
+  - Authored two representative sample encounters (`Ember Crossing`, `Seraph Rematch`) with staged combat/boss/replay metadata.
+  - Extended sample audio event map with boss-phase and run-clear cues.
+  - Added dedicated sample runbook with content-pack, replay, and packaging validation commands.
+- Integration goals closed:
+  - Content data now explicitly maps encounter zones to entity archetypes and boss phase order for testability.
+  - Product-validation steps now live beside normal build/test docs (no hidden internal checklist).
+- Next hardening pass:
+  1. Capture one golden replay per sample encounter and gate them in CI.
+  2. Add optional sample-specific smoke test that loads the pack and verifies encounter IDs exist.
+
 
 ## 2026-03-07 — Build hygiene and clean rebuild validation
 - Audit findings:
