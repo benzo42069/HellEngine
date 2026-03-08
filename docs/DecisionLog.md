@@ -578,6 +578,13 @@
 - **Rationale**: Restores compile integrity without redesigning palette or projectile rendering architecture.
 - **Status**: Accepted.
 
+## 2026-03-08 — Public API / Plugin Boundary Hardening
+- **Decision:** Keep the external/public surface constrained to `engine/public` headers and avoid promoting internal runtime classes into the plugin contract.
+- **Decision:** Introduce additive plugin metadata (`PluginMetadata`) plus compatibility validation against runtime public API version.
+- **Decision:** Add explicit plugin lifecycle controls (`unregister*`, `clearRegisteredPlugins`) so hosts/tools can tear down extension state cleanly.
+- **Rationale:** Commercial plugin ecosystems need predictable registration failure reasons and lifecycle boundaries while preserving ABI/API stability.
+- **Compatibility:** Additive-only change (MINOR-safe): existing registration flow semantics are preserved for valid plugins; invalid inputs now produce typed rejection instead of silent ignore.
+
 ## 2026-03-08 — GameplaySession ownership facet split
 - **Context**: `GameplaySession` still mixed session orchestration, player combat runtime transitions, progression navigation logic, and presentation event shaping in one update path.
 - **Decision**: Introduce explicit subsystem interfaces in `gameplay_session_subsystems` (`PlayerCombatSubsystem`, `ProgressionSubsystem`, `PresentationSubsystem`) and route `GameplaySession::updateGameplay()` / `onUpgradeNavigation()` through those boundaries.

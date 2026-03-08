@@ -1,6 +1,14 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Public API/plugin boundary hardening added metadata-based plugin registration, compatibility gating against `publicApiVersion()`, duplicate-id protection, and explicit unregister/clear lifecycle endpoints while preserving existing engine run behavior.
+
+## Public API / Extensibility Baseline (2026-03-08)
+- Stable external boundary remains limited to `include/engine/public/*`; all `include/engine/internal/*` and `src/engine/*` details are explicitly non-contract internals.
+- Plugin contract now uses metadata-first registration (`PluginMetadata`) with explicit target API version checks at registration time.
+- Plugin lifecycle supports register, unregister-by-id, and `clearRegisteredPlugins()` for host-managed teardown and test isolation.
+- Registration rejects null plugins, missing ids, duplicate ids/instances, and incompatible major/minor API targets to preserve runtime safety without exposing runtime internals.
+
 - 2026-03-08: Editor tooling architecture was decomposed from the single `src/engine/editor_tools.cpp` unit into modular editor translation units under `src/engine/editor/` (`editor_tools_core`, `editor_tools_workspace_panel`, `editor_tools_pattern_panel`, and `editor_tools_services`).
 - 2026-03-08: Shared editor services were formalized around content generation and validation (`generateDemoContent`, `runControlCenterValidation`) so panels consume service APIs instead of embedding filesystem/schema logic inline.
 - 2026-03-08: Extension seam preserved and clarified: plugin panels still render through `public_api::toolPanelPlugins()`, while new editor domains can be added as isolated panel/source units without expanding a central monolith.

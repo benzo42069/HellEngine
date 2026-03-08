@@ -14,6 +14,10 @@ struct ApiVersion {
     int patch {ENGINE_PUBLIC_API_VERSION_PATCH};
 };
 
+constexpr bool isApiCompatible(const ApiVersion& pluginTargetVersion, const ApiVersion& runtimeVersion) {
+    return pluginTargetVersion.major == runtimeVersion.major && pluginTargetVersion.minor <= runtimeVersion.minor;
+}
+
 // Versioning policy:
 // - PATCH: bug fixes, no source/binary API break.
 // - MINOR: additive API changes only.
