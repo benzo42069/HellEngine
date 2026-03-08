@@ -92,3 +92,41 @@ Attach crash report + seed + pack version when filing issues.
 ```
 
 If this passes, environment + core content pipeline are operational.
+
+
+## Release packaging issues
+
+### Missing runtime dependency in portable build
+Cause: dependency DLL absent from build output, so auto-discovery cannot bundle it.
+
+Fix:
+- Confirm dependency DLL exists in `build-release/Release` or `build-release`.
+- Re-run release packaging:
+
+```powershell
+./tools/package_dist.ps1 -BuildDir build-release
+```
+
+### Manifest validation failure (`RELEASE_MANIFEST.txt`)
+Cause: packaging incomplete or post-package files modified/deleted.
+
+Fix:
+1. Re-run full gate:
+
+```powershell
+./tools/release_validate.ps1 -Clean -Deterministic
+```
+
+2. Inspect manifest for expected entries (`EngineDemo`, `ContentPacker`, `content.pak`, `sample-content.pak`, `VERSION.txt`).
+
+### Sample pack replay verify fails during packaging
+Cause: sample content drift introduced deterministic/runtime incompatibility.
+
+Fix:
+- Rebuild sample pack locally and replay-verify directly:
+
+```powershell
+./tools/build_release.ps1 -BuildDir build-release -SkipTests -SkipBenchmarks
+```
+
+- Check runtime logs for divergence tick and update sample content under `examples/content_packs`.

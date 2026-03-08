@@ -7,6 +7,14 @@
 
 # Implementation Plan
 
+## 2026-03-08 — Release packaging finalization plan (completed)
+- [x] Audit build/package/release scripts for dependency bundle assumptions and missing validation links.
+- [x] Replace single-DLL copy assumption with runtime DLL auto-discovery from build output directories.
+- [x] Add package manifest generation (`RELEASE_MANIFEST.txt`) with deterministic file inventory and SHA-256 hashes.
+- [x] Validate sample packaging end-to-end by replay-verifying `sample-content.pak` both in release build flow and in portable bundle validation.
+- [x] Extend release gate checks to require manifest presence and required artifact references.
+- [x] Update release docs/troubleshooting for manifest, dependency bundling behavior, and failure triage steps.
+
 ## 2026-03-08 — Vertical slice completion plan (product validation)
 - Scope delivered:
   - Authored two representative sample encounters (`Ember Crossing`, `Seraph Rematch`) with staged combat/boss/replay metadata.

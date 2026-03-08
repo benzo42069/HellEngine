@@ -1,5 +1,12 @@
 # Decision Log
 
+## 2026-03-08 — Release packaging reliability + sample bundle validation hardening
+- **Context**: Release scripts packaged expected binaries/content but had weak dependency discovery (`SDL2.dll` only), no signed inventory/trace artifact, and no explicit sample-pack execution check from the produced portable folder.
+- **Decision**: Extend packaging to (1) discover/copy all runtime DLLs from release build output, (2) generate `RELEASE_MANIFEST.txt` with file inventory + SHA-256 hashes, and (3) run replay verification using `sample-content.pak` from within the packaged bundle.
+- **Decision**: Extend release validation to require the manifest and verify required entry fragments for core release artifacts.
+- **Rationale**: Improves practical distribution readiness and troubleshooting confidence while preserving existing successful build/package behavior.
+- **Status**: Accepted.
+
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
 - **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
 - **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.

@@ -33,4 +33,25 @@ if (-not (Test-Path (Join-Path $portableDir "sample-content.pak"))) {
     throw "[release_validate] Portable sample-content.pak missing"
 }
 
+$manifestPath = Join-Path $portableDir "RELEASE_MANIFEST.txt"
+if (-not (Test-Path $manifestPath)) {
+    throw "[release_validate] Portable release manifest missing: $manifestPath"
+}
+
+$manifestRequiredEntries = @(
+    "EngineDemo",
+    "ContentPacker",
+    "content.pak",
+    "sample-content.pak",
+    "engine_config.json",
+    "VERSION.txt"
+)
+
+$manifestText = Get-Content $manifestPath -Raw
+foreach ($entry in $manifestRequiredEntries) {
+    if ($manifestText -notmatch [Regex]::Escape($entry)) {
+        throw "[release_validate] Manifest missing required entry fragment: $entry"
+    }
+}
+
 Write-Host "[release_validate] PASS"

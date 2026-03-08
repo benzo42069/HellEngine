@@ -107,6 +107,10 @@
 - Added `tools/release_validate.ps1` to run a full release gate (build, test, benchmark, content pack generation, replay verify, packaging, artifact checks).
 
 ### Changed
+- `tools/package_dist.ps1` now auto-bundles runtime DLL dependencies discovered in build output and writes `RELEASE_MANIFEST.txt` with SHA-256 file hashes for troubleshooting/distribution traceability.
+- `tools/package_dist.ps1` now validates `sample-content.pak` via portable replay verification in addition to smoke/content-packer checks.
+- `tools/release_validate.ps1` now enforces release-manifest presence and required artifact entry coverage.
+- `tools/build_release.ps1` now fails early on missing content input directories and replay-verifies the generated sample pack during release pack generation.
 - Hardened `tools/build_release.ps1` to run release validation gates by default instead of only configuring/building.
 - Hardened `tools/package_dist.ps1` to bundle generated content packs and run portable self-validation before creating archives.
 - Improved `build_installer.ps1` diagnostics and output handling around NSIS availability and path resolution.

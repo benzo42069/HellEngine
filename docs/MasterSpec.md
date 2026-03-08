@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Release packaging/productization hardening completed. Portable packaging now auto-bundles discovered runtime DLL dependencies from build output, emits a SHA-256 release manifest (`RELEASE_MANIFEST.txt`), and enforces sample-pack replay validation from the packaged bundle. Release validation now checks both artifact presence and manifest coverage for critical binaries/content.
 - 2026-03-08: Public API/plugin boundary hardening added metadata-based plugin registration, compatibility gating against `publicApiVersion()`, duplicate-id protection, and explicit unregister/clear lifecycle endpoints while preserving existing engine run behavior.
 
 ## Public API / Extensibility Baseline (2026-03-08)

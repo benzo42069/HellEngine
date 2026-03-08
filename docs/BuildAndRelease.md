@@ -23,7 +23,7 @@ This performs:
 - default and sample content pack generation
 - replay verification against generated pack
 - portable bundle assembly
-- portable self-validation (ContentPacker + EngineDemo smoke run)
+- portable self-validation (ContentPacker + EngineDemo smoke run + sample-pack replay verify)
 - archive generation and artifact presence checks
 
 ### 2) Build release only
@@ -52,7 +52,8 @@ Portable bundles intentionally include:
 - generated packs: `content.pak`, `sample-content.pak`
 - source/content examples: `data/`, `assets/`, `examples/`
 - configuration and docs: `engine_config.json`, `BuildAndRun.md`, `BuildAndRelease.md`, `VERSION.txt`
-- runtime DLL dependencies when discoverable in build output (e.g. `SDL2.dll`)
+- runtime DLL dependencies auto-discovered from build output (`*.dll` in `build-release/Release` and `build-release`)
+- release manifest: `RELEASE_MANIFEST.txt` with full file inventory, sizes, and SHA-256 hashes
 
 ## Content pack compatibility enforcement
 - Runtime pack compatibility version is now centralized as `kRuntimePackVersion = 4`.
@@ -85,3 +86,14 @@ Executable build stamp:
 Runtime behavior:
 - Build stamp logged on startup
 - Window title includes build stamp
+
+## Release validation expectations
+- `tools/build_release.ps1` now hard-fails when required content input directories are missing (`data/`, sample pack input dir).
+- Release build flow replay-verifies both packs: generated default `content.pak` and generated `sample-content.pak`.
+- `tools/release_validate.ps1` requires `RELEASE_MANIFEST.txt` and asserts required artifact entries are listed.
+
+## Troubleshooting-first artifacts
+When triaging distribution issues, start with `dist/portable/RELEASE_MANIFEST.txt`:
+- Verify target file exists in inventory and size/hash align with expected build outputs.
+- Compare hashes between local build and distributed archive to isolate corruption or stale artifacts.
+- Confirm runtime DLL inventory includes platform dependencies expected by your deployment target.
