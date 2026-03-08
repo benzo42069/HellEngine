@@ -678,3 +678,9 @@
 - **Decision**: Apply minimal, local syntax-safe rename of the helper identifier to avoid preprocessor macro collision.
 - **Implementation**: Renamed `near(...)` helper to `nearlyEqual(...)` and updated all local call sites in the same test file.
 - **Consequence**: Test compiles cleanly without changing renderer behavior or test intent.
+
+## 2026-03-08 — Catch2 test target helper consistency for missing-main link failures
+- **Context**: Windows linking reported unresolved `main` for `render2d_tests.exe` and `pattern_tests.exe` while other Catch targets (for example `projectile_tests`) linked correctly.
+- **Decision**: Route `render2d_tests` and `pattern_tests` through `engine_add_catch_test(...)` instead of `engine_add_plain_test(...)` to inherit `Catch2::Catch2WithMain` from the shared helper.
+- **Rationale**: Keeps Catch entrypoint ownership centralized in one helper and prevents per-target drift that can reintroduce missing-main linker failures.
+- **Status**: Accepted.
