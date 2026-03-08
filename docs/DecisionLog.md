@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-08 — Rebuild reliability hardening and validation
+- **Context**: Prior audits flagged potential divergence between source edits and incremental build state, especially around generated/versioned configuration artifacts.
+- **Decision**: Add `CMAKE_CONFIGURE_DEPENDS` for `version/VERSION.txt` and explicitly validate both clean and incremental rebuild paths in the same environment.
+- **Rationale**: Automatic reconfigure on version input changes removes a subtle stale-config class while preserving current target/link structure.
+- **Status**: Accepted.
+
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
 - **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
 - **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.

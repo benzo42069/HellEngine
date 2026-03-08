@@ -5,6 +5,8 @@
 - Typed plugin registration result (`PluginRegistrationResult`) with boundary-safe rejection causes.
 
 ### Changed
+- Hardened top-level CMake reconfigure reliability by tracking `version/VERSION.txt` via `CMAKE_CONFIGURE_DEPENDS`, ensuring generated version header updates are not missed on incremental runs.
+- Verified build reliability with a full deleted-build configure/build and representative incremental rebuild probes (header touch + cpp touch) using Ninja, confirming dependency propagation and link refresh behavior.
 - Plugin registration now enforces compatibility/version checks plus duplicate-id and duplicate-instance protection.
 - Public API versioning helpers now include `isApiCompatible(...)` for host/plugin compatibility gating.
 

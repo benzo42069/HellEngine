@@ -7,6 +7,21 @@
 
 # Implementation Plan
 
+## 2026-03-08 — Build reliability verification (clean + incremental)
+- Risks checked:
+  - Generated header flow (`generated/engine/version.h`) and version-file-driven configure drift.
+  - Incremental dependency propagation after representative header and cpp edits.
+  - Clean rebuild behavior from a fully deleted build tree.
+- Fixes made:
+  - Added `CMAKE_CONFIGURE_DEPENDS` on `version/VERSION.txt` in top-level CMake so version-driven configure output stays synchronized automatically.
+- Validation runbook:
+  1. `cmake -E remove_directory build`
+  2. `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug`
+  3. `cmake --build build --target engine_core -j 8`
+  4. `cmake -E touch include/engine/render_pipeline.h && cmake --build build --target engine_core -j 8`
+  5. `cmake -E touch src/engine/render_pipeline.cpp && cmake --build build --target engine_core -j 8`
+- Status: Clean configure/build and incremental rebuild checks completed successfully after installing missing OpenGL development libraries in this container.
+
 ## 2026-03-08 — Vertical slice completion plan (product validation)
 - Scope delivered:
   - Authored two representative sample encounters (`Ember Crossing`, `Seraph Rematch`) with staged combat/boss/replay metadata.
