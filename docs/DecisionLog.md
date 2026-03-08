@@ -608,3 +608,10 @@
 - **Rationale**: Keeps deterministic runtime behavior intact while isolating concern-specific logic into testable units with smaller APIs.
 - **Migration Notes**: Existing `GameplaySession` state fields remain available, but gameplay mutation entry points now flow through subsystem interfaces.
 - **Status**: Accepted.
+
+## 2026-03-08 — GameplaySession encounter-runtime ownership split
+- **Context**: After the initial subsystem split, `GameplaySession::updateGameplay()` still directly owned collision resolution flow, despawn visual reactions, zone transition/ambient presentation emission, and entity runtime-event fanout.
+- **Decision**: Introduce `EncounterSimulationSubsystem` and route encounter-specific simulation/presentation coordination through it (`emitDespawnParticles`, `processRuntimeEvents`, `resolveCpuDeterministicCollisions`, `emitZoneTransitionFeedback`, `emitAmbientZoneFeedback`).
+- **Rationale**: Reduces overloaded session orchestration code, establishes explicit encounter boundary ownership, and improves testability of encounter/presentation glue without altering deterministic behavior.
+- **Migration Notes**: `GameplaySession` remains top-level deterministic coordinator; internal encounter responsibilities are delegated to subsystem methods while preserving public API and replay integration.
+- **Status**: Accepted.
