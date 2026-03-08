@@ -7,6 +7,16 @@
 - **Status**: Accepted.
 
 
+## 2026-03-08 — Content pipeline/audio runtime boundary cleanup
+- **Context**: `content_pipeline.h` included `audio_system.h`, creating an inverted dependency where generic content interfaces pulled in runtime SDL_mixer headers and forced tooling targets to link/runtime-audio dependencies.
+- **Decision**: Split audio content schema definitions (`AudioBus`, `AudioEventId`, `AudioClipRecord`, `AudioEventBinding`, `AudioContentDatabase`) into `audio_content.h`; update `content_pipeline.h` and `audio_system.h` to depend on that shared lightweight header.
+- **Rationale**: Restores architectural layering: content pipeline types stay data-focused while runtime playback/system concerns remain in `audio_system`.
+## 2026-03-08 — Consolidated FetchContent dependency registration
+- **Context**: Dependency setup in top-level CMake remained operational but fragmented across repeated declaration blocks, making wiring audits harder and inviting accidental duplication during future additions.
+- **Decision**: Introduce a single dependency registration helper (`engine_register_dependency`) that appends each third-party package to one canonical list, then materialize once via `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})`.
+- **Rationale**: Keeps behavior unchanged while making third-party setup auditable, reducing redundancy risk, and clarifying target availability order for downstream linking.
+- **Status**: Accepted.
+
 
 ## 2026-03-07 — Build hygiene reliability guardrails
 - **Context**: Audit found stale-state risk factors in the build graph (duplicate dependency materialization calls, potential in-source cache pollution, and generated-header path assumptions).
@@ -558,4 +568,11 @@
 - **Context**: `engine_core` build was blocked by duplicated `PaletteRampTexture` declarations and a renderer-side unresolved projectile allegiance symbol.
 - **Decision**: Apply a surgical fix: deduplicate `palette_ramp.h/.cpp`, keep one canonical `texture_` + member set, expose `animationFor` publicly, and include `projectiles.h` in `gl_bullet_renderer.cpp`.
 - **Rationale**: Restores compile integrity without redesigning palette or projectile rendering architecture.
+- **Status**: Accepted.
+
+## 2026-03-08 — GameplaySession ownership facet split
+- **Context**: `GameplaySession` still mixed session orchestration, player combat runtime transitions, progression navigation logic, and presentation event shaping in one update path.
+- **Decision**: Introduce explicit subsystem interfaces in `gameplay_session_subsystems` (`PlayerCombatSubsystem`, `ProgressionSubsystem`, `PresentationSubsystem`) and route `GameplaySession::updateGameplay()` / `onUpgradeNavigation()` through those boundaries.
+- **Rationale**: Keeps deterministic runtime behavior intact while isolating concern-specific logic into testable units with smaller APIs.
+- **Migration Notes**: Existing `GameplaySession` state fields remain available, but gameplay mutation entry points now flow through subsystem interfaces.
 - **Status**: Accepted.
