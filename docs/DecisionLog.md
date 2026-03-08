@@ -1,5 +1,12 @@
 # Decision Log
 
+## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
+- **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
+- **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.
+- **Rationale**: Reduces coupling between UI domains and shared runtime-facing logic, improves maintainability, and creates explicit extension points for future panels/services while preserving existing behavior.
+- **Status**: Accepted.
+
+
 
 ## 2026-03-07 — Build hygiene reliability guardrails
 - **Context**: Audit found stale-state risk factors in the build graph (duplicate dependency materialization calls, potential in-source cache pollution, and generated-header path assumptions).

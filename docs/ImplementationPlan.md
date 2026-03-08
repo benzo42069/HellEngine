@@ -1,5 +1,13 @@
 # Implementation Plan
 
+## 2026-03-08 Editor Tool Decomposition Plan (Completed)
+- [x] Audit `editor_tools.cpp` responsibilities and identify domain seams.
+- [x] Introduce modular editor implementation units under `src/engine/editor/` for core orchestration, workspace/content-browser UX, and pattern/encounter/trait/projectile UX.
+- [x] Move content generation + validation into shared editor services consumed by UI modules.
+- [x] Preserve `ControlCenterToolSuite` public header/API surface to keep runtime integrations stable.
+- [x] Update build graph and docs to reflect the new module/service architecture and extension points.
+
+
 
 ## 2026-03-07 — Build hygiene and clean rebuild validation
 - Audit findings:
