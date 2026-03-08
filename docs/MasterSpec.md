@@ -1,6 +1,14 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Editor tooling architecture was decomposed from the single `src/engine/editor_tools.cpp` unit into modular editor translation units under `src/engine/editor/` (`editor_tools_core`, `editor_tools_workspace_panel`, `editor_tools_pattern_panel`, and `editor_tools_services`).
+- 2026-03-08: Shared editor services were formalized around content generation and validation (`generateDemoContent`, `runControlCenterValidation`) so panels consume service APIs instead of embedding filesystem/schema logic inline.
+- 2026-03-08: Extension seam preserved and clarified: plugin panels still render through `public_api::toolPanelPlugins()`, while new editor domains can be added as isolated panel/source units without expanding a central monolith.
+
+
+## Build Notes
+- 2026-03-08: Removed generic content pipeline -> runtime audio header coupling by extracting audio pack schema types into `audio_content.h`; `content_pipeline.h` no longer includes `audio_system.h`, so SDL_mixer headers are no longer required for generic content/tool include paths. Follow-up: keep runtime playback APIs confined to `audio_system` and avoid reintroducing SDL-facing includes into content headers.
+- 2026-03-08: Consolidated third-party CMake dependency registration into a single `engine_register_dependency(...)` workflow and one `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})` materialization pass. This replaces fragmented declaration patterns with one auditable dependency list while preserving existing targets (`SDL2`, `SDL2_mixer`, `imgui`, `nlohmann_json`, `Catch2`) and downstream link wiring.
 - 2026-03-07: `ContentPacker` now explicitly links `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` because it compiles content pipeline sources that include audio headers; this fixes Visual Studio/Ninja include failures for `SDL_mixer.h` without changing engine runtime behavior.
 - 2026-03-07: Build hygiene hardening pass completed. CMake now rejects in-source builds to prevent cache/source-tree contamination, ensures `${CMAKE_BINARY_DIR}/generated/engine` exists before emitting configured headers, and removes duplicate `FetchContent_MakeAvailable` calls so dependency initialization is single-pass and deterministic across clean/incremental configure runs.
 - 2026-03-07: Clean rebuild workflow baseline is now: remove build tree, reconfigure out-of-source, build, then run tests (`cmake -E remove_directory build`, `cmake -S . -B build ...`, `cmake --build build ...`, `ctest --test-dir build ...`).
@@ -1643,3 +1651,12 @@ Documentation policy:
 - Resolved a palette-ramp header merge regression that duplicated `PaletteRampTexture` members (`textureId`, `rowV`, `shutdown`, and `texture_`) and blocked renderer compilation.
 - `PaletteRampTexture::animationFor` is now exposed in the public interface to match existing `GlBulletRenderer` usage.
 - `GlBulletRenderer` now explicitly includes `projectiles.h` so `ProjectileAllegiance::Enemy` resolves from the canonical projectile allegiance enum.
+
+## GameplaySession Runtime Ownership (2026-03-08 update)
+
+`GameplaySession` is now treated as a deterministic runtime coordinator with explicit concern facets:
+- **PlayerCombatSubsystem**: updates aim target, movement clamp, defensive-special trigger gating, and graze point collection.
+- **ProgressionSubsystem**: applies upgrade screen navigation and selection/reroll transitions.
+- **PresentationSubsystem**: emits camera-shake/audio feedback events for gameplay-triggered presentation signals.
+
+Behavioral contract remains unchanged: the owning simulation tick order is still orchestrated by `GameplaySession::updateGameplay()`, and replay determinism contracts are preserved.

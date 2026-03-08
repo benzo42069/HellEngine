@@ -1,5 +1,27 @@
 # Implementation Plan
 
+## 2026-03-08 Editor Tool Decomposition Plan (Completed)
+- [x] Audit `editor_tools.cpp` responsibilities and identify domain seams.
+- [x] Introduce modular editor implementation units under `src/engine/editor/` for core orchestration, workspace/content-browser UX, and pattern/encounter/trait/projectile UX.
+- [x] Move content generation + validation into shared editor services consumed by UI modules.
+- [x] Preserve `ControlCenterToolSuite` public header/API surface to keep runtime integrations stable.
+- [x] Update build graph and docs to reflect the new module/service architecture and extension points.
+
+## 2026-03-08 — Dependency setup consolidation (CMake)
+- Audit findings:
+  - Third-party setup was functionally correct but spread across repeated `FetchContent_Declare(...)` blocks with manual tracking, which made drift/duplication review harder.
+  - Dependency materialization intent (single-pass) was not represented as explicit structure in CMake.
+- Changes applied:
+  - Added `engine_register_dependency(...)` helper to register each dependency in one canonical list (`ENGINE_FETCHCONTENT_DEPENDENCIES`).
+  - Kept SDL/SDL_mixer cache policy knobs intact and adjacent to their registrations.
+  - Preserved existing dependency set and wiring (`SDL2`, `SDL2_mixer`, `imgui`, `nlohmann_json`, `Catch2`) with one `FetchContent_MakeAvailable(...)` call driven by the canonical list.
+- Target wiring notes:
+  - No changes to `ENGINEDEMO_SDL_TARGET` selection logic.
+  - No changes to downstream link libraries for `engine_core`, `ContentPacker`, or tests.
+- Validation status:
+  - Dependency resolution and FetchContent orchestration complete successfully during configure.
+  - Final configure step is still blocked in this container by missing system OpenGL development libraries required by `find_package(OpenGL REQUIRED)`.
+
 
 ## 2026-03-08 — Renderer ownership clarification pass
 - Audit findings:
@@ -436,6 +458,7 @@ Completed items:
 - Implemented core `AudioSystem` runtime service with SDL audio callback mixer, content-driven clip/event registration, and music loop support.
 - Wired gameplay event hooks for: hit, graze, player damage, enemy death, boss warning, UI click, UI confirm.
 - Added content pipeline integration by allowing `ContentPacker` to include `audio` section in generated pack and by parsing audio metadata through `parseAudioContentDatabase`.
+- 2026-03-08 boundary fix: moved audio content schema declarations into `include/engine/audio_content.h` so generic content pipeline interfaces no longer transitively require `audio_system.h`/`SDL_mixer.h`; runtime playback APIs remain isolated in `AudioSystem`.
 - Added runtime config volume controls (`audioMasterVolume`, `audioMusicVolume`, `audioSfxVolume`) and command-line overrides (`--audio-master`, `--audio-music`, `--audio-sfx`).
 - Added smoke-level tests covering audio content parsing and config volume parsing/overrides.
 
@@ -529,3 +552,22 @@ Completed release-engineering closure work:
 - Kept `animationFor` available to renderer call sites by moving it to the public API surface.
 - Fixed `ProjectileAllegiance::Enemy` resolution in `src/engine/gl_bullet_renderer.cpp` via explicit canonical enum header include.
 - Verified `engine_core` builds past the previously failing files.
+
+## 2026-03-08 — GameplaySession responsibility refactor
+
+### Completed
+- Extracted concern-specific runtime interfaces into `include/engine/gameplay_session_subsystems.h` and `src/engine/gameplay_session_subsystems.cpp`.
+- Routed player aim/movement/graze and defensive-special trigger checks through `PlayerCombatSubsystem`.
+- Routed upgrade navigation semantics through `ProgressionSubsystem`.
+- Routed presentation event emission for defensive-special activation and graze feedback through `PresentationSubsystem`.
+- Added new build integration for subsystem implementation (`CMakeLists.txt`).
+
+### Ownership boundaries after refactor
+1. **Session orchestration**: `GameplaySession::updateGameplay()` remains deterministic phase coordinator.
+2. **Player runtime combat state**: `PlayerCombatSubsystem` mutates only player-combat-centric state and queries projectile graze.
+3. **Progression/upgrades/traits input handling**: `ProgressionSubsystem` owns upgrade-screen navigation transitions.
+4. **Presentation event emission**: `PresentationSubsystem` owns camera shake/audio event shaping for combat feedback.
+
+### Migration notes
+- Runtime call sites remain unchanged (`session.onUpgradeNavigation()`, `session.updateGameplay()`), but those entry points now dispatch to subsystem interfaces.
+- No replay hash contract changes were introduced by this split.
