@@ -660,3 +660,9 @@
 - **Rationale**: Reduces overloaded session orchestration code, establishes explicit encounter boundary ownership, and improves testability of encounter/presentation glue without altering deterministic behavior.
 - **Migration Notes**: `GameplaySession` remains top-level deterministic coordinator; internal encounter responsibilities are delegated to subsystem methods while preserving public API and replay integration.
 - **Status**: Accepted.
+
+## 2026-03-08 — RenderPipeline compile hotfix for duplicated `buildSceneOverlay` signature
+- **Context**: `render_pipeline.cpp` failed to compile with C2601/C1075 due to an unmatched opening brace near the `buildSceneOverlay(...)` region.
+- **Decision**: Apply a surgical syntax fix by removing the stray duplicated `buildSceneOverlay(const SimSnapshot&, const double frameDelta)` opening block and retaining the existing `buildSceneOverlay(const SimSnapshot&, const double /*frameDelta*/)` definition.
+- **Rationale**: Restores correct function/block structure so `buildSceneOverlay` and `renderFrame` are parsed as class member definitions without changing rendering behavior.
+- **Status**: Accepted.

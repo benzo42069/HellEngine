@@ -160,3 +160,7 @@
 - Moved deterministic CPU collision flow, despawn presentation emission, and zone-feedback emission out of inline `GameplaySession` logic into encounter subsystem methods.
 - Routed entity runtime-event presentation fanout through encounter subsystem coordination.
 - Extended `gameplay_session_state_tests` with coverage for encounter zone-feedback emission behavior.
+
+## Unreleased
+### Fixed
+- Fixed a brace/function-structure mismatch in `src/engine/render_pipeline.cpp` where a duplicated `buildSceneOverlay(...)` signature introduced an unmatched `{` and caused subsequent member functions (including `renderFrame`) to parse as illegal local definitions.
