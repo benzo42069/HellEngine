@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-08 — Consolidated FetchContent dependency registration
+- **Context**: Dependency setup in top-level CMake remained operational but fragmented across repeated declaration blocks, making wiring audits harder and inviting accidental duplication during future additions.
+- **Decision**: Introduce a single dependency registration helper (`engine_register_dependency`) that appends each third-party package to one canonical list, then materialize once via `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})`.
+- **Rationale**: Keeps behavior unchanged while making third-party setup auditable, reducing redundancy risk, and clarifying target availability order for downstream linking.
+- **Status**: Accepted.
+
 
 ## 2026-03-07 — Build hygiene reliability guardrails
 - **Context**: Audit found stale-state risk factors in the build graph (duplicate dependency materialization calls, potential in-source cache pollution, and generated-header path assumptions).

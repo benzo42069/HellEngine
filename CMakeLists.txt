@@ -49,47 +49,60 @@ endif()
 
 include(FetchContent)
 
-# Avoid building both SDL shared and static variants in this project to reduce
-# archive/write races under parallel generators and to keep linkage explicit.
+# Third-party dependency setup (single registration/materialization flow).
+set(ENGINE_FETCHCONTENT_DEPENDENCIES)
+
+function(engine_register_dependency dependency_name)
+  cmake_parse_arguments(ENGINE_DEP "" "" "FETCH_ARGS" ${ARGN})
+  if(NOT ENGINE_DEP_FETCH_ARGS)
+    message(FATAL_ERROR "engine_register_dependency(${dependency_name}) requires FETCH_ARGS")
+  endif()
+
+  FetchContent_Declare(${dependency_name} ${ENGINE_DEP_FETCH_ARGS})
+  list(APPEND ENGINE_FETCHCONTENT_DEPENDENCIES ${dependency_name})
+  set(ENGINE_FETCHCONTENT_DEPENDENCIES "${ENGINE_FETCHCONTENT_DEPENDENCIES}" PARENT_SCOPE)
+endfunction()
+
+# SDL2 policy: prefer shared-only to avoid duplicate archive generation.
 set(SDL_SHARED ON CACHE BOOL "Build SDL shared library" FORCE)
 set(SDL_STATIC OFF CACHE BOOL "Build SDL static library" FORCE)
 set(SDL_TEST OFF CACHE BOOL "Build SDL tests" FORCE)
 
-FetchContent_Declare(
-  SDL2
-  GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-  GIT_TAG release-2.30.5
+engine_register_dependency(SDL2
+  FETCH_ARGS
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG release-2.30.5
 )
 
 # Keep SDL_mixer self-contained in CI/dev environments without system codec dev packages.
 set(SDL2MIXER_VENDORED ON CACHE BOOL "Use vendored dependencies for SDL2_mixer" FORCE)
 set(SDL2MIXER_SAMPLES OFF CACHE BOOL "Disable SDL2_mixer sample binaries" FORCE)
 
-FetchContent_Declare(
-  SDL2_mixer
-  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
-  GIT_TAG release-2.8.1
+engine_register_dependency(SDL2_mixer
+  FETCH_ARGS
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+    GIT_TAG release-2.8.1
 )
 
-FetchContent_Declare(
-  imgui
-  GIT_REPOSITORY https://github.com/ocornut/imgui.git
-  GIT_TAG v1.91.0
+engine_register_dependency(imgui
+  FETCH_ARGS
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG v1.91.0
 )
 
-FetchContent_Declare(
-  nlohmann_json
-  GIT_REPOSITORY https://github.com/nlohmann/json.git
-  GIT_TAG v3.11.3
+engine_register_dependency(nlohmann_json
+  FETCH_ARGS
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
 )
 
-FetchContent_Declare(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v3.5.2
+engine_register_dependency(Catch2
+  FETCH_ARGS
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG v3.5.2
 )
 
-FetchContent_MakeAvailable(SDL2 SDL2_mixer imgui nlohmann_json Catch2)
+FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
