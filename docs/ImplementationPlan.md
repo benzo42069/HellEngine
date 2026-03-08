@@ -7,6 +7,7 @@
 
 # Implementation Plan
 
+- 2026-03-08 progress: Completed authored-encounter runtime wiring so vertical-slice stage/zone flow is sourced from packed encounter JSON (`encounters[].zones[]`) with deterministic fallback to default stages when packs are absent.
 ## 2026-03-08 — Pattern panel modularization follow-up (Completed)
 - [x] Audit remaining dense concerns in `drawPatternGraphEditorPanel` after initial editor split.
 - [x] Separate pattern generation controls, seed/testing controls, graph palette/inspector, and preview-analysis rendering into focused helper methods.

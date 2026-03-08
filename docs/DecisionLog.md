@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-03-08 — Run-structure driven by authored encounter zones
+- **Context**: Vertical-slice validation required encounter pacing (combat/elite/event/boss) to run through authored content-pack data, but runtime stage flow was still sourced from hardcoded defaults.
+- **Decision**: Add a content-pack boot path that reads `encounters[].zones[]` and hydrates `RunStructure` stages from authored encounter definitions; keep default stage initialization as fallback when packs are missing/invalid.
+- **Rationale**: Validates intended workflow end-to-end (author JSON -> ContentPacker -> Runtime) and avoids bespoke demo-only runtime paths.
 ## 2026-03-08 — Pattern panel responsibility split inside editor tooling
 - **Context**: After the first editor decomposition, the pattern panel still mixed generation tuning, seed/testing actions, graph editing, and preview diagnostics in one dense function body.
 - **Decision**: Keep a single Pattern Graph Editor window for workflow continuity, but split implementation into focused helper modules for generation controls, seed/testing, graph editing, preview-asset construction, and simulation/analysis rendering.

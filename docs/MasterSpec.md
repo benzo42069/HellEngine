@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Runtime run-structure boot now consumes authored `encounters[].zones[]` from the selected content pack when available, falling back to defaults only if no encounter data is present. This aligns the playable vertical slice flow (combat/elite/event/boss sequencing) with content-pipeline authored data instead of hardcoded stage layouts.
 - 2026-03-08: Build reliability verification pass completed. Clean reconfigure/build from a deleted `build/` directory and incremental rebuild checks (`touch` representative header/cpp + rebuild) both behaved consistently in Ninja; expected workflow remains delete build dir, reconfigure, rebuild, then run tests.
 - 2026-03-08: Added `CMAKE_CONFIGURE_DEPENDS` tracking for `version/VERSION.txt` so project version and generated `generated/engine/version.h` are reconfigured automatically when the version file changes, reducing stale configure state risk.
 - 2026-03-08: Public API/plugin boundary hardening added metadata-based plugin registration, compatibility gating against `publicApiVersion()`, duplicate-id protection, and explicit unregister/clear lifecycle endpoints while preserving existing engine run behavior.
