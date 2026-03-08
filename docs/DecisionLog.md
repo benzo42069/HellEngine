@@ -26,6 +26,13 @@
 - **Status**: Accepted.
 
 
+## 2026-03-08 — Product validation via authored vertical slice
+- **Context**: Audit follow-up required proving HellEngine as a coherent product loop (combat → encounter flow → boss phases → replay/package viability), not just subsystem completeness.
+- **Decision**: Treat the vertical slice as an authored content-pack workflow artifact: expand encounter metadata, wire slice run/replay instructions, and validate through existing build/test/package scripts rather than bespoke runtime toggles.
+- **Rationale**: Keeps the validation representative of shipping workflows and avoids architectural bypasses/hardcoded demo paths.
+- **Status**: Accepted.
+
+
 ## 2026-03-07 — Build hygiene reliability guardrails
 - **Context**: Audit found stale-state risk factors in the build graph (duplicate dependency materialization calls, potential in-source cache pollution, and generated-header path assumptions).
 - **Decision**: Enforce out-of-source builds, create generated include directory explicitly before `configure_file`, and consolidate third-party dependency setup into a single `FetchContent_MakeAvailable(...)` pass.

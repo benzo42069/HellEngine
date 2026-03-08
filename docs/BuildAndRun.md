@@ -67,6 +67,19 @@ cmake --build build --config Debug
 .\build\Debug\EngineDemo.exe --audio-master 0.8 --audio-music 0.5 --audio-sfx 1.0
 ```
 
+
+## Product Validation Vertical Slice
+Use the authored sample runbook for end-to-end product validation:
+- `docs/SampleVerticalSlice.md`
+
+Quick path:
+```powershell
+.\build\Debug\ContentPacker.exe --input data --output content.pak
+.\build\Debug\EngineDemo.exe --content-pack content.pak
+.\build\Debug\EngineDemo.exe --replay-verify --headless --ticks 7200 --seed 1337 --content-pack content.pak
+./tools/package_dist.ps1
+```
+
 ## Build ContentPacker
 ```powershell
 cmake --build build --config Debug --target ContentPacker
