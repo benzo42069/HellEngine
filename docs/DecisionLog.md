@@ -1,5 +1,10 @@
 # Decision Log
 
+## 2026-03-08 — Decision: Creator docs are workflow-first and split by task
+- **Context:** Existing docs had useful detail but mixed internal notes, stale examples, and overlapping pages that increased onboarding friction for external creators.
+- **Decision:** Keep a short index-style `AuthoringGuide.md` and maintain focused workflow guides (build/run, import, palette/grayscale, patterns, encounter/boss, replay/debug, audio, sample usage, troubleshooting, plugins/mods, performance).
+- **Rationale:** External creators need dependable, executable workflows more than architecture prose during first contact with the engine.
+- **Consequence:** Lower doc drift risk (single owner page per workflow) and clearer upgrade path for future creator-facing changes.
 ## 2026-03-08 — Release packaging reliability + sample bundle validation hardening
 - **Context**: Release scripts packaged expected binaries/content but had weak dependency discovery (`SDL2.dll` only), no signed inventory/trace artifact, and no explicit sample-pack execution check from the produced portable folder.
 - **Decision**: Extend packaging to (1) discover/copy all runtime DLLs from release build output, (2) generate `RELEASE_MANIFEST.txt` with file inventory + SHA-256 hashes, and (3) run replay verification using `sample-content.pak` from within the packaged bundle.

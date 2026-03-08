@@ -1,43 +1,44 @@
-# Plugin and Mod Extension Overview
+# Plugin and Mod Overview
 
-This document describes the supported external extension boundary for HellEngine.
+This guide defines the supported external extension boundary for creators and integrators.
 
-## 1) Public API boundary
-
-External integrations should include only public headers:
+## 1) Public API boundary (stable contract)
+Only include public headers:
 - `include/engine/public/engine.h`
 - `include/engine/public/api.h`
 - `include/engine/public/plugins.h`
 - `include/engine/public/versioning.h`
 
-Do not depend on `include/engine/internal/*` or `src/engine/*` internals for external plugins/mod tooling.
+Do **not** depend on `include/engine/internal/*` or `src/engine/*` internals for shipped plugins/mod tooling.
 
-## 2) Supported plugin types
+## 2) Plugin categories
 
-### Content pack plugins
-Implement `IContentPackPlugin` and register with `registerContentPackPlugin(plugin)`.
+### Content pack plugins (`IContentPackPlugin`)
+- Register with `registerContentPackPlugin(...)`.
+- Provide pack paths or pack providers to extend content load order.
 
-Purpose:
-- Provide additional pack paths at runtime.
-- Extend/override content through pack load order.
+### Shader pack plugins (`IShaderPackPlugin`)
+- Register with `registerShaderPackPlugin(...)`.
+- Provide custom shader-pack metadata for runtime renderer diagnostics/integration.
 
-### Shader pack plugins
-Implement `IShaderPackPlugin` and register with `registerShaderPackPlugin(plugin)`.
+### Tool panel plugins (`IToolPanelPlugin`)
+- Register with `registerToolPanelPlugin(...)`.
+- Add editor/control-center panels without modifying engine core editor code.
 
-Purpose:
-- Surface custom shader packs for runtime diagnostics/HUD and renderer integration.
+## 3) Registration and lifecycle expectations
+Registration rejects:
+- null plugin pointers
+- empty metadata ids
+- duplicate ids or duplicate instances
+- incompatible target API version
 
-### Tool panel plugins
-Implement `IToolPanelPlugin` and register with `registerToolPanelPlugin(plugin)`.
+Lifecycle:
+1. Construct plugin instance.
+2. Register plugin.
+3. Unregister by id when unloading, or call `clearRegisteredPlugins()` during host teardown.
 
-Purpose:
-- Add custom control-center/editor panels without editing core editor modules.
-
-## 3) Mod pack layering behavior
-
-Runtime supports multiple packs via `--content-pack` separated by `;` or `,`.
-
-Example:
+## 4) Mod pack layering behavior
+Runtime accepts multiple packs via `--content-pack`, separated by `;` or `,`.
 
 ```bash
 ./build/EngineDemo --content-pack "mods/base.pak;mods/balance_patch.pak"
@@ -45,35 +46,11 @@ Example:
 
 Merge rules:
 - Left-to-right load order.
-- Later pack entries override earlier ones by `guid`.
-- Conflicts are logged.
+- Later pack assets override earlier assets by GUID.
+- Conflicts are logged for diagnostics.
 
-## 4) Versioning and compatibility
-
-Public API policy:
-- PATCH: bugfixes only.
-- MINOR: additive API changes.
-- MAJOR: breaking API changes.
-
-Deprecations are marked and retained for at least one MINOR before MAJOR removal.
-
-## 5) Recommended extension workflow
-1. Build a content pack or plugin against current public headers.
-2. Validate with headless run + replay verify.
-3. Pin against a compatible runtime version.
-4. Avoid internal include reliance to reduce breakage risk.
-
-## 6) Plugin lifecycle boundary
-
-Expected host lifecycle:
-1. Construct plugin instances.
-2. Register via `register*Plugin(...)`.
-3. On shutdown/unload, unregister by plugin id (`unregister*Plugin(id)`) or call `clearRegisteredPlugins()`.
-
-Registration validates:
-- non-null plugin pointer
-- non-empty metadata id
-- unique plugin id and unique plugin instance
-- API compatibility (`targetApiVersion` vs runtime public API version)
-
-This boundary keeps plugin management in the public layer while keeping registry storage and ordering internal/unstable.
+## 5) Creator-safe extension workflow
+1. Build against public headers only.
+2. Run smoke + replay verify with your pack/plugin.
+3. Pin your integration to a compatible runtime public API version.
+4. Avoid internal include dependencies to reduce breakage risk.

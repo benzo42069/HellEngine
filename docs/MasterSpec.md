@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Final creator-facing documentation pass completed. External onboarding now has explicit workflows for getting started, build/run, asset import, palette+grayscale shading, pattern authoring, encounter/boss authoring, replay/debug, audio, sample project usage, troubleshooting, plugin/mod integration, and creator performance guidance.
 - 2026-03-08: Release packaging/productization hardening completed. Portable packaging now auto-bundles discovered runtime DLL dependencies from build output, emits a SHA-256 release manifest (`RELEASE_MANIFEST.txt`), and enforces sample-pack replay validation from the packaged bundle. Release validation now checks both artifact presence and manifest coverage for critical binaries/content.
 - 2026-03-08: Runtime run-structure boot now consumes authored `encounters[].zones[]` from the selected content pack when available, falling back to defaults only if no encounter data is present. This aligns the playable vertical slice flow (combat/elite/event/boss sequencing) with content-pipeline authored data instead of hardcoded stage layouts.
 - 2026-03-08: Build reliability verification pass completed. Clean reconfigure/build from a deleted `build/` directory and incremental rebuild checks (`touch` representative header/cpp + rebuild) both behaved consistently in Ninja; expected workflow remains delete build dir, reconfigure, rebuild, then run tests.

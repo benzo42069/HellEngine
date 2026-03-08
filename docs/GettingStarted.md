@@ -1,72 +1,80 @@
-# Getting Started (External Creator Quickstart)
+# Getting Started (Creator Onboarding)
 
-This guide is the fastest path from clone to a playable build that uses your own authored content.
+This guide is the fastest path from clone to a playable HellEngine run using authored content.
 
-## Who this guide is for
-- Creators building encounters/patterns/content packs.
-- Integrators evaluating engine runtime + deterministic replay workflow.
+## Audience
+- Content creators (patterns, encounters, bosses, palettes, audio).
+- Technical designers validating deterministic replay.
 - Mod/plugin developers validating extension boundaries.
 
-## 1) Build the engine
+## 1) Build engine tools and runtime
 
+### Linux/macOS (Ninja)
 ```bash
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j 4
 ```
 
-Expected binaries in `build/`:
+### Windows (Visual Studio)
+```powershell
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake --build build --config Debug
+```
+
+Expected binaries:
 - `EngineDemo`
 - `ContentPacker`
 
-## 2) Build a content pack
+## 2) Build a runtime content pack
 
-Runtime content is loaded from a compiled pack (`content.pak`).
-
-Build from local authoring data:
+Build from repository authoring data:
 
 ```bash
 ./build/ContentPacker --input data --output content.pak
 ```
 
-Or build from repo templates:
+Build from sample templates:
 
 ```bash
 ./build/ContentPacker --input examples/content_packs --output content.pak --pack-id starter
 ```
 
-## 3) Run the game/runtime
+## 3) Run the runtime
 
 ```bash
 ./build/EngineDemo --content-pack content.pak
 ```
 
-Headless smoke test:
+Headless creator smoke test:
 
 ```bash
 ./build/EngineDemo --headless --ticks 300 --content-pack content.pak
 ```
 
-## 4) Verify deterministic replay parity
+## 4) Validate deterministic replay parity
 
 ```bash
 ./build/EngineDemo --replay-verify --headless --ticks 1200 --seed 1337 --content-pack content.pak
 ```
 
-Use this command as your baseline “did my content change break determinism?” check.
+Run this before publishing content changes.
 
-## 5) Author safely (edit -> repack -> verify loop)
-1. Edit JSON in `data/` (or your own content source folder).
-2. Rebuild the pack with `ContentPacker`.
+## 5) Daily creator loop
+1. Edit authored JSON in your source folder (`data/` or your own pack source tree).
+2. Rebuild with `ContentPacker`.
 3. Run a short headless smoke test.
-4. Run `--replay-verify` before sharing/committing.
+4. Run replay verification.
+5. Fix warnings/errors before sharing.
 
-If content load fails, runtime reports a structured `error_report=...` log and keeps last-good/default fallback behavior instead of hard-crashing.
-
-## 6) Where to go next
-- Asset import workflow: `docs/AssetImportWorkflow.md`
+## 6) Creator documentation map
+- Build/run options: `docs/BuildAndRun.md`
+- Asset import: `docs/AssetImportWorkflow.md`
+- Palette + grayscale shader workflow: `docs/PaletteAndGrayscaleWorkflow.md`
 - Pattern authoring: `docs/PatternAuthoringGuide.md`
-- Boss + encounter authoring: `docs/BossEncounterAuthoring.md`
+- Encounter/boss authoring: `docs/BossEncounterAuthoring.md`
 - Replay/debug workflow: `docs/ReplayAndDebugGuide.md`
-- Plugin/mod extension overview: `docs/PluginAndModOverview.md`
-- Performance guidance for creators: `docs/CreatorPerformanceGuide.md`
+- Audio workflow: `docs/AudioWorkflow.md`
+- Sample project usage: `docs/SampleProjectUsage.md`
+- Plugin/mod overview: `docs/PluginAndModOverview.md`
+- Creator performance guidance: `docs/CreatorPerformanceGuide.md`
 - Troubleshooting: `docs/Troubleshooting.md`

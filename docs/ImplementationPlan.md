@@ -7,6 +7,12 @@
 
 # Implementation Plan
 
+## 2026-03-08 — Final creator-facing documentation pass (Completed)
+- [x] Audited creator docs for internal-only assumptions and outdated instructions (notably stale pack metadata/examples).
+- [x] Standardized onboarding around explicit build -> pack -> run -> replay-verify loops.
+- [x] Added dedicated guides for palette/grayscale shader workflow, audio workflow, and sample project usage.
+- [x] Updated core creator docs (asset import, pattern authoring, encounter/boss, replay/debug, troubleshooting, performance, build/run) to align with implemented CLI and content-packer behavior.
+- [x] Reframed `AuthoringGuide.md` as a maintained index to reduce drift across duplicated long-form docs.
 ## 2026-03-08 — Release packaging finalization plan (completed)
 - [x] Audit build/package/release scripts for dependency bundle assumptions and missing validation links.
 - [x] Replace single-DLL copy assumption with runtime DLL auto-discovery from build output directories.
