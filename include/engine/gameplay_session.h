@@ -182,6 +182,7 @@ class GameplaySession {
     PlayerCombatSubsystem playerCombat_ {};
     ProgressionSubsystem progressionRuntime_ {};
     PresentationSubsystem presentationRuntime_ {};
+    EncounterSimulationSubsystem encounterRuntime_ {};
 
   private:
     void reloadPatterns(const std::string& path);

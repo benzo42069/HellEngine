@@ -268,6 +268,7 @@ void RenderPipeline::ensureZoneBackground(const GameplaySession& session) {
 
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
     (void)frameDelta;
+void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double /*frameDelta*/) {
     const GameplaySession& s = snapshot.session;
     const ProjectileRenderPath projectileRenderPath = resolveProjectileRenderPath(s);
 

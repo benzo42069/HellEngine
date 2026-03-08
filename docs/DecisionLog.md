@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-03-08 — ContentPacker runtime-audio dependency trim
+- **Context**: `ContentPacker` previously linked SDL2 + SDL2_mixer due to older transitive coupling from content pipeline headers into runtime audio APIs.
+- **Decision**: Keep audio-content parsing in the content pipeline (`audio_content.h` / `parseAudioContentDatabase`) but remove direct SDL2 and SDL2_mixer linkage from the `ContentPacker` target.
+- **Rationale**: The packer compiles JSON/schema parsing utilities only and no longer includes/runtime-calls SDL audio or mixer APIs, so runtime playback libraries are unnecessary for this tool target.
+## 2026-03-08 — Rebuild reliability hardening and validation
+- **Context**: Prior audits flagged potential divergence between source edits and incremental build state, especially around generated/versioned configuration artifacts.
+- **Decision**: Add `CMAKE_CONFIGURE_DEPENDS` for `version/VERSION.txt` and explicitly validate both clean and incremental rebuild paths in the same environment.
+- **Rationale**: Automatic reconfigure on version input changes removes a subtle stale-config class while preserving current target/link structure.
+- **Status**: Accepted.
+
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
 - **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
 - **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.
@@ -604,4 +614,11 @@
 - **Decision**: Introduce explicit subsystem interfaces in `gameplay_session_subsystems` (`PlayerCombatSubsystem`, `ProgressionSubsystem`, `PresentationSubsystem`) and route `GameplaySession::updateGameplay()` / `onUpgradeNavigation()` through those boundaries.
 - **Rationale**: Keeps deterministic runtime behavior intact while isolating concern-specific logic into testable units with smaller APIs.
 - **Migration Notes**: Existing `GameplaySession` state fields remain available, but gameplay mutation entry points now flow through subsystem interfaces.
+- **Status**: Accepted.
+
+## 2026-03-08 — GameplaySession encounter-runtime ownership split
+- **Context**: After the initial subsystem split, `GameplaySession::updateGameplay()` still directly owned collision resolution flow, despawn visual reactions, zone transition/ambient presentation emission, and entity runtime-event fanout.
+- **Decision**: Introduce `EncounterSimulationSubsystem` and route encounter-specific simulation/presentation coordination through it (`emitDespawnParticles`, `processRuntimeEvents`, `resolveCpuDeterministicCollisions`, `emitZoneTransitionFeedback`, `emitAmbientZoneFeedback`).
+- **Rationale**: Reduces overloaded session orchestration code, establishes explicit encounter boundary ownership, and improves testability of encounter/presentation glue without altering deterministic behavior.
+- **Migration Notes**: `GameplaySession` remains top-level deterministic coordinator; internal encounter responsibilities are delegated to subsystem methods while preserving public API and replay integration.
 - **Status**: Accepted.

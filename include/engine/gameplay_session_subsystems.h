@@ -16,12 +16,16 @@
 namespace engine {
 
 struct PlayerCombatState;
+struct EncounterRuntimeState;
 struct ProgressionState;
 struct PresentationState;
 struct AudioEvent;
+struct ZoneDefinition;
 class DefensiveSpecialSystem;
 class TraitSystem;
 class ProjectileSystem;
+class EntitySystem;
+class BulletPaletteTable;
 
 class PlayerCombatSubsystem {
   public:
@@ -47,6 +51,15 @@ class PresentationSubsystem {
   public:
     void emitDefensiveSpecialActivation(std::vector<ShakeParams>& cameraShakes, std::vector<AudioEvent>& audioEvents, const Vec2& playerPos) const;
     void emitGrazeFeedback(std::vector<ShakeParams>& cameraShakes, std::vector<AudioEvent>& audioEvents, const Vec2& playerPos) const;
+};
+
+class EncounterSimulationSubsystem {
+  public:
+    void emitDespawnParticles(ProjectileSystem& projectiles, const BulletPaletteTable& paletteTable, PresentationState& presentation) const;
+    void processRuntimeEvents(EntitySystem& entities, EncounterRuntimeState& encounter, std::vector<ShakeParams>& cameraShakes) const;
+    void resolveCpuDeterministicCollisions(ProjectileSystem& projectiles, EntitySystem& entities, const PlayerCombatState& playerState, EncounterRuntimeState& encounter, PresentationState& presentation) const;
+    void emitZoneTransitionFeedback(const ZoneDefinition* zoneBeforeUpdate, const ZoneDefinition* zoneAfterUpdate, const Vec2& playerPos, std::vector<ShakeParams>& cameraShakes, std::vector<AudioEvent>& audioEvents) const;
+    void emitAmbientZoneFeedback(const ZoneDefinition* zoneAfterUpdate, std::vector<ShakeParams>& cameraShakes) const;
 };
 
 } // namespace engine
