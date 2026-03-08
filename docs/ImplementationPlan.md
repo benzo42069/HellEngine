@@ -697,3 +697,8 @@ Completed release-engineering closure work:
 - Identified macro collision risk on helper name `near` causing parser corruption near `const` parameter tokens under MSVC environments.
 - Applied minimal fix by renaming helper to `nearlyEqual` and updating call sites only.
 - Attempted `modern_renderer_tests` target rebuild; environment lacked OpenGL development libraries during CMake configure, then validated the test file with a direct compiler syntax-only check.
+
+## 2026-03-08 — Implementation note: render2d/pattern Catch2 main linkage
+- Identified target-level inconsistency: `render2d_tests` and `pattern_tests` used the plain test helper while Catch-oriented test binaries should use the Catch helper path.
+- Applied minimal build fix in shared target wiring usage: switched both targets to `engine_add_catch_test(...)` so `Catch2::Catch2WithMain` is linked automatically.
+- Kept executable names and test intent unchanged; updated test sources to `TEST_CASE` format to align with Catch-driven main provisioning and discovery.

@@ -1,28 +1,19 @@
 #include <engine/patterns.h>
 
+#include <catch2/catch_test_macros.hpp>
+
 #include <cmath>
-#include <cstdlib>
-#include <iostream>
 #include <vector>
 
-int main() {
+TEST_CASE("PatternBank loads and PatternPlayer emission is deterministic", "[pattern]") {
     engine::PatternBank bank;
     const bool loaded = bank.loadFromFile("assets/patterns/sandbox_patterns.json")
         || bank.loadFromFile("../assets/patterns/sandbox_patterns.json");
-    if (!loaded) {
-        std::cerr << "failed to load pattern json\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(loaded);
 
-    if (bank.patterns().size() < 3) {
-        std::cerr << "expected at least 3 composed patterns\n";
-        return EXIT_FAILURE;
-    }
-
-    if (bank.patterns()[0].layers.size() < 2 || bank.patterns()[0].sequence.empty()) {
-        std::cerr << "composition fields not loaded\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(bank.patterns().size() >= 3);
+    REQUIRE(bank.patterns()[0].layers.size() >= 2);
+    REQUIRE_FALSE(bank.patterns()[0].sequence.empty());
 
     engine::PatternPlayer a;
     engine::PatternPlayer b;
@@ -43,18 +34,10 @@ int main() {
         b.update(1.0F / 60.0F, {0.0F, 0.0F}, {50.0F, -10.0F}, [&](const engine::ProjectileSpawn& p) { outB.push_back(p); });
     }
 
-    if (outA.size() != outB.size()) {
-        std::cerr << "deterministic emit count mismatch\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(outA.size() == outB.size());
 
     for (std::size_t i = 0; i < outA.size(); ++i) {
-        if (std::abs(outA[i].vel.x - outB[i].vel.x) > 0.0001F || std::abs(outA[i].vel.y - outB[i].vel.y) > 0.0001F) {
-            std::cerr << "deterministic velocity mismatch\n";
-            return EXIT_FAILURE;
-        }
+        REQUIRE(std::abs(outA[i].vel.x - outB[i].vel.x) <= 0.0001F);
+        REQUIRE(std::abs(outA[i].vel.y - outB[i].vel.y) <= 0.0001F);
     }
-
-    std::cout << "pattern_tests passed\n";
-    return EXIT_SUCCESS;
 }

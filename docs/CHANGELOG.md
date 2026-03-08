@@ -173,3 +173,8 @@
 ## Unreleased
 ### Fixed
 - Fixed MSVC syntax build failure in `tests/modern_renderer_tests.cpp` by renaming helper `near(...)` to `nearlyEqual(...)` to avoid Windows macro collision that produced parser errors around `const` near file top.
+
+## Unreleased
+### Fixed
+- Fixed Windows test-link missing-main failures for `render2d_tests` and `pattern_tests` by switching both targets to the shared Catch2 helper path (`engine_add_catch_test`) so `Catch2::Catch2WithMain` is linked consistently.
+- Converted `tests/render2d_tests.cpp` and `tests/pattern_tests.cpp` to Catch `TEST_CASE` style so test entrypoint ownership remains centralized in Catch2 main.

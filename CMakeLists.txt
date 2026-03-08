@@ -281,9 +281,9 @@ endfunction()
 
 engine_add_plain_test(timing_tests tests/timing_tests.cpp)
 engine_add_plain_test(config_tests tests/config_tests.cpp)
-engine_add_plain_test(render2d_tests tests/render2d_tests.cpp)
+engine_add_catch_test(render2d_tests tests/render2d_tests.cpp)
 engine_add_catch_test(projectile_tests tests/projectile_tests.cpp)
-engine_add_plain_test(pattern_tests tests/pattern_tests.cpp)
+engine_add_catch_test(pattern_tests tests/pattern_tests.cpp)
 
 add_executable(content_packer_tests tests/content_packer_tests.cpp)
 target_link_libraries(content_packer_tests PRIVATE engine_core)

@@ -1712,3 +1712,9 @@ Behavioral contract remains unchanged: the owning simulation tick order is still
 - CMake test target creation should use shared helpers to avoid per-target setup drift.
 - On Windows, each test executable must have runtime DLL dependencies deployed into its output directory prior to execution (including discovery-time execution for `catch_discover_tests`).
 - Runtime DLL deployment should be implemented once at the build-system layer using target runtime dependency introspection (`TARGET_RUNTIME_DLLS`) and reused by all test targets.
+
+## Test Build Hotfix — Catch2 main linkage consistency (2026-03-08)
+- Root cause: `render2d_tests` and `pattern_tests` were configured through `engine_add_plain_test(...)` while their intended Catch-style test registration path requires `Catch2::Catch2WithMain` to provide the executable entry point.
+- Affected test targets: `render2d_tests`, `pattern_tests`.
+- Exact CMake fix: switched both targets to `engine_add_catch_test(...)`, which centrally applies `Catch2::Catch2WithMain` and `catch_discover_tests(...)`.
+- Follow-up consistency fix: converted both files from ad-hoc `int main()` checks to Catch `TEST_CASE` definitions so entrypoint ownership is consistently provided by Catch2.
