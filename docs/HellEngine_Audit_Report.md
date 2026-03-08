@@ -409,3 +409,9 @@ Residual risk:
 - Residual risk: UI is still one window by design; future overflow should prefer adding focused collapsible sections before adding new top-level panels.
 - Render-path routing ownership was finalized by removing duplicate projectile path branches from `RenderPipeline::buildSceneOverlay` and enforcing single-source `ProjectileRenderPath` selection.
 - Palette/grayscale template ownership was documented and clarified (`GrayscaleSpriteAtlas` template source, `paletteRamp_` GL LUT authority, `proceduralPaletteRamp_` procedural staging).
+
+## Audit Addendum — 2026-03-08 (Test Infrastructure)
+- Previous Windows test failures were traced to two build-system issues rather than engine runtime logic:
+  1. Catch target-definition drift allowed some Catch executables to be defined without `Catch2::Catch2WithMain`, producing missing `main` link failures.
+  2. Runtime DLL deployment for tests was not standardized, causing `0xc0000135` during Catch discovery when SDL2/SDL2_mixer DLLs were unavailable beside test binaries.
+- The remediation introduces centralized CMake helpers for plain and Catch tests and a single reusable Windows DLL deployment helper (`TARGET_RUNTIME_DLLS` copy) applied to all test targets.

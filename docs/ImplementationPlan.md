@@ -1,3 +1,17 @@
+## 2026-03-08 — Test/CMake hardening: Catch2 linkage + runtime DLL deployment
+### Problem
+- Catch-target setup had drift across individual test definitions, allowing targets to compile as Catch tests without linking `Catch2::Catch2WithMain`.
+- Windows Catch test discovery attempted to run executables before runtime DLLs were present in the executable directory.
+
+### Plan
+1. Add reusable CMake helpers for plain tests and Catch tests.
+2. Route all test targets through these helpers to enforce consistent linking and registration.
+3. Add a reusable Windows runtime dependency deployment helper based on `TARGET_RUNTIME_DLLS`.
+4. Apply deployment helper to all test executables so `catch_discover_tests` can execute reliably during discovery.
+
+### Status
+- Implemented in top-level `CMakeLists.txt`; all test targets now use consistent helper-based setup.
+
 ## Public API / Extensibility Hardening (2026-03-08)
 - [x] Audit existing public headers and plugin registry implementation for boundary leakage.
 - [x] Add metadata-based plugin contract with version compatibility checks at registration boundaries.

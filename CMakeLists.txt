@@ -252,167 +252,76 @@ if(WIN32)
   target_compile_definitions(EngineDemo PRIVATE SDL_MAIN_HANDLED)
 endif()
 
+function(engine_deploy_runtime_dlls target_name)
+  if(WIN32)
+    add_custom_command(
+      TARGET ${target_name}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+              $<TARGET_RUNTIME_DLLS:${target_name}>
+              $<TARGET_FILE_DIR:${target_name}>
+      COMMAND_EXPAND_LISTS
+    )
+  endif()
+endfunction()
 
-add_executable(timing_tests tests/timing_tests.cpp)
-target_link_libraries(timing_tests PRIVATE engine_core)
-add_test(NAME timing_tests COMMAND timing_tests)
+function(engine_add_plain_test target_name source_file)
+  add_executable(${target_name} ${source_file})
+  target_link_libraries(${target_name} PRIVATE engine_core)
+  engine_deploy_runtime_dlls(${target_name})
+  add_test(NAME ${target_name} COMMAND ${target_name})
+endfunction()
 
-add_executable(config_tests tests/config_tests.cpp)
-target_link_libraries(config_tests PRIVATE engine_core)
-add_test(NAME config_tests COMMAND config_tests)
+function(engine_add_catch_test target_name source_file)
+  add_executable(${target_name} ${source_file})
+  target_link_libraries(${target_name} PRIVATE engine_core Catch2::Catch2WithMain)
+  engine_deploy_runtime_dlls(${target_name})
+  catch_discover_tests(${target_name})
+endfunction()
 
-add_executable(render2d_tests tests/render2d_tests.cpp)
-target_link_libraries(render2d_tests PRIVATE engine_core)
-add_test(NAME render2d_tests COMMAND render2d_tests)
-
-add_executable(projectile_tests tests/projectile_tests.cpp)
-target_link_libraries(projectile_tests PRIVATE engine_core Catch2::Catch2WithMain)
-catch_discover_tests(projectile_tests)
-
-add_executable(pattern_tests tests/pattern_tests.cpp)
-target_link_libraries(pattern_tests PRIVATE engine_core)
-add_test(NAME pattern_tests COMMAND pattern_tests)
+engine_add_plain_test(timing_tests tests/timing_tests.cpp)
+engine_add_plain_test(config_tests tests/config_tests.cpp)
+engine_add_plain_test(render2d_tests tests/render2d_tests.cpp)
+engine_add_catch_test(projectile_tests tests/projectile_tests.cpp)
+engine_add_plain_test(pattern_tests tests/pattern_tests.cpp)
 
 add_executable(content_packer_tests tests/content_packer_tests.cpp)
 target_link_libraries(content_packer_tests PRIVATE engine_core)
+engine_deploy_runtime_dlls(content_packer_tests)
 add_test(NAME content_packer_generate COMMAND ContentPacker --input ${CMAKE_SOURCE_DIR}/data --output ${CMAKE_BINARY_DIR}/content_test.pak)
 add_test(NAME content_packer_tests COMMAND content_packer_tests ${CMAKE_BINARY_DIR}/content_test.pak)
 set_tests_properties(content_packer_tests PROPERTIES DEPENDS content_packer_generate)
 
-
-add_executable(content_import_pipeline_tests tests/content_import_pipeline_tests.cpp)
-target_link_libraries(content_import_pipeline_tests PRIVATE engine_core)
-add_test(NAME content_import_pipeline_tests COMMAND content_import_pipeline_tests)
-
-add_executable(entity_tests tests/entity_tests.cpp)
-target_link_libraries(entity_tests PRIVATE engine_core)
-add_test(NAME entity_tests COMMAND entity_tests)
-
-add_executable(trait_tests tests/trait_tests.cpp)
-target_link_libraries(trait_tests PRIVATE engine_core)
-add_test(NAME trait_tests COMMAND trait_tests)
-
-add_executable(archetype_tests tests/archetype_tests.cpp)
-target_link_libraries(archetype_tests PRIVATE engine_core)
-add_test(NAME archetype_tests COMMAND archetype_tests)
-
-add_executable(boss_phase_tests tests/boss_phase_tests.cpp)
-target_link_libraries(boss_phase_tests PRIVATE engine_core)
-add_test(NAME boss_phase_tests COMMAND boss_phase_tests)
-
-add_executable(run_structure_tests tests/run_structure_tests.cpp)
-target_link_libraries(run_structure_tests PRIVATE engine_core)
-add_test(NAME run_structure_tests COMMAND run_structure_tests)
-
-add_executable(meta_progression_tests tests/meta_progression_tests.cpp)
-target_link_libraries(meta_progression_tests PRIVATE engine_core)
-add_test(NAME meta_progression_tests COMMAND meta_progression_tests)
-
-add_executable(persistence_tests tests/persistence_tests.cpp)
-target_link_libraries(persistence_tests PRIVATE engine_core)
-add_test(NAME persistence_tests COMMAND persistence_tests)
-
-add_executable(editor_tools_tests tests/editor_tools_tests.cpp)
-target_link_libraries(editor_tools_tests PRIVATE engine_core)
-add_test(NAME editor_tools_tests COMMAND editor_tools_tests)
-
-add_executable(replay_tests tests/replay_tests.cpp)
-target_link_libraries(replay_tests PRIVATE engine_core Catch2::Catch2WithMain)
-catch_discover_tests(replay_tests)
-
-add_executable(upgrade_ui_tests tests/upgrade_ui_tests.cpp)
-target_link_libraries(upgrade_ui_tests PRIVATE engine_core)
-add_test(NAME upgrade_ui_tests COMMAND upgrade_ui_tests)
-
-add_executable(upgrade_ui_model_tests tests/upgrade_ui_model_tests.cpp)
-target_link_libraries(upgrade_ui_model_tests PRIVATE engine_core)
-add_test(NAME upgrade_ui_model_tests COMMAND upgrade_ui_model_tests)
-
-add_executable(projectile_behavior_tests tests/projectile_behavior_tests.cpp)
-target_link_libraries(projectile_behavior_tests PRIVATE engine_core Catch2::Catch2WithMain)
-catch_discover_tests(projectile_behavior_tests)
-
-add_executable(pattern_graph_tests tests/pattern_graph_tests.cpp)
-target_link_libraries(pattern_graph_tests PRIVATE engine_core Catch2::Catch2WithMain)
-catch_discover_tests(pattern_graph_tests)
-
-add_executable(pattern_generator_tests tests/pattern_generator_tests.cpp)
-target_link_libraries(pattern_generator_tests PRIVATE engine_core)
-add_test(NAME pattern_generator_tests COMMAND pattern_generator_tests)
-
-
-add_executable(pattern_graph_perf_tests tests/pattern_graph_perf_tests.cpp)
-target_link_libraries(pattern_graph_perf_tests PRIVATE engine_core)
-add_test(NAME pattern_graph_perf_tests COMMAND pattern_graph_perf_tests)
-add_executable(encounter_graph_tests tests/encounter_graph_tests.cpp)
-target_link_libraries(encounter_graph_tests PRIVATE engine_core)
-add_test(NAME encounter_graph_tests COMMAND encounter_graph_tests)
-
-add_executable(difficulty_scaling_tests tests/difficulty_scaling_tests.cpp)
-target_link_libraries(difficulty_scaling_tests PRIVATE engine_core)
-add_test(NAME difficulty_scaling_tests COMMAND difficulty_scaling_tests)
-
-
-add_executable(diagnostics_tests tests/diagnostics_tests.cpp)
-target_link_libraries(diagnostics_tests PRIVATE engine_core)
-add_test(NAME diagnostics_tests COMMAND diagnostics_tests)
-
-add_executable(gpu_bullets_tests tests/gpu_bullets_tests.cpp)
-target_link_libraries(gpu_bullets_tests PRIVATE engine_core)
-add_test(NAME gpu_bullets_tests COMMAND gpu_bullets_tests)
-
-
-
-
-add_executable(golden_replay_tests tests/golden_replay_tests.cpp)
-target_link_libraries(golden_replay_tests PRIVATE engine_core)
-add_test(NAME golden_replay_tests COMMAND golden_replay_tests)
-
-add_executable(benchmark_suite_tests tests/benchmark_suite.cpp)
-target_link_libraries(benchmark_suite_tests PRIVATE engine_core)
-add_test(NAME benchmark_suite_tests COMMAND benchmark_suite_tests)
-
-add_executable(public_api_tests tests/public_api_tests.cpp)
-target_link_libraries(public_api_tests PRIVATE engine_core)
-add_test(NAME public_api_tests COMMAND public_api_tests)
-
-add_executable(renderer_smoke_tests tests/renderer_smoke_tests.cpp)
-target_link_libraries(renderer_smoke_tests PRIVATE engine_core)
-add_test(NAME renderer_smoke_tests COMMAND renderer_smoke_tests)
-
-add_executable(palette_fx_templates_tests tests/palette_fx_templates_tests.cpp)
-target_link_libraries(palette_fx_templates_tests PRIVATE engine_core)
-add_test(NAME palette_fx_templates_tests COMMAND palette_fx_templates_tests)
-
-add_executable(modern_renderer_tests tests/modern_renderer_tests.cpp)
-target_link_libraries(modern_renderer_tests PRIVATE engine_core)
-add_test(NAME modern_renderer_tests COMMAND modern_renderer_tests)
-
-add_executable(defensive_special_tests tests/defensive_special_tests.cpp)
-target_link_libraries(defensive_special_tests PRIVATE engine_core)
-add_test(NAME defensive_special_tests COMMAND defensive_special_tests)
-
-
-add_executable(gameplay_session_state_tests tests/gameplay_session_state_tests.cpp)
-target_link_libraries(gameplay_session_state_tests PRIVATE engine_core)
-add_test(NAME gameplay_session_state_tests COMMAND gameplay_session_state_tests)
-
-add_executable(standards_tests tests/standards_tests.cpp)
-target_link_libraries(standards_tests PRIVATE engine_core)
-add_test(NAME standards_tests COMMAND standards_tests)
-
-add_executable(collision_correctness_tests tests/collision_correctness_tests.cpp)
-target_link_libraries(collision_correctness_tests PRIVATE engine_core Catch2::Catch2WithMain)
-catch_discover_tests(collision_correctness_tests)
-
-add_executable(determinism_property_tests tests/determinism_property_tests.cpp)
-target_link_libraries(determinism_property_tests PRIVATE engine_core Catch2::Catch2WithMain)
-catch_discover_tests(determinism_property_tests)
-
-add_executable(content_fuzz_tests tests/content_fuzz_tests.cpp)
-target_link_libraries(content_fuzz_tests PRIVATE engine_core Catch2::Catch2WithMain)
-catch_discover_tests(content_fuzz_tests)
-
-add_executable(determinism_cross_config_test tests/determinism_cross_config_test.cpp)
-target_link_libraries(determinism_cross_config_test PRIVATE engine_core)
-add_test(NAME determinism_cross_config_test COMMAND determinism_cross_config_test)
+engine_add_plain_test(content_import_pipeline_tests tests/content_import_pipeline_tests.cpp)
+engine_add_plain_test(entity_tests tests/entity_tests.cpp)
+engine_add_plain_test(trait_tests tests/trait_tests.cpp)
+engine_add_plain_test(archetype_tests tests/archetype_tests.cpp)
+engine_add_plain_test(boss_phase_tests tests/boss_phase_tests.cpp)
+engine_add_plain_test(run_structure_tests tests/run_structure_tests.cpp)
+engine_add_plain_test(meta_progression_tests tests/meta_progression_tests.cpp)
+engine_add_plain_test(persistence_tests tests/persistence_tests.cpp)
+engine_add_plain_test(editor_tools_tests tests/editor_tools_tests.cpp)
+engine_add_catch_test(replay_tests tests/replay_tests.cpp)
+engine_add_plain_test(upgrade_ui_tests tests/upgrade_ui_tests.cpp)
+engine_add_plain_test(upgrade_ui_model_tests tests/upgrade_ui_model_tests.cpp)
+engine_add_catch_test(projectile_behavior_tests tests/projectile_behavior_tests.cpp)
+engine_add_catch_test(pattern_graph_tests tests/pattern_graph_tests.cpp)
+engine_add_plain_test(pattern_generator_tests tests/pattern_generator_tests.cpp)
+engine_add_plain_test(pattern_graph_perf_tests tests/pattern_graph_perf_tests.cpp)
+engine_add_plain_test(encounter_graph_tests tests/encounter_graph_tests.cpp)
+engine_add_plain_test(difficulty_scaling_tests tests/difficulty_scaling_tests.cpp)
+engine_add_plain_test(diagnostics_tests tests/diagnostics_tests.cpp)
+engine_add_plain_test(gpu_bullets_tests tests/gpu_bullets_tests.cpp)
+engine_add_plain_test(golden_replay_tests tests/golden_replay_tests.cpp)
+engine_add_plain_test(benchmark_suite_tests tests/benchmark_suite.cpp)
+engine_add_plain_test(public_api_tests tests/public_api_tests.cpp)
+engine_add_plain_test(renderer_smoke_tests tests/renderer_smoke_tests.cpp)
+engine_add_plain_test(palette_fx_templates_tests tests/palette_fx_templates_tests.cpp)
+engine_add_plain_test(modern_renderer_tests tests/modern_renderer_tests.cpp)
+engine_add_plain_test(defensive_special_tests tests/defensive_special_tests.cpp)
+engine_add_plain_test(gameplay_session_state_tests tests/gameplay_session_state_tests.cpp)
+engine_add_plain_test(standards_tests tests/standards_tests.cpp)
+engine_add_catch_test(collision_correctness_tests tests/collision_correctness_tests.cpp)
+engine_add_catch_test(determinism_property_tests tests/determinism_property_tests.cpp)
+engine_add_catch_test(content_fuzz_tests tests/content_fuzz_tests.cpp)
+engine_add_plain_test(determinism_cross_config_test tests/determinism_cross_config_test.cpp)

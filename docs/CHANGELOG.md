@@ -2,6 +2,11 @@
 
 ## Unreleased
 ### Fixed
+- Standardized Catch2 target setup through shared CMake helpers so all Catch-based test executables are linked with `Catch2::Catch2WithMain`, eliminating Windows `unresolved external symbol main`/`LNK1120` failures caused by per-target drift.
+- Added Windows runtime DLL deployment for every test executable by copying each target's `TARGET_RUNTIME_DLLS` into the test binary output directory at build time, preventing `0xc0000135` failures during `catch_discover_tests` discovery when SDL2/SDL2_mixer DLLs were missing.
+
+## Unreleased
+### Fixed
 - Fixed Windows/MSVC build failures caused by `<windows.h>` `min`/`max` macro collisions by defining `NOMINMAX` and `WIN32_LEAN_AND_MEAN` globally for `WIN32` CMake builds (covers `engine_core` and dependent targets).
 - Eliminated resulting cascading parse errors affecting `std::min`/`std::max` use in headers/sources (including renderer/public API/palette-related units) without broad refactors.
 - Documented that a clean rebuild/reconfigure is required after applying the compile-definition change so all translation units see consistent macro state.
