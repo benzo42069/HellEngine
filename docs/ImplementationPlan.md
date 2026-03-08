@@ -126,6 +126,13 @@
 - Fix applied: Updated `target_link_libraries(ContentPacker ...)` to include `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` in addition to existing JSON dependency.
 - Validation: Reconfigured CMake, built `ContentPacker` successfully, and attempted `engine_core` verification (currently blocked by pre-existing unrelated compile errors in `palette_ramp.h`/`gl_bullet_renderer.cpp`).
 
+
+## 2026-03-08 — Windows Macro Compatibility Hotfix Plan (Completed)
+- Scope: Surgical build-system fix for Windows `min`/`max` macro collisions causing `std::min`/`std::max` parse failures.
+- Action taken: Added global `WIN32` compile definitions `NOMINMAX` and `WIN32_LEAN_AND_MEAN` in top-level CMake so `engine_core` and all linked executables/tests inherit the same macro hygiene.
+- Source fallback policy: No broad local source rewrites were needed after the global definition fix; keep `(std::min)(...)` / `(std::max)(...)` only as future fallback when unavoidable in mixed third-party include order scenarios.
+- Rebuild note: Requires clean rebuild/reconfigure on Windows to invalidate stale object files compiled before these definitions were present.
+
 ## Planning Constraints
 
 ## Execution Status Update (Persistence Baseline)

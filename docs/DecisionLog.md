@@ -9,6 +9,12 @@
 
 # Decision Log
 
+## 2026-03-08 — Windows min/max macro collision build fix
+- **Context**: Windows headers (`<windows.h>`) can define function-like `min`/`max` macros that corrupt `std::min`/`std::max` parsing (`C4003`, illegal token after `::`) and trigger cascading failures in engine compilation units.
+- **Decision**: Apply global Windows macro hygiene at the build-system layer by defining `NOMINMAX` (and `WIN32_LEAN_AND_MEAN`) for all targets when `WIN32` is true, instead of ad hoc file-by-file workarounds.
+- **Implementation**: Added `add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)` in top-level `CMakeLists.txt` under `if(WIN32)`, ensuring `engine_core` and all dependent targets compile with consistent preprocessor definitions.
+- **Consequence**: Existing `std::min`/`std::max` call sites compile correctly under MSVC without broad source edits; developers should perform a clean rebuild/reconfigure so all objects are rebuilt with the updated definitions.
+
 ## 2026-03-08 — Public API/plugin/mod boundary finalization
 - Decision: keep runtime/plugin registry internals private while adding small host-facing helper APIs for compatibility checks and registration error diagnostics.
 - Rationale: host applications and plugin managers need predictable lifecycle/status reporting without exposing mutable registry internals as stable contract.
