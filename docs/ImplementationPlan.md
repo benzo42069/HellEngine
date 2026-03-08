@@ -1,3 +1,9 @@
+## 2026-03-08 — Build Engineering follow-up: content_packer_tests/entity_tests missing-main fix (completed)
+- [x] Audited `content_packer_tests` and `entity_tests` target definitions versus working Catch test targets.
+- [x] Applied minimal shared-helper fix in `engine_link_catch_main_if_needed(...)` for the two named targets.
+- [x] Ensured `Catch2::Catch2WithMain` is linked when either target lacks a local `main(...)`.
+- [x] Preserved existing target names and CTest registration/discovery behavior.
+
 ## 2026-03-08 — Catch2 main-link completion for remaining test targets (completed)
 - [x] Audited all CMake test target creation paths (`engine_add_test` and manual `add_executable` definitions).
 - [x] Added helper-level `main` detection so Catch2 main linkage is only applied when a Catch source does not define its own entry point.

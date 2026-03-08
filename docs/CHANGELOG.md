@@ -1,5 +1,6 @@
 ## Unreleased
 ### Fixed
+- Added a minimal shared CMake safety override in `engine_link_catch_main_if_needed(...)` so `content_packer_tests` and `entity_tests` are forced to link `Catch2::Catch2WithMain` when they do not define their own `main(...)`, resolving the remaining unresolved-`main` / `LNK1120` follow-up failures.
 - Fixed remaining Windows Catch test link failures caused by inconsistent test-helper routing: Catch-authored targets registered through plain wiring could miss `Catch2::Catch2WithMain` and fail with unresolved `main`/`LNK1120`.
 - Unified helper-path test registration via `engine_add_test(...)` + source-based Catch detection so Catch targets consistently link `Catch2::Catch2WithMain` and use `catch_discover_tests` (covering targets such as `render2d_tests`, `pattern_tests`, and `entity_tests` class checks during audit).
 - Closed the remaining manual target gap by applying shared Catch/main detection to `content_packer_tests` too, ensuring any Catch-based test executable without a local `main(...)` links `Catch2::Catch2WithMain` regardless of whether it is created via helper or direct `add_executable` path.

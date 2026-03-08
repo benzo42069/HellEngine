@@ -301,6 +301,13 @@ function(engine_link_catch_main_if_needed target_name source_file)
   engine_source_uses_catch(_engine_test_is_catch "${source_file}")
   engine_source_defines_main(_engine_test_has_main "${source_file}")
 
+  # Safety override for known Catch-authored targets that can be authored
+  # without a local include in the translation unit (e.g. shared helper headers).
+  if((target_name STREQUAL "content_packer_tests" OR target_name STREQUAL "entity_tests")
+     AND NOT _engine_test_has_main)
+    set(_engine_test_is_catch TRUE)
+  endif()
+
   if(_engine_test_is_catch AND NOT _engine_test_has_main)
     target_link_libraries(${target_name} PRIVATE Catch2::Catch2WithMain)
     set(_engine_target_uses_catch_with_main TRUE PARENT_SCOPE)
