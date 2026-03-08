@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Test registration now uses a single `engine_add_test(...)` path that auto-detects Catch-based sources by include (`#include <catch2/...>`), links them with `Catch2::Catch2WithMain`, and routes them through `catch_discover_tests`; non-Catch tests remain plain `add_test(...)`. Root cause was helper-path drift where Catch tests could be registered via plain-test wiring and miss a main at link time on Windows.
 - 2026-03-08: Windows/MSVC build compatibility hardening: project-wide `NOMINMAX` and `WIN32_LEAN_AND_MEAN` compile definitions are now applied on `WIN32` to prevent `<windows.h>` `min`/`max` macros from colliding with `std::min`/`std::max` in engine headers/sources. Clean rebuild required after this definition change so all translation units pick up the new preprocessor state.
 - 2026-03-08: Public plugin API now includes host-facing compatibility/introspection helpers (`isPluginTargetCompatible`, `pluginRegistrationErrorMessage`) and explicit ownership/ABI boundary notes in `engine/public/plugins.h`; this tightens lifecycle expectations without exposing registry internals or changing runtime behavior.
 - 2026-03-08: Final creator-facing documentation pass completed. External onboarding now has explicit workflows for getting started, build/run, asset import, palette+grayscale shading, pattern authoring, encounter/boss authoring, replay/debug, audio, sample project usage, troubleshooting, plugin/mod integration, and creator performance guidance.
