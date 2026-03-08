@@ -9,6 +9,12 @@
 
 # Decision Log
 
+## 2026-03-08 — Catch2 test target and runtime DLL deployment standardization
+- **Context**: Windows test builds were failing in two modes: some Catch-based targets were linked without a Catch2-provided test main (`unresolved external symbol main`/`LNK1120`), and some Catch targets crashed during discovery with `0xc0000135` because SDL runtime DLLs were not present beside the test executable.
+- **Decision**: Centralize test wiring in CMake helper functions: one helper for plain `main()` tests and one helper for Catch tests that always links `Catch2::Catch2WithMain` and registers discovery consistently.
+- **Decision**: Add a shared Windows runtime deployment helper (`engine_deploy_runtime_dlls`) that copies `TARGET_RUNTIME_DLLS` to each test executable output directory so discovery-time execution has required dependencies.
+- **Consequence**: Catch and non-Catch tests now share one maintainable setup path, and Windows Catch discovery is resilient without one-off per-target DLL copy logic.
+
 ## 2026-03-08 — Windows min/max macro collision build fix
 - **Context**: Windows headers (`<windows.h>`) can define function-like `min`/`max` macros that corrupt `std::min`/`std::max` parsing (`C4003`, illegal token after `::`) and trigger cascading failures in engine compilation units.
 - **Decision**: Apply global Windows macro hygiene at the build-system layer by defining `NOMINMAX` (and `WIN32_LEAN_AND_MEAN`) for all targets when `WIN32` is true, instead of ad hoc file-by-file workarounds.

@@ -1706,3 +1706,9 @@ Behavioral contract remains unchanged: the owning simulation tick order is still
 - Affected file: `tests/modern_renderer_tests.cpp`.
 - Root cause: helper function named `near` conflicted with a Windows macro (`near`), corrupting parsing near the top-of-file helper signature and cascading into syntax errors around `const`.
 - Exact fix: renamed helper to `nearlyEqual` and updated its call sites; no test logic changes.
+
+## 29. Test Build Contract (Windows + Catch2)
+- Catch-based tests must link `Catch2::Catch2WithMain` unless a target intentionally supplies its own `main`.
+- CMake test target creation should use shared helpers to avoid per-target setup drift.
+- On Windows, each test executable must have runtime DLL dependencies deployed into its output directory prior to execution (including discovery-time execution for `catch_discover_tests`).
+- Runtime DLL deployment should be implemented once at the build-system layer using target runtime dependency introspection (`TARGET_RUNTIME_DLLS`) and reused by all test targets.
