@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-08 — Public API/plugin/mod boundary finalization
+- Decision: keep runtime/plugin registry internals private while adding small host-facing helper APIs for compatibility checks and registration error diagnostics.
+- Rationale: host applications and plugin managers need predictable lifecycle/status reporting without exposing mutable registry internals as stable contract.
+- Outcome: added `isPluginTargetCompatible(...)` and `pluginRegistrationErrorMessage(...)` to `engine/public/plugins.h`; retained existing registration/unregistration behavior.
+- Compatibility expectation: plugin targets must match runtime major and not exceed runtime minor; patch versions are non-breaking.
+
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
 - **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
 - **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.

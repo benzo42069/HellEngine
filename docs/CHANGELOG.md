@@ -10,6 +10,8 @@
 
 ## Unreleased
 ### Changed
+- Clarified public plugin boundary with explicit host ownership contract comments and added host-facing helpers `isPluginTargetCompatible(...)` + `pluginRegistrationErrorMessage(...)` for stable compatibility/error diagnostics.
+- Documented final public/plugin/mod compatibility expectations and lifecycle responsibilities across architecture/spec/plan/decision docs.
 - Added a polished product-validation vertical slice definition via authored encounter/audio content and a dedicated sample runbook covering combat readability, enemy/boss flow, replay, UI, audio, and packaging checks.
 - Consolidated CMake third-party dependency setup under a single registration/materialization flow (`engine_register_dependency` + `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})`) while preserving all existing target wiring and dependency availability.
 - Hardened CMake build hygiene: reject in-source builds, explicitly create generated include output directory before configured-header emission, and remove duplicate `FetchContent_MakeAvailable` dependency materialization to improve clean/incremental rebuild consistency.

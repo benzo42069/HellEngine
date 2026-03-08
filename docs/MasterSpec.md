@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Public plugin API now includes host-facing compatibility/introspection helpers (`isPluginTargetCompatible`, `pluginRegistrationErrorMessage`) and explicit ownership/ABI boundary notes in `engine/public/plugins.h`; this tightens lifecycle expectations without exposing registry internals or changing runtime behavior.
 - 2026-03-08: Public API/plugin boundary hardening added metadata-based plugin registration, compatibility gating against `publicApiVersion()`, duplicate-id protection, and explicit unregister/clear lifecycle endpoints while preserving existing engine run behavior.
 
 ## Public API / Extensibility Baseline (2026-03-08)

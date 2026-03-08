@@ -14,6 +14,8 @@ PluginRegistry& pluginRegistry() {
 
 namespace engine::public_api {
 
+bool isPluginTargetCompatible(const PluginMetadata& metadata);
+
 namespace {
 
 template <typename T>
@@ -27,7 +29,7 @@ PluginRegistrationResult registerPlugin(engine::internal::PluginRegistryCollecti
         return {PluginRegistrationError::MissingId, false};
     }
 
-    if (!isApiCompatible(meta.targetApiVersion, publicApiVersion())) {
+    if (!isPluginTargetCompatible(meta)) {
         return {PluginRegistrationError::IncompatibleApiVersion, false};
     }
 
@@ -58,6 +60,28 @@ bool unregisterPlugin(engine::internal::PluginRegistryCollection<T>& dst, const 
 }
 
 } // namespace
+
+const char* pluginRegistrationErrorMessage(PluginRegistrationError error) {
+    switch (error) {
+    case PluginRegistrationError::None:
+        return "ok";
+    case PluginRegistrationError::NullPlugin:
+        return "plugin pointer is null";
+    case PluginRegistrationError::IncompatibleApiVersion:
+        return "plugin target API version is incompatible with runtime";
+    case PluginRegistrationError::DuplicateId:
+        return "plugin id is already registered";
+    case PluginRegistrationError::DuplicateInstance:
+        return "plugin instance is already registered";
+    case PluginRegistrationError::MissingId:
+        return "plugin id is empty";
+    }
+    return "unknown registration error";
+}
+
+bool isPluginTargetCompatible(const PluginMetadata& metadata) {
+    return isApiCompatible(metadata.targetApiVersion, publicApiVersion());
+}
 
 PluginRegistrationResult registerShaderPackPlugin(IShaderPackPlugin* plugin) {
     return registerPlugin(engine::internal::pluginRegistry().shaderPacks, plugin);

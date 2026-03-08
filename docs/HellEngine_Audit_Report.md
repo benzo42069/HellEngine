@@ -1,3 +1,5 @@
+> **2026-03-08 extensibility update:** Public/plugin/mod boundaries were tightened without widening internals: host-facing compatibility/error helper APIs were added to the public plugin contract, while registry storage/order remains internal and non-contract.
+
 
 > **2026-03-08 follow-up:** The prior `editor_tools.cpp` monolith risk has been mitigated by splitting editor tooling implementation into focused modules and shared services under `src/engine/editor/`. Functionality is preserved while improving maintainability and extension boundaries.
 

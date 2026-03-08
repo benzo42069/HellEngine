@@ -7,6 +7,11 @@
 
 namespace engine::public_api {
 
+// Public plugin API policy:
+// - Implementations may be loaded/unloaded by hosts.
+// - Plugin objects are owned by the host, not by the engine registry.
+// - Runtime/internal registry ordering/storage are intentionally not part of ABI/API contract.
+
 struct PluginMetadata {
     std::string id;
     std::string displayName;
@@ -49,6 +54,9 @@ struct PluginRegistrationResult {
     bool accepted {false};
 };
 
+// Optional convenience helper for host diagnostics/UI.
+const char* pluginRegistrationErrorMessage(PluginRegistrationError error);
+
 PluginRegistrationResult registerShaderPackPlugin(IShaderPackPlugin* plugin);
 PluginRegistrationResult registerContentPackPlugin(IContentPackPlugin* plugin);
 PluginRegistrationResult registerToolPanelPlugin(IToolPanelPlugin* plugin);
@@ -62,5 +70,8 @@ void clearRegisteredPlugins();
 const std::vector<IShaderPackPlugin*>& shaderPackPlugins();
 const std::vector<IContentPackPlugin*>& contentPackPlugins();
 const std::vector<IToolPanelPlugin*>& toolPanelPlugins();
+
+// Returns true when plugin target version is accepted by current runtime policy.
+bool isPluginTargetCompatible(const PluginMetadata& metadata);
 
 } // namespace engine::public_api

@@ -77,3 +77,10 @@ Registration validates:
 - API compatibility (`targetApiVersion` vs runtime public API version)
 
 This boundary keeps plugin management in the public layer while keeping registry storage and ordering internal/unstable.
+
+
+## 7) Compatibility + diagnostics expectations
+
+- Host tools can call `isPluginTargetCompatible(metadata)` for registration preflight before attempting registration.
+- Failed registration results should be surfaced via `pluginRegistrationErrorMessage(error)` to keep diagnostics stable for end users.
+- Plugin instances remain host-owned and must be unregistered before plugin/module unload.
