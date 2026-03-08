@@ -45,6 +45,8 @@ float adjustedRarityWeight(const TraitRarity rarity, const float rareChanceMulti
 
 TraitModifiers mods() { return TraitModifiers {}; }
 
+} // namespace
+
 namespace {
 TraitRarity parseTraitRarity(const std::string& s) {
     if (s == "common" || s == "Common") return TraitRarity::Common;

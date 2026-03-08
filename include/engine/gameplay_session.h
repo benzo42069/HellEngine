@@ -12,6 +12,7 @@
 #include <engine/editor_tools.h>
 #include <engine/entities.h>
 #include <engine/gpu_bullets.h>
+#include <engine/gameplay_session_subsystems.h>
 #include <engine/input_system.h>
 #include <engine/job_system.h>
 #include <engine/memory.h>
@@ -177,6 +178,10 @@ class GameplaySession {
     DefensiveSpecialSystem defensiveSpecial_ {};
     DifficultyModel difficultyModel_ {};
     std::array<UpgradeCardAnimState, TraitSystem::choiceCount> cardAnim_ {};
+
+    PlayerCombatSubsystem playerCombat_ {};
+    ProgressionSubsystem progressionRuntime_ {};
+    PresentationSubsystem presentationRuntime_ {};
 
   private:
     void reloadPatterns(const std::string& path);
