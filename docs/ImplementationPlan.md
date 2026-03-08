@@ -7,6 +7,12 @@
 
 # Implementation Plan
 
+## 2026-03-08 — ContentPacker SDL2_mixer dependency audit/removal
+- [x] Audited `tools_content_packer` and content pipeline sources for SDL/SDL_mixer usage.
+- [x] Confirmed `ContentPacker` path uses `audio_content.h` schema parsing and does not require runtime playback APIs.
+- [x] Removed `ContentPacker` linkage to `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` and dropped SDL include-directory injection.
+- [x] Reconfigured and rebuilt `ContentPacker` to verify clean build with reduced dependency surface.
+
 ## 2026-03-08 — Vertical slice completion plan (product validation)
 - Scope delivered:
   - Authored two representative sample encounters (`Ember Crossing`, `Seraph Rematch`) with staged combat/boss/replay metadata.

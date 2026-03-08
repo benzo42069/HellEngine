@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-08 — ContentPacker runtime-audio dependency trim
+- **Context**: `ContentPacker` previously linked SDL2 + SDL2_mixer due to older transitive coupling from content pipeline headers into runtime audio APIs.
+- **Decision**: Keep audio-content parsing in the content pipeline (`audio_content.h` / `parseAudioContentDatabase`) but remove direct SDL2 and SDL2_mixer linkage from the `ContentPacker` target.
+- **Rationale**: The packer compiles JSON/schema parsing utilities only and no longer includes/runtime-calls SDL audio or mixer APIs, so runtime playback libraries are unnecessary for this tool target.
+- **Status**: Accepted.
+
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
 - **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
 - **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.

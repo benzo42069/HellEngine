@@ -63,6 +63,7 @@
 ## Unreleased
 ### Changed
 - Removed generic content pipeline header coupling to runtime audio playback headers by introducing `include/engine/audio_content.h` for shared audio pack schema types; this drops transitive `SDL_mixer.h` requirements from content pipeline includes while preserving audio content parsing behavior.
+- Removed unnecessary `ContentPacker` linkage to SDL2/SDL2_mixer after confirming content pipeline/audio parsing paths no longer depend on runtime mixer APIs; tool now keeps a smaller dependency surface while preserving audio content packing behavior.
 - Refactored `ControlCenterToolSuite` editor tooling from a single monolithic draw routine into modular domain panel methods (workspace/content browser, pattern graph editor, encounter/wave editor, palette/FX editor, trait/projectile tooling, validator diagnostics).
 - Added shared editor service helpers for encounter asset composition and deterministic panel-state seeding to reduce coupling and improve maintainability without changing editor user behavior.
 - Updated architecture/plan/decision documentation for the new editor module structure and extension guidance.
