@@ -5,6 +5,8 @@
 - Typed plugin registration result (`PluginRegistrationResult`) with boundary-safe rejection causes.
 
 ### Changed
+- Hardened top-level CMake reconfigure reliability by tracking `version/VERSION.txt` via `CMAKE_CONFIGURE_DEPENDS`, ensuring generated version header updates are not missed on incremental runs.
+- Verified build reliability with a full deleted-build configure/build and representative incremental rebuild probes (header touch + cpp touch) using Ninja, confirming dependency propagation and link refresh behavior.
 - Plugin registration now enforces compatibility/version checks plus duplicate-id and duplicate-instance protection.
 - Public API versioning helpers now include `isApiCompatible(...)` for host/plugin compatibility gating.
 
@@ -12,6 +14,8 @@
 ### Changed
 - Clarified public plugin boundary with explicit host ownership contract comments and added host-facing helpers `isPluginTargetCompatible(...)` + `pluginRegistrationErrorMessage(...)` for stable compatibility/error diagnostics.
 - Documented final public/plugin/mod compatibility expectations and lifecycle responsibilities across architecture/spec/plan/decision docs.
+- Refactored the pattern editor panel internals into focused helpers for generation controls, seed/testing controls, graph editing, and preview/analysis while preserving the single-window workflow and existing behavior.
+- Added explicit pattern-panel extension seams (`buildPatternPreviewAsset`, `drawPatternPreviewAndAnalysis`, and dedicated control/graph draw helpers) to support future tooling features with less coupling.
 - Added a polished product-validation vertical slice definition via authored encounter/audio content and a dedicated sample runbook covering combat readability, enemy/boss flow, replay, UI, audio, and packaging checks.
 - Consolidated CMake third-party dependency setup under a single registration/materialization flow (`engine_register_dependency` + `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})`) while preserving all existing target wiring and dependency availability.
 - Hardened CMake build hygiene: reject in-source builds, explicitly create generated include output directory before configured-header emission, and remove duplicate `FetchContent_MakeAvailable` dependency materialization to improve clean/incremental rebuild consistency.
@@ -26,6 +30,8 @@
 - Clarified renderer-stack ownership: `render_pipeline` now centrally resolves projectile render path (`Disabled`/`ProceduralSpriteBatch`/`GlInstanced`) and applies it consistently for buffer build + draw submission.
 - Renamed `RenderPipeline` modern mode flag to `modernPipelineEnabled_` to distinguish compositing mode from projectile backend decisions.
 - Added explicit ownership comments in renderer headers (`gpu_bullets`, `gl_bullet_renderer`, `modern_renderer`) to reduce subsystem overlap ambiguity.
+- Removed duplicated projectile render-path branching in `RenderPipeline::buildSceneOverlay` so a single route decision governs GL prep/procedural fallback/overlay follow-up each frame.
+- Renamed internal procedural palette-ramp staging member to `proceduralPaletteRamp_` to clarify palette ramp ownership (`paletteRamp_` = GL projectile shader LUT).
 
 # Changelog
 
@@ -65,6 +71,7 @@
 ## Unreleased
 ### Changed
 - Removed generic content pipeline header coupling to runtime audio playback headers by introducing `include/engine/audio_content.h` for shared audio pack schema types; this drops transitive `SDL_mixer.h` requirements from content pipeline includes while preserving audio content parsing behavior.
+- Removed unnecessary `ContentPacker` linkage to SDL2/SDL2_mixer after confirming content pipeline/audio parsing paths no longer depend on runtime mixer APIs; tool now keeps a smaller dependency surface while preserving audio content packing behavior.
 - Refactored `ControlCenterToolSuite` editor tooling from a single monolithic draw routine into modular domain panel methods (workspace/content browser, pattern graph editor, encounter/wave editor, palette/FX editor, trait/projectile tooling, validator diagnostics).
 - Added shared editor service helpers for encounter asset composition and deterministic panel-state seeding to reduce coupling and improve maintainability without changing editor user behavior.
 - Updated architecture/plan/decision documentation for the new editor module structure and extension guidance.
@@ -126,3 +133,10 @@
 - Refactored `GameplaySession` responsibility flow by extracting player combat, progression navigation, and presentation event emission into explicit subsystem interfaces (`gameplay_session_subsystems`).
 - Updated `GameplaySession` orchestration to delegate to these subsystem boundaries while preserving deterministic update behavior.
 - Added subsystem implementation unit to `engine_core` build sources.
+
+## Unreleased
+### Changed
+- Continued `GameplaySession` architecture cleanup by introducing `EncounterSimulationSubsystem` for encounter-runtime ownership boundaries.
+- Moved deterministic CPU collision flow, despawn presentation emission, and zone-feedback emission out of inline `GameplaySession` logic into encounter subsystem methods.
+- Routed entity runtime-event presentation fanout through encounter subsystem coordination.
+- Extended `gameplay_session_state_tests` with coverage for encounter zone-feedback emission behavior.

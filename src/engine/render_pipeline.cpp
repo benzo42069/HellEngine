@@ -133,7 +133,7 @@ void RenderPipeline::shutdown(ControlCenterToolSuite& toolSuite) {
     glBulletRenderer_.shutdown();
     paletteRamp_.shutdown();
     shaderCache_.shutdown();
-    paletteRampTexture_.shutdown();
+    proceduralPaletteRamp_.shutdown();
     spriteAtlas_.shutdown();
     backgroundSystem_.clear();
     textures_.reset();
@@ -189,7 +189,7 @@ void RenderPipeline::generateBulletSprites(const PaletteFxTemplateRegistry& regi
     const auto defaultFill = deriveProjectileFillFromCore(PaletteColor {1.0F, 1.0F, 1.0F, 1.0F});
     generator.generatePaletteSet(renderer_, *textures_, "0", defaultFill, 16);
 
-    (void)paletteRampTexture_.buildFromRegistry(registry);
+    (void)proceduralPaletteRamp_.buildFromRegistry(registry);
 
     const auto& db = registry.database();
     std::uint8_t idx = 1;
@@ -267,8 +267,11 @@ void RenderPipeline::ensureZoneBackground(const GameplaySession& session) {
 }
 
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
+    (void)frameDelta;
+void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double /*frameDelta*/) {
     const GameplaySession& s = snapshot.session;
     const ProjectileRenderPath projectileRenderPath = resolveProjectileRenderPath(s);
+
     if (projectileRenderPath == ProjectileRenderPath::GlInstanced) {
         const auto& posX = s.projectiles_.posX();
         const auto& posY = s.projectiles_.posY();
@@ -315,53 +318,6 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
     }
 
     if (projectileRenderPath != ProjectileRenderPath::Disabled) {
-        s.particleFx_.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
-    if (s.bulletSimMode_ == BulletSimulationMode::CpuCollisionDeterministic) {
-        const bool canUseGlBullets = glReady_ && glBulletRenderer_.initialized() && paletteRamp_.valid();
-        if (canUseGlBullets) {
-            const auto& posX = s.projectiles_.posX();
-            const auto& posY = s.projectiles_.posY();
-            const auto& velX = s.projectiles_.velX();
-            const auto& velY = s.projectiles_.velY();
-            const auto& radius = s.projectiles_.radius();
-            const auto& life = s.projectiles_.life();
-            const auto& paletteIndex = s.projectiles_.paletteIndex();
-            const auto& shape = s.projectiles_.shape();
-            const auto& active = s.projectiles_.active();
-            const auto& allegiance = s.projectiles_.allegiance();
-            const auto& enableTrails = s.projectiles_.enableTrails();
-            const auto& trailX = s.projectiles_.trailX();
-            const auto& trailY = s.projectiles_.trailY();
-            const auto& trailHead = s.projectiles_.trailHead();
-            const auto& activeIndices = s.projectiles_.activeIndices();
-            glBulletRenderer_.buildVertexBuffer(
-                posX.data(),
-                posY.data(),
-                velX.data(),
-                velY.data(),
-                radius.data(),
-                life.data(),
-                paletteIndex.data(),
-                shape.data(),
-                active.data(),
-                allegiance.data(),
-                enableTrails.data(),
-                trailX.data(),
-                trailY.data(),
-                trailHead.data(),
-                ProjectileSystem::kTrailLength,
-                activeIndices.data(),
-                s.projectiles_.activeCount(),
-                camera_,
-                spriteAtlas_,
-                paletteRamp_,
-                s.bulletPaletteTable_,
-                s.projectiles_.gradientAnimator(),
-                static_cast<float>(s.simulation_.simClock)
-            );
-        } else {
-            s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_, static_cast<float>(s.simulation_.simClock));
-        }
         s.presentation_.particleFx.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
         s.projectiles_.debugDraw(debugDraw_, true, true);
     }
