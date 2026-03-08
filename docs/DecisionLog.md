@@ -666,3 +666,9 @@
 - **Decision**: Apply a surgical syntax fix by removing the stray duplicated `buildSceneOverlay(const SimSnapshot&, const double frameDelta)` opening block and retaining the existing `buildSceneOverlay(const SimSnapshot&, const double /*frameDelta*/)` definition.
 - **Rationale**: Restores correct function/block structure so `buildSceneOverlay` and `renderFrame` are parsed as class member definitions without changing rendering behavior.
 - **Status**: Accepted.
+
+## 2026-03-08 — modern_renderer_tests syntax/build fix
+- **Context**: MSVC test build failed in `tests/modern_renderer_tests.cpp` with parser errors near line 10 (`syntax error: 'const'`, missing `;`, missing function header).
+- **Decision**: Apply minimal, local syntax-safe rename of the helper identifier to avoid preprocessor macro collision.
+- **Implementation**: Renamed `near(...)` helper to `nearlyEqual(...)` and updated all local call sites in the same test file.
+- **Consequence**: Test compiles cleanly without changing renderer behavior or test intent.

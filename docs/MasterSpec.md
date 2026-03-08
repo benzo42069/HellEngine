@@ -1701,3 +1701,8 @@ Behavioral contract remains unchanged: the owning simulation tick order is still
 - Root cause: a duplicated `RenderPipeline::buildSceneOverlay(...)` function signature in `src/engine/render_pipeline.cpp` introduced an unmatched opening brace, which caused following member definitions (including `renderFrame`) to be parsed as local functions.
 - Syntax fix applied: removed the stray duplicate opening signature/block and kept the existing `buildSceneOverlay(const SimSnapshot&, const double /*frameDelta*/)` body intact.
 - Behavior impact: none intended; this is a parsing/structure correction only.
+
+## Test Build Hotfix (2026-03-08)
+- Affected file: `tests/modern_renderer_tests.cpp`.
+- Root cause: helper function named `near` conflicted with a Windows macro (`near`), corrupting parsing near the top-of-file helper signature and cascading into syntax errors around `const`.
+- Exact fix: renamed helper to `nearlyEqual` and updated its call sites; no test logic changes.
