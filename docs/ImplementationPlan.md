@@ -71,6 +71,8 @@
   - Preserved behavior: deterministic projectile mode renders GL-instanced bullets when available, otherwise falls back to procedural SpriteBatch path.
   - Renamed `useModernRenderer_` to `modernPipelineEnabled_` for clearer pipeline ownership semantics.
   - Added subsystem role notes to renderer-related headers and MasterSpec/DecisionLog/Changelog.
+  - Removed duplicated projectile-render routing inside `RenderPipeline::buildSceneOverlay`; projectile path is now resolved once and applied uniformly for buffer prep, procedural fallback, and debug/pfx follow-up.
+  - Renamed internal procedural palette-ramp staging member to `proceduralPaletteRamp_` to avoid confusion with shader-authoritative `paletteRamp_`.
 - Remaining roadmap notes:
   - `GpuBulletSystem` alias remains for compatibility and should be retired in a future cleanup phase once downstream usage is migrated.
   - Any future true GPU simulation path must be introduced as a separate authoritative simulation mode, not by overloading current mass-render terminology.

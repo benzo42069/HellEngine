@@ -26,6 +26,8 @@
 - Clarified renderer-stack ownership: `render_pipeline` now centrally resolves projectile render path (`Disabled`/`ProceduralSpriteBatch`/`GlInstanced`) and applies it consistently for buffer build + draw submission.
 - Renamed `RenderPipeline` modern mode flag to `modernPipelineEnabled_` to distinguish compositing mode from projectile backend decisions.
 - Added explicit ownership comments in renderer headers (`gpu_bullets`, `gl_bullet_renderer`, `modern_renderer`) to reduce subsystem overlap ambiguity.
+- Removed duplicated projectile render-path branching in `RenderPipeline::buildSceneOverlay` so a single route decision governs GL prep/procedural fallback/overlay follow-up each frame.
+- Renamed internal procedural palette-ramp staging member to `proceduralPaletteRamp_` to clarify palette ramp ownership (`paletteRamp_` = GL projectile shader LUT).
 
 # Changelog
 

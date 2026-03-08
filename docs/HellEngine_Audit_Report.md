@@ -391,3 +391,6 @@ Implemented closures:
 
 Residual risk:
 - Installer generation still depends on external NSIS tooling; workflow now degrades with explicit diagnostics when unavailable.
+
+- Render-path routing ownership was finalized by removing duplicate projectile path branches from `RenderPipeline::buildSceneOverlay` and enforcing single-source `ProjectileRenderPath` selection.
+- Palette/grayscale template ownership was documented and clarified (`GrayscaleSpriteAtlas` template source, `paletteRamp_` GL LUT authority, `proceduralPaletteRamp_` procedural staging).

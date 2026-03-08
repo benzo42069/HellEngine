@@ -318,6 +318,7 @@ Typical designer parameters: `N, Δ, Ω, I, S, A, L, a, ωturn, phase` and varia
 - `render2d` owns generic 2D presentation primitives (`Camera2D`, `SpriteBatch`, `DebugDraw`, `TextureStore`) shared by gameplay and tooling overlays.
 - `modern_renderer` owns optional scene/post-processing composition (offscreen buffers + post-fx), independent from projectile simulation/path decisions.
 - `gpu_bullets` (current `CpuMassBulletRenderSystem`) is explicitly an alternate CPU mass-render path and does not own authoritative collision/deterministic projectile state.
+- Roadmap note: if a future authoritative GPU-simulation path is introduced, it must be a distinct simulation mode with independent replay/hash contracts rather than an extension of current mass-render presentation systems.
 - `RenderPipeline::ProjectileRenderPath` is the canonical projectile presentation selector (`Disabled`/`ProceduralSpriteBatch`/`GlInstanced`) to avoid split routing logic across call sites.
 
 ### 15.x Roadmap Notes

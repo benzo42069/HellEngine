@@ -133,7 +133,7 @@ void RenderPipeline::shutdown(ControlCenterToolSuite& toolSuite) {
     glBulletRenderer_.shutdown();
     paletteRamp_.shutdown();
     shaderCache_.shutdown();
-    paletteRampTexture_.shutdown();
+    proceduralPaletteRamp_.shutdown();
     spriteAtlas_.shutdown();
     backgroundSystem_.clear();
     textures_.reset();
@@ -189,7 +189,7 @@ void RenderPipeline::generateBulletSprites(const PaletteFxTemplateRegistry& regi
     const auto defaultFill = deriveProjectileFillFromCore(PaletteColor {1.0F, 1.0F, 1.0F, 1.0F});
     generator.generatePaletteSet(renderer_, *textures_, "0", defaultFill, 16);
 
-    (void)paletteRampTexture_.buildFromRegistry(registry);
+    (void)proceduralPaletteRamp_.buildFromRegistry(registry);
 
     const auto& db = registry.database();
     std::uint8_t idx = 1;
@@ -266,9 +266,12 @@ void RenderPipeline::ensureZoneBackground(const GameplaySession& session) {
     }
 }
 
+void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
+    (void)frameDelta;
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double /*frameDelta*/) {
     const GameplaySession& s = snapshot.session;
     const ProjectileRenderPath projectileRenderPath = resolveProjectileRenderPath(s);
+
     if (projectileRenderPath == ProjectileRenderPath::GlInstanced) {
         const auto& posX = s.projectiles_.posX();
         const auto& posY = s.projectiles_.posY();

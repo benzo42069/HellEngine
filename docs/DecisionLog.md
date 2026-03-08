@@ -28,6 +28,13 @@
 - **Status**: Accepted.
 
 
+## 2026-03-08 — RenderPipeline projectile routing de-duplication
+- **Context**: `RenderPipeline::buildSceneOverlay` still contained duplicate projectile routing checks, which obscured ownership boundaries and risked divergent path behavior.
+- **Decision**: Keep a single `ProjectileRenderPath` resolution per frame-overlay build and remove the duplicated fallback branch. Keep particle/debug overlays keyed from the same resolved path.
+- **Decision**: Rename the secondary palette-ramp member to `proceduralPaletteRamp_` to distinguish procedural sprite-generation staging from GL shader-authoritative `paletteRamp_`.
+- **Rationale**: Preserves behavior while making renderer ownership boundaries auditable and less error-prone.
+- **Status**: Accepted.
+
 ## 2026-03-08 — Clarify renderer stack ownership boundaries
 - **Context**: Rendering ownership had overlapping language across `gpu_bullets`, `gl_bullet_renderer`, `modern_renderer`, `render_pipeline`, and `render2d`, with projectile route checks duplicated inside `RenderPipeline`.
 - **Decision**: Make `RenderPipeline` the explicit owner of projectile render-path selection via `ProjectileRenderPath` (`Disabled`, `ProceduralSpriteBatch`, `GlInstanced`) and rename `useModernRenderer_` to `modernPipelineEnabled_` to clarify that modern mode is a compositing backend toggle.
