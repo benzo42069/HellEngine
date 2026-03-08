@@ -53,6 +53,15 @@
 - Add deterministic verifier probes in `runtime.cpp` + `replay.cpp`.
 
 
+## Renderer ownership boundaries (finalized)
+
+- `render_pipeline` is the sole orchestration layer for renderer-path selection and frame composition; projectile-path checks are resolved once via `ProjectileRenderPath` and consumed consistently for prep + submit.
+- `gl_bullet_renderer` owns only OpenGL projectile draw preparation/submission from projectile SoA snapshots.
+- `render2d` owns generic 2D primitives (`SpriteBatch`, `DebugDraw`, `DebugText`, camera transforms, and texture atlas/store helpers).
+- `modern_renderer` owns post-processing/compositing render targets and fullscreen pass chain, independent from projectile simulation authority.
+- `gpu_bullets` (`CpuMassBulletRenderSystem`) remains a non-authoritative alternate CPU mass-render presentation path.
+- Palette/grayscale ownership split: `GrayscaleSpriteAtlas` defines grayscale shape templates, `paletteRamp_` is the GL projectile-shader LUT, and `proceduralPaletteRamp_` is reserved for procedural/SDL sprite-generation workflows.
+
 ## Rendering pipeline additions (OpenGL hybrid)
 
 - `RenderPipeline` now attempts to initialize an OpenGL 3.3 Core context (`SDL_WINDOW_OPENGL`) and GLAD loader.
