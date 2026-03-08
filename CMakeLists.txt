@@ -11,6 +11,10 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ENGINE_VERSION
 
 project(EngineDemo VERSION ${ENGINE_PROJECT_VERSION} LANGUAGES CXX)
 
+if(WIN32)
+  add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "In-source builds are not supported. Use: cmake -S . -B build")
 endif()
