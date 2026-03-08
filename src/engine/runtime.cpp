@@ -1,5 +1,6 @@
 #include <engine/runtime.h>
 
+#include <engine/content_pipeline.h>
 #include <engine/logging.h>
 #include <engine/persistence.h>
 #include <engine/public/plugins.h>
@@ -8,12 +9,28 @@
 
 #include <algorithm>
 #include <chrono>
+#include <filesystem>
+#include <fstream>
+
 #include <fstream>
 #include <nlohmann/json.hpp>
 
 namespace engine {
 
 namespace {
+AudioEventId toAudioContentEvent(const AudioEventType type) {
+    switch (type) {
+    case AudioEventType::Hit:
+        return AudioEventId::Hit;
+    case AudioEventType::Graze:
+        return AudioEventId::Graze;
+    case AudioEventType::BossPhaseTransition:
+        return AudioEventId::BossPhaseShift;
+    case AudioEventType::DefensiveSpecialActivated:
+        return AudioEventId::DefensiveSpecial;
+    }
+    return AudioEventId::Hit;
+}
 
 bool parseZoneType(const std::string& value, ZoneType& out) {
     if (value == "combat") {
@@ -95,24 +112,42 @@ Runtime::~Runtime() {
 
 void Runtime::dispatchAudioEvents() {
     if (!audio_.available()) return;
-    const Vec2 listener = session_.playerPos();
+    audio_.setListenerPosition(session_.playerPos());
     for (const AudioEvent& event : session_.consumeAudioEvents()) {
-        switch (event.type) {
-        case AudioEventType::Hit:
-            audio_.playSoundPositional(hitSoundId_, event.position, listener);
-            break;
-        case AudioEventType::Graze:
-            audio_.playSound(grazeSoundId_, 0.85F);
-            break;
-        case AudioEventType::BossPhaseTransition:
-            audio_.playSound(phaseWarnSoundId_, 1.0F);
-            break;
-        case AudioEventType::DefensiveSpecialActivated:
-            audio_.playSound(specialSoundId_, 0.95F);
-            break;
-        }
+        audio_.dispatchEvent(toAudioContentEvent(event.type), event.position);
     }
     audio_.update();
+}
+
+bool Runtime::loadAudioContent(const std::string& packSearchPath) {
+    std::vector<std::string> candidates = splitPackPaths(packSearchPath);
+    candidates.push_back("data/audio.json");
+    for (const std::string& path : candidates) {
+        std::ifstream in(path);
+        if (!in) continue;
+
+        nlohmann::json doc;
+        try {
+            in >> doc;
+        } catch (const std::exception& ex) {
+            logWarn("Audio content parse failed for `" + path + "`: " + ex.what());
+            continue;
+        }
+
+        AudioContentDatabase audioContent;
+        std::string audioError;
+        if (!parseAudioContentDatabase(doc, audioContent, audioError)) {
+            logWarn("Audio content validation failed for `" + path + "`: " + audioError);
+            continue;
+        }
+
+        const std::string assetRoot = std::filesystem::path(path).parent_path().string();
+        if (audio_.configureFromContent(audioContent, assetRoot)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void Runtime::simTick(const double dt) {
@@ -169,11 +204,6 @@ int Runtime::run() {
     }
 
     (void)audio_.initialize();
-    hitSoundId_ = audio_.loadSound("data/audio/hit.wav");
-    grazeSoundId_ = audio_.loadSound("data/audio/graze.wav");
-    phaseWarnSoundId_ = audio_.loadSound("data/audio/phase_warn.wav");
-    specialSoundId_ = audio_.loadSound("data/audio/special.wav");
-
     session_.projectiles_.initialize(config_.projectileCapacity, 420.0F, 32, 18);
     session_.cpuMassBullets_.initialize(std::max<std::uint32_t>(config_.projectileCapacity, 500000U), 420.0F);
 
@@ -185,6 +215,13 @@ int Runtime::run() {
                 packSearchPath += extraPath;
             }
         }
+    }
+
+    audio_.setMasterVolume(config_.audioMasterVolume);
+    audio_.setBusVolume(AudioBus::Music, config_.audioMusicVolume);
+    audio_.setBusVolume(AudioBus::Sfx, config_.audioSfxVolume);
+    if (!loadAudioContent(packSearchPath)) {
+        logWarn("Audio content load fallback: no valid authored audio database found in pack search paths");
     }
 
     const bool loadedPack = session_.patternBank_.loadFromFile(packSearchPath)

@@ -109,6 +109,11 @@
         "name": "run_clear",
         "clip": "sfx_run_clear",
         "gain": 1.0
+      },
+      {
+        "name": "defensive_special",
+        "clip": "sfx_phase_shift",
+        "gain": 0.95
       }
     ]
   }

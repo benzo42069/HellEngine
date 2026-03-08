@@ -129,13 +129,14 @@ int main() {
             })},
             {"events", nlohmann::json::array({
                 {{"name", "hit"}, {"clip", "sfx_hit"}, {"gain", 1.0}},
-                {{"name", "boss_warning"}, {"clip", "sfx_hit"}, {"gain", 0.8}}
+                {{"name", "boss_phase_shift"}, {"clip", "sfx_hit"}, {"gain", 0.8}},
+                {{"name", "defensive_special"}, {"clip", "sfx_hit"}, {"gain", 0.6}}
             })}
         }}
     };
     engine::AudioContentDatabase audioDb;
     std::string audioError;
-    if (!engine::parseAudioContentDatabase(audioDoc, audioDb, audioError) || !audioError.empty() || audioDb.clips.size() != 2 || audioDb.events.size() != 2 || audioDb.musicClipId != "bgm_core") {
+    if (!engine::parseAudioContentDatabase(audioDoc, audioDb, audioError) || !audioError.empty() || audioDb.clips.size() != 2 || audioDb.events.size() != 3 || audioDb.musicClipId != "bgm_core") {
         std::cerr << "parseAudioContentDatabase failed\n";
         return EXIT_FAILURE;
     }

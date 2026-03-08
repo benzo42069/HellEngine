@@ -601,6 +601,9 @@ bool parseAudioContentDatabase(const nlohmann::json& doc, AudioContentDatabase& 
             else if (name == "player_damage") binding.event = AudioEventId::PlayerDamage;
             else if (name == "enemy_death") binding.event = AudioEventId::EnemyDeath;
             else if (name == "boss_warning") binding.event = AudioEventId::BossWarning;
+            else if (name == "boss_phase_shift") binding.event = AudioEventId::BossPhaseShift;
+            else if (name == "defensive_special") binding.event = AudioEventId::DefensiveSpecial;
+            else if (name == "run_clear") binding.event = AudioEventId::RunClear;
             else if (name == "ui_click") binding.event = AudioEventId::UiClick;
             else if (name == "ui_confirm") binding.event = AudioEventId::UiConfirm;
             else {
