@@ -391,3 +391,11 @@ Implemented closures:
 
 Residual risk:
 - Installer generation still depends on external NSIS tooling; workflow now degrades with explicit diagnostics when unavailable.
+
+
+## Pattern panel modularization follow-up (2026-03-08)
+- Status: Completed refinement pass after initial editor decomposition.
+- Previous risk: Pattern tooling remained feature-dense inside one large draw function (generation, testing, graph editing, preview diagnostics).
+- Mitigation: Split responsibilities into focused helper methods with clear boundaries while preserving a single coherent panel for usability.
+- Extension points now documented and code-level explicit: generation controls, seed/testing controls, node palette, node inspector, preview asset builder, and preview/analysis renderer.
+- Residual risk: UI is still one window by design; future overflow should prefer adding focused collapsible sections before adding new top-level panels.

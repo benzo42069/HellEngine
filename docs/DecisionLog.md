@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-08 — Pattern panel responsibility split inside editor tooling
+- **Context**: After the first editor decomposition, the pattern panel still mixed generation tuning, seed/testing actions, graph editing, and preview diagnostics in one dense function body.
+- **Decision**: Keep a single Pattern Graph Editor window for workflow continuity, but split implementation into focused helper modules for generation controls, seed/testing, graph editing, preview-asset construction, and simulation/analysis rendering.
+- **Rationale**: Preserves user flow and existing behavior while reducing coupling, clarifying ownership, and creating extension points for future tooling features.
+- **Status**: Accepted.
+
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
 - **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
 - **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.
