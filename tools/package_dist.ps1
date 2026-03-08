@@ -6,7 +6,8 @@ Param(
     [switch]$Clean,
     [switch]$Deterministic,
     [switch]$SkipBuild,
-    [switch]$SkipValidation
+    [switch]$SkipValidation,
+    [string]$ManifestName = "RELEASE_MANIFEST.txt"
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,6 +32,57 @@ function Get-BuiltExecutablePath {
     }
 
     throw "Unable to locate executable '$Name' in build output '$BuildDir'."
+}
+
+function Copy-RuntimeDependencies {
+    param(
+        [Parameter(Mandatory = $true)][string]$BuildDir,
+        [Parameter(Mandatory = $true)][string]$DestinationDir
+    )
+
+    $releaseDir = Join-Path $BuildDir "Release"
+    $candidateDirs = @($releaseDir, $BuildDir) | Where-Object { Test-Path $_ }
+    $copied = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+
+    foreach ($dir in $candidateDirs) {
+        Get-ChildItem -Path $dir -Filter "*.dll" -File | ForEach-Object {
+            if ($copied.Add($_.Name)) {
+                Copy-Item $_.FullName (Join-Path $DestinationDir $_.Name)
+            }
+        }
+    }
+
+    if ($copied.Count -eq 0) {
+        Write-Host "[package_dist] No runtime DLLs discovered in build output"
+    }
+    else {
+        Write-Host "[package_dist] Bundled runtime DLLs: $($copied -join ', ')"
+    }
+}
+
+function Write-ReleaseManifest {
+    param(
+        [Parameter(Mandatory = $true)][string]$PortableDir,
+        [Parameter(Mandatory = $true)][string]$ManifestPath
+    )
+
+    $manifestLines = @(
+        "# HellEngine Portable Release Manifest",
+        "GeneratedUtc=$([DateTime]::UtcNow.ToString('o'))",
+        "PortableDir=$PortableDir",
+        "",
+        "## File Inventory"
+    )
+
+    Get-ChildItem -Path $PortableDir -File -Recurse |
+        Sort-Object FullName |
+        ForEach-Object {
+            $relative = [System.IO.Path]::GetRelativePath($PortableDir, $_.FullName)
+            $hash = (Get-FileHash -Algorithm SHA256 -Path $_.FullName).Hash
+            $manifestLines += "$relative | $($_.Length) bytes | SHA256=$hash"
+        }
+
+    Set-Content -Path $ManifestPath -Value $manifestLines -Encoding UTF8
 }
 
 $distDir = Join-Path $DistRoot $PortableDirName
@@ -89,13 +141,7 @@ if (Test-Path "version/VERSION.txt") {
     Copy-Item "version/VERSION.txt" (Join-Path $distDir "VERSION.txt")
 }
 
-$runtimeDlls = @("SDL2.dll")
-foreach ($dll in $runtimeDlls) {
-    $candidate = Join-Path $BuildDir "Release/$dll"
-    if (Test-Path $candidate) {
-        Copy-Item $candidate (Join-Path $distDir $dll)
-    }
-}
+Copy-RuntimeDependencies -BuildDir $BuildDir -DestinationDir $distDir
 
 if (-not $SkipValidation) {
     $portableEngine = Join-Path $distDir "EngineDemo$(if ($engineExe.EndsWith('.exe')) {'.exe'})"
@@ -121,11 +167,23 @@ if (-not $SkipValidation) {
         if ($LASTEXITCODE -ne 0) {
             throw "Portable EngineDemo smoke validation failed with exit code $LASTEXITCODE"
         }
+
+        if (Test-Path "sample-content.pak") {
+            Write-Host "[package_dist] Running sample pack replay verify from portable bundle"
+            & $portableEngine --replay-verify --headless --ticks 180 --seed 1337 --content-pack sample-content.pak
+            if ($LASTEXITCODE -ne 0) {
+                throw "Portable sample-content replay verification failed with exit code $LASTEXITCODE"
+            }
+        }
     }
     finally {
         Pop-Location
     }
 }
+
+$manifestPath = Join-Path $distDir $ManifestName
+Write-Host "[package_dist] Writing release manifest: $manifestPath"
+Write-ReleaseManifest -PortableDir $distDir -ManifestPath $manifestPath
 
 if (-not (Test-Path $DistRoot)) {
     New-Item -ItemType Directory -Path $DistRoot | Out-Null

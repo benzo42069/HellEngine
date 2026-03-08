@@ -9,6 +9,20 @@
 
 # Decision Log
 
+## 2026-03-08 — Decision: Creator docs are workflow-first and split by task
+- **Context:** Existing docs had useful detail but mixed internal notes, stale examples, and overlapping pages that increased onboarding friction for external creators.
+- **Decision:** Keep a short index-style `AuthoringGuide.md` and maintain focused workflow guides (build/run, import, palette/grayscale, patterns, encounter/boss, replay/debug, audio, sample usage, troubleshooting, plugins/mods, performance).
+- **Rationale:** External creators need dependable, executable workflows more than architecture prose during first contact with the engine.
+- **Consequence:** Lower doc drift risk (single owner page per workflow) and clearer upgrade path for future creator-facing changes.
+## 2026-03-08 — Release packaging reliability + sample bundle validation hardening
+- **Context**: Release scripts packaged expected binaries/content but had weak dependency discovery (`SDL2.dll` only), no signed inventory/trace artifact, and no explicit sample-pack execution check from the produced portable folder.
+- **Decision**: Extend packaging to (1) discover/copy all runtime DLLs from release build output, (2) generate `RELEASE_MANIFEST.txt` with file inventory + SHA-256 hashes, and (3) run replay verification using `sample-content.pak` from within the packaged bundle.
+- **Decision**: Extend release validation to require the manifest and verify required entry fragments for core release artifacts.
+- **Rationale**: Improves practical distribution readiness and troubleshooting confidence while preserving existing successful build/package behavior.
+## 2026-03-08 — Run-structure driven by authored encounter zones
+- **Context**: Vertical-slice validation required encounter pacing (combat/elite/event/boss) to run through authored content-pack data, but runtime stage flow was still sourced from hardcoded defaults.
+- **Decision**: Add a content-pack boot path that reads `encounters[].zones[]` and hydrates `RunStructure` stages from authored encounter definitions; keep default stage initialization as fallback when packs are missing/invalid.
+- **Rationale**: Validates intended workflow end-to-end (author JSON -> ContentPacker -> Runtime) and avoids bespoke demo-only runtime paths.
 ## 2026-03-08 — Pattern panel responsibility split inside editor tooling
 - **Context**: After the first editor decomposition, the pattern panel still mixed generation tuning, seed/testing actions, graph editing, and preview diagnostics in one dense function body.
 - **Decision**: Keep a single Pattern Graph Editor window for workflow continuity, but split implementation into focused helper modules for generation controls, seed/testing, graph editing, preview-asset construction, and simulation/analysis rendering.

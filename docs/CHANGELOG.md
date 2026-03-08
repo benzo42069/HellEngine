@@ -1,3 +1,12 @@
+# Changelog
+
+## Unreleased
+### Changed
+- Completed final creator-facing documentation pass with workflow-first onboarding and refreshed guidance for build/run, content authoring, replay/debug, troubleshooting, plugins/mods, and performance.
+- Reworked `docs/AuthoringGuide.md` into a maintained index to reduce stale duplicated instructions.
+
+### Added
+- Added dedicated creator guides: `docs/PaletteAndGrayscaleWorkflow.md`, `docs/AudioWorkflow.md`, and `docs/SampleProjectUsage.md`.
 ## [Unreleased]
 ### Added
 - Public plugin metadata contract (`PluginMetadata`, `IPlugin`) with explicit per-plugin target API version declaration.
@@ -18,6 +27,7 @@
 - Refactored the pattern editor panel internals into focused helpers for generation controls, seed/testing controls, graph editing, and preview/analysis while preserving the single-window workflow and existing behavior.
 - Added explicit pattern-panel extension seams (`buildPatternPreviewAsset`, `drawPatternPreviewAndAnalysis`, and dedicated control/graph draw helpers) to support future tooling features with less coupling.
 - Added a polished product-validation vertical slice definition via authored encounter/audio content and a dedicated sample runbook covering combat readability, enemy/boss flow, replay, UI, audio, and packaging checks.
+- Runtime now hydrates `RunStructure` stage/zone sequencing from authored pack encounters (`encounters[].zones[]`), so vertical-slice progression is driven by content pipeline data with fallback defaults when encounter data is unavailable.
 - Consolidated CMake third-party dependency setup under a single registration/materialization flow (`engine_register_dependency` + `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})`) while preserving all existing target wiring and dependency availability.
 - Hardened CMake build hygiene: reject in-source builds, explicitly create generated include output directory before configured-header emission, and remove duplicate `FetchContent_MakeAvailable` dependency materialization to improve clean/incremental rebuild consistency.
 - Fixed Visual Studio/CMake/Ninja `ContentPacker` build failure (`SDL_mixer.h` not found) by explicitly linking `ContentPacker` with `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` while preserving `engine_core` dependency setup.
@@ -33,8 +43,6 @@
 - Added explicit ownership comments in renderer headers (`gpu_bullets`, `gl_bullet_renderer`, `modern_renderer`) to reduce subsystem overlap ambiguity.
 - Removed duplicated projectile render-path branching in `RenderPipeline::buildSceneOverlay` so a single route decision governs GL prep/procedural fallback/overlay follow-up each frame.
 - Renamed internal procedural palette-ramp staging member to `proceduralPaletteRamp_` to clarify palette ramp ownership (`paletteRamp_` = GL projectile shader LUT).
-
-# Changelog
 
 ## Unreleased
 ### Changed
@@ -117,6 +125,10 @@
 - Added `tools/release_validate.ps1` to run a full release gate (build, test, benchmark, content pack generation, replay verify, packaging, artifact checks).
 
 ### Changed
+- `tools/package_dist.ps1` now auto-bundles runtime DLL dependencies discovered in build output and writes `RELEASE_MANIFEST.txt` with SHA-256 file hashes for troubleshooting/distribution traceability.
+- `tools/package_dist.ps1` now validates `sample-content.pak` via portable replay verification in addition to smoke/content-packer checks.
+- `tools/release_validate.ps1` now enforces release-manifest presence and required artifact entry coverage.
+- `tools/build_release.ps1` now fails early on missing content input directories and replay-verifies the generated sample pack during release pack generation.
 - Hardened `tools/build_release.ps1` to run release validation gates by default instead of only configuring/building.
 - Hardened `tools/package_dist.ps1` to bundle generated content packs and run portable self-validation before creating archives.
 - Improved `build_installer.ps1` diagnostics and output handling around NSIS availability and path resolution.

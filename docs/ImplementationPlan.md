@@ -7,6 +7,20 @@
 
 # Implementation Plan
 
+## 2026-03-08 — Final creator-facing documentation pass (Completed)
+- [x] Audited creator docs for internal-only assumptions and outdated instructions (notably stale pack metadata/examples).
+- [x] Standardized onboarding around explicit build -> pack -> run -> replay-verify loops.
+- [x] Added dedicated guides for palette/grayscale shader workflow, audio workflow, and sample project usage.
+- [x] Updated core creator docs (asset import, pattern authoring, encounter/boss, replay/debug, troubleshooting, performance, build/run) to align with implemented CLI and content-packer behavior.
+- [x] Reframed `AuthoringGuide.md` as a maintained index to reduce drift across duplicated long-form docs.
+## 2026-03-08 — Release packaging finalization plan (completed)
+- [x] Audit build/package/release scripts for dependency bundle assumptions and missing validation links.
+- [x] Replace single-DLL copy assumption with runtime DLL auto-discovery from build output directories.
+- [x] Add package manifest generation (`RELEASE_MANIFEST.txt`) with deterministic file inventory and SHA-256 hashes.
+- [x] Validate sample packaging end-to-end by replay-verifying `sample-content.pak` both in release build flow and in portable bundle validation.
+- [x] Extend release gate checks to require manifest presence and required artifact references.
+- [x] Update release docs/troubleshooting for manifest, dependency bundling behavior, and failure triage steps.
+- 2026-03-08 progress: Completed authored-encounter runtime wiring so vertical-slice stage/zone flow is sourced from packed encounter JSON (`encounters[].zones[]`) with deterministic fallback to default stages when packs are absent.
 ## 2026-03-08 — Pattern panel modularization follow-up (Completed)
 - [x] Audit remaining dense concerns in `drawPatternGraphEditorPanel` after initial editor split.
 - [x] Separate pattern generation controls, seed/testing controls, graph palette/inspector, and preview-analysis rendering into focused helper methods.
