@@ -128,6 +128,17 @@
 - **M9 Full Demo Loop**: stage map, encounters, rewards, boss, progression.
 - **M10 1.0 RC**: docs/templates/plugin+mod baseline and release-readiness checks passed.
 
+## Audio workflow hardening update (2026-03-08)
+- Audited flow from authored `audio` pack data -> parse (`parseAudioContentDatabase`) -> runtime dispatch.
+- Closed a boundary gap where runtime used hardcoded clip loads even when authored audio metadata existed.
+- Implemented runtime integration updates:
+  - `Runtime` loads authored audio JSON from configured pack search paths.
+  - `AudioSystem` now supports content-driven clip/event registration and event-id dispatch.
+  - Bus/category volume controls are applied through runtime settings (`master/music/sfx`) directly in `AudioSystem`.
+  - Listener position is updated each tick before dispatching queued presentation audio events.
+- Expanded parser support for authored events: `boss_phase_shift`, `defensive_special`, `run_clear`.
+- Scope guardrails kept: no middleware replacement, no simulation/audio coupling, no deterministic boundary changes.
+
 ## Phase Framework Alignment
 This plan uses additive buildable phases that map to the product program sequence:
 - Foundations/pre-production intent is represented by Phase 1 documentation lock and milestone M0.

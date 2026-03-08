@@ -18,6 +18,9 @@ enum class AudioEventId : std::uint8_t {
     PlayerDamage,
     EnemyDeath,
     BossWarning,
+    BossPhaseShift,
+    DefensiveSpecial,
+    RunClear,
     UiClick,
     UiConfirm,
 };

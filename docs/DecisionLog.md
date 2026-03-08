@@ -1,3 +1,12 @@
+## 2026-03-08 — Audio authoring/runtime boundary hardening
+- **Context**: Runtime playback still loaded hardcoded WAV paths while content pipeline already parsed authored audio records; event schema and runtime dispatch were partially disconnected.
+- **Decision**: Route runtime playback through authored `AudioContentDatabase` records (clip registry + event bindings + buses) and make `Runtime` dispatch authored `AudioEventId` values instead of hardcoded `SoundId` members.
+- **Implementation**:
+  - `AudioSystem` now owns clip registry, event binding table, per-bus volume controls, listener position, and event dispatch (`dispatchEvent`).
+  - `Runtime` now parses pack JSON audio sections via `parseAudioContentDatabase`, configures `AudioSystem`, and maps gameplay presentation events to authored audio event ids.
+  - Content parser now recognizes `boss_phase_shift`, `defensive_special`, and `run_clear` event names.
+- **Consequence**: Content creators can iterate audio event bindings/bus assignments in authored data without touching runtime code, while deterministic sim boundaries remain unchanged (events still emitted in sim, playback still dispatched post-tick).
+
 # Decision Log
 
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition

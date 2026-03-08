@@ -1584,8 +1584,9 @@ Headless mode contract:
 
 ## Audio Runtime and Event Routing
 - `AudioSystem` is a presentation-only runtime service; simulation never depends on audio state.
-- Gameplay emits deterministic audio events (`hit`, `graze`, `player_damage`, `enemy_death`, `boss_warning`, `ui_click`, `ui_confirm`) and runtime flushes them after each simulation tick.
+- Gameplay emits deterministic audio events (`hit`, `graze`, `player_damage`, `enemy_death`, `boss_warning`, `boss_phase_shift`, `defensive_special`, `run_clear`, `ui_click`, `ui_confirm`) and runtime flushes them after each simulation tick.
 - Audio content is data-driven via pack `audio` section (`clips`, `events`, `music`) and loaded at runtime from content pack JSON.
+- Runtime configures playback from authored audio pack records at boot (clip registry + event bindings + optional music loop id) and applies bus/category mix controls (`master/music/sfx`) before event dispatch.
 - Mix model supports buses (`master`, `music`, `sfx`) with independent volume controls (`audioMasterVolume`, `audioMusicVolume`, `audioSfxVolume`).
 - Supported source asset type is WAV via SDL decode/conversion, with deterministic fallback tones when source files are unavailable.
 

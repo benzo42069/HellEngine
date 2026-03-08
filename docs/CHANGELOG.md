@@ -5,6 +5,9 @@
 - Typed plugin registration result (`PluginRegistrationResult`) with boundary-safe rejection causes.
 
 ### Changed
+- Hardened authored audio workflow end-to-end: `Runtime` now loads and validates pack `audio` metadata (`clips`, `events`, `music`) and configures `AudioSystem` from authored records instead of hardcoded clip paths.
+- Added explicit runtime audio event routing (`AudioEventType` -> `AudioEventId`) with bus-aware gain composition (`master/music/sfx`), listener-position updates, and loop-aware music handling in `AudioSystem`.
+- Expanded supported authored event bindings with `boss_phase_shift`, `defensive_special`, and `run_clear` to align content/event schema with current audio authoring data.
 - Plugin registration now enforces compatibility/version checks plus duplicate-id and duplicate-instance protection.
 - Public API versioning helpers now include `isApiCompatible(...)` for host/plugin compatibility gating.
 

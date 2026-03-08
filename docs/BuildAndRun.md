@@ -9,7 +9,7 @@
 - nlohmann_json (fetched via CMake FetchContent)
 - GLAD (vendored at `third_party/glad`)
 - Catch2 (**not currently used**; test binaries are custom `main()` executables wired through CTest)
-- SDL_mixer (**not currently used**; audio runtime uses SDL audio callback mixer in `AudioSystem`)
+- SDL_mixer (actively used by `AudioSystem` for runtime WAV playback and event-driven bus/category mixing)
 
 ## Configure
 ```powershell
