@@ -11,6 +11,7 @@
 ## Unreleased
 ### Changed
 - Added a polished product-validation vertical slice definition via authored encounter/audio content and a dedicated sample runbook covering combat readability, enemy/boss flow, replay, UI, audio, and packaging checks.
+- Runtime now hydrates `RunStructure` stage/zone sequencing from authored pack encounters (`encounters[].zones[]`), so vertical-slice progression is driven by content pipeline data with fallback defaults when encounter data is unavailable.
 - Consolidated CMake third-party dependency setup under a single registration/materialization flow (`engine_register_dependency` + `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})`) while preserving all existing target wiring and dependency availability.
 - Hardened CMake build hygiene: reject in-source builds, explicitly create generated include output directory before configured-header emission, and remove duplicate `FetchContent_MakeAvailable` dependency materialization to improve clean/incremental rebuild consistency.
 - Fixed Visual Studio/CMake/Ninja `ContentPacker` build failure (`SDL_mixer.h` not found) by explicitly linking `ContentPacker` with `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` while preserving `engine_core` dependency setup.

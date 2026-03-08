@@ -7,6 +7,7 @@
 
 # Implementation Plan
 
+- 2026-03-08 progress: Completed authored-encounter runtime wiring so vertical-slice stage/zone flow is sourced from packed encounter JSON (`encounters[].zones[]`) with deterministic fallback to default stages when packs are absent.
 ## 2026-03-08 — Vertical slice completion plan (product validation)
 - Scope delivered:
   - Authored two representative sample encounters (`Ember Crossing`, `Seraph Rematch`) with staged combat/boss/replay metadata.

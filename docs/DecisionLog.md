@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-08 — Run-structure driven by authored encounter zones
+- **Context**: Vertical-slice validation required encounter pacing (combat/elite/event/boss) to run through authored content-pack data, but runtime stage flow was still sourced from hardcoded defaults.
+- **Decision**: Add a content-pack boot path that reads `encounters[].zones[]` and hydrates `RunStructure` stages from authored encounter definitions; keep default stage initialization as fallback when packs are missing/invalid.
+- **Rationale**: Validates intended workflow end-to-end (author JSON -> ContentPacker -> Runtime) and avoids bespoke demo-only runtime paths.
+- **Status**: Accepted.
+
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
 - **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
 - **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.

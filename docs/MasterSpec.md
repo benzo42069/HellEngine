@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Runtime run-structure boot now consumes authored `encounters[].zones[]` from the selected content pack when available, falling back to defaults only if no encounter data is present. This aligns the playable vertical slice flow (combat/elite/event/boss sequencing) with content-pipeline authored data instead of hardcoded stage layouts.
 - 2026-03-08: Public API/plugin boundary hardening added metadata-based plugin registration, compatibility gating against `publicApiVersion()`, duplicate-id protection, and explicit unregister/clear lifecycle endpoints while preserving existing engine run behavior.
 
 ## Public API / Extensibility Baseline (2026-03-08)
