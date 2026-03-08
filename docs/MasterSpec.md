@@ -1674,3 +1674,13 @@ Documentation policy:
 - **PresentationSubsystem**: emits camera-shake/audio feedback events for gameplay-triggered presentation signals.
 
 Behavioral contract remains unchanged: the owning simulation tick order is still orchestrated by `GameplaySession::updateGameplay()`, and replay determinism contracts are preserved.
+
+### Runtime Architecture Update — GameplaySession subsystem continuation (2026-03-08)
+- `GameplaySession` remains deterministic phase orchestrator, but encounter-focused runtime/presentation glue has been extracted into `EncounterSimulationSubsystem`.
+- `EncounterSimulationSubsystem` owns:
+  - projectile despawn presentation reaction shaping,
+  - deterministic CPU collision pipeline coordination (danger-field build + collision target/event processing),
+  - runtime-event to presentation feedback fanout for encounter events,
+  - zone transition and ambient zone presentation emissions.
+- `GameplaySession` now coordinates subsystem calls rather than embedding full encounter implementation blocks inline.
+- Determinism/replay contract remains unchanged: update order and core runtime systems are preserved.

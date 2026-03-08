@@ -589,3 +589,21 @@ Completed release-engineering closure work:
 ### Migration notes
 - Runtime call sites remain unchanged (`session.onUpgradeNavigation()`, `session.updateGameplay()`), but those entry points now dispatch to subsystem interfaces.
 - No replay hash contract changes were introduced by this split.
+
+## 2026-03-08 — GameplaySession decomposition continuation (encounter ownership cleanup)
+
+### Completed
+- Added `EncounterSimulationSubsystem` to isolate encounter-runtime and presentation-facing collision/event handling from `GameplaySession`.
+- Moved deterministic CPU-collision pipeline wiring (danger-field build, collision target/event setup, hit shake/audio emission) into `EncounterSimulationSubsystem::resolveCpuDeterministicCollisions`.
+- Moved projectile-despawn particle/shake emission into `EncounterSimulationSubsystem::emitDespawnParticles`.
+- Moved zone transition + ambient zone presentation feedback emission into explicit encounter subsystem methods.
+- Replaced inline entity runtime-event fanout inside `GameplaySession::updateGameplay()` with `EncounterSimulationSubsystem::processRuntimeEvents`.
+
+### Ownership boundaries after this pass
+1. **Session orchestration** stays in `GameplaySession::updateGameplay()` and remains deterministic tick coordinator.
+2. **Encounter simulation coordination** now lives in `EncounterSimulationSubsystem` for collision/runtime-event processing and zone-feedback outputs.
+3. **Presentation-facing encounter outputs** (camera shake + audio events from despawns/collisions/zone transitions) are emitted through encounter/presentation subsystem interfaces, not ad-hoc inline blocks.
+
+### Migration notes
+- No call-site API break: runtime still calls `session.updateGameplay()` and drains presentation queues through existing consume methods.
+- Replay/determinism boundaries remain unchanged: refactor preserves tick order and uses same underlying runtime systems.

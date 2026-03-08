@@ -124,3 +124,10 @@
 - Refactored `GameplaySession` responsibility flow by extracting player combat, progression navigation, and presentation event emission into explicit subsystem interfaces (`gameplay_session_subsystems`).
 - Updated `GameplaySession` orchestration to delegate to these subsystem boundaries while preserving deterministic update behavior.
 - Added subsystem implementation unit to `engine_core` build sources.
+
+## Unreleased
+### Changed
+- Continued `GameplaySession` architecture cleanup by introducing `EncounterSimulationSubsystem` for encounter-runtime ownership boundaries.
+- Moved deterministic CPU collision flow, despawn presentation emission, and zone-feedback emission out of inline `GameplaySession` logic into encounter subsystem methods.
+- Routed entity runtime-event presentation fanout through encounter subsystem coordination.
+- Extended `gameplay_session_state_tests` with coverage for encounter zone-feedback emission behavior.
