@@ -1,5 +1,20 @@
 # Implementation Plan
 
+## 2026-03-08 — Dependency setup consolidation (CMake)
+- Audit findings:
+  - Third-party setup was functionally correct but spread across repeated `FetchContent_Declare(...)` blocks with manual tracking, which made drift/duplication review harder.
+  - Dependency materialization intent (single-pass) was not represented as explicit structure in CMake.
+- Changes applied:
+  - Added `engine_register_dependency(...)` helper to register each dependency in one canonical list (`ENGINE_FETCHCONTENT_DEPENDENCIES`).
+  - Kept SDL/SDL_mixer cache policy knobs intact and adjacent to their registrations.
+  - Preserved existing dependency set and wiring (`SDL2`, `SDL2_mixer`, `imgui`, `nlohmann_json`, `Catch2`) with one `FetchContent_MakeAvailable(...)` call driven by the canonical list.
+- Target wiring notes:
+  - No changes to `ENGINEDEMO_SDL_TARGET` selection logic.
+  - No changes to downstream link libraries for `engine_core`, `ContentPacker`, or tests.
+- Validation status:
+  - Dependency resolution and FetchContent orchestration complete successfully during configure.
+  - Final configure step is still blocked in this container by missing system OpenGL development libraries required by `find_package(OpenGL REQUIRED)`.
+
 
 ## 2026-03-07 — Build hygiene and clean rebuild validation
 - Audit findings:

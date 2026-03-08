@@ -4,6 +4,10 @@
 - **Context**: `content_pipeline.h` included `audio_system.h`, creating an inverted dependency where generic content interfaces pulled in runtime SDL_mixer headers and forced tooling targets to link/runtime-audio dependencies.
 - **Decision**: Split audio content schema definitions (`AudioBus`, `AudioEventId`, `AudioClipRecord`, `AudioEventBinding`, `AudioContentDatabase`) into `audio_content.h`; update `content_pipeline.h` and `audio_system.h` to depend on that shared lightweight header.
 - **Rationale**: Restores architectural layering: content pipeline types stay data-focused while runtime playback/system concerns remain in `audio_system`.
+## 2026-03-08 — Consolidated FetchContent dependency registration
+- **Context**: Dependency setup in top-level CMake remained operational but fragmented across repeated declaration blocks, making wiring audits harder and inviting accidental duplication during future additions.
+- **Decision**: Introduce a single dependency registration helper (`engine_register_dependency`) that appends each third-party package to one canonical list, then materialize once via `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})`.
+- **Rationale**: Keeps behavior unchanged while making third-party setup auditable, reducing redundancy risk, and clarifying target availability order for downstream linking.
 - **Status**: Accepted.
 
 
