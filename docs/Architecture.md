@@ -1,5 +1,13 @@
 # Architecture
 
+## Public extensibility boundaries (2026-03-08)
+
+- Public contract for embedders/mod tooling remains constrained to `include/engine/public/*` only.
+- Plugin registry storage/order (`engine::internal::PluginRegistry`) remains internal and non-contract.
+- Host/plugin lifecycle contract is: host owns plugin object lifetime, engine stores non-owning pointers, host unregisters before destroying plugin instances or at shutdown via `clearRegisteredPlugins()`.
+- Compatibility policy is centralized in public helpers: `isPluginTargetCompatible(metadata)` and `pluginRegistrationErrorMessage(error)` for stable diagnostics in host logs/UIs.
+- Mod/content extension boundary remains content-pack layering (`--content-pack` with `;`/`,` separators, left-to-right with later entries overriding by `guid`).
+
 ## Runtime layers
 
 1. **Config/bootstrap** (`main.cpp`, `config.*`)

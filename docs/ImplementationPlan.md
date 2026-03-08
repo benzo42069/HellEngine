@@ -7,6 +7,11 @@
 
 # Implementation Plan
 
+## 2026-03-08 — Extensibility boundary closeout
+- [x] Public API boundary audit completed (`engine/public` vs `engine/internal`/`src`).
+- [x] Plugin lifecycle boundary clarified with explicit host ownership guidance and stable error/compatibility helpers.
+- [x] Mod/content extension boundary reaffirmed (pack layering + override semantics) without widening internals.
+- [x] No runtime behavior changes introduced; updates are boundary clarity and host integration ergonomics.
 ## 2026-03-08 — Final creator-facing documentation pass (Completed)
 - [x] Audited creator docs for internal-only assumptions and outdated instructions (notably stale pack metadata/examples).
 - [x] Standardized onboarding around explicit build -> pack -> run -> replay-verify loops.

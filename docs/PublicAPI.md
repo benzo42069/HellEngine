@@ -75,3 +75,17 @@ Compatibility check uses `isApiCompatible(pluginTarget, publicApiVersion())`:
 - Plugin minor must be <= runtime minor.
 
 This keeps extensibility stable while avoiding exposure of runtime internals.
+
+
+## Host lifecycle expectations
+
+- Plugin instances are host-owned; registry stores non-owning pointers only.
+- Unregister plugin ids before destroying instances or call `clearRegisteredPlugins()` during host shutdown.
+- Use `isPluginTargetCompatible(metadata)` prior to registration for preflight checks.
+- Use `pluginRegistrationErrorMessage(result.error)` for stable user-facing diagnostics.
+
+## Mod/content boundary expectations
+
+- Mod authors should prefer content-pack extension (`--content-pack` layering) over runtime/internal symbol coupling.
+- Public plugin hooks are intentionally narrow: content paths, shader-pack descriptors, tool panel draw callbacks.
+- Internal load-order storage and registry structure are not API contract and may evolve between versions.

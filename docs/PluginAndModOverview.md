@@ -46,6 +46,45 @@ Runtime accepts multiple packs via `--content-pack`, separated by `;` or `,`.
 
 Merge rules:
 - Left-to-right load order.
+- Later pack entries override earlier ones by `guid`.
+- Conflicts are logged.
+
+## 4) Versioning and compatibility
+
+Public API policy:
+- PATCH: bugfixes only.
+- MINOR: additive API changes.
+- MAJOR: breaking API changes.
+
+Deprecations are marked and retained for at least one MINOR before MAJOR removal.
+
+## 5) Recommended extension workflow
+1. Build a content pack or plugin against current public headers.
+2. Validate with headless run + replay verify.
+3. Pin against a compatible runtime version.
+4. Avoid internal include reliance to reduce breakage risk.
+
+## 6) Plugin lifecycle boundary
+
+Expected host lifecycle:
+1. Construct plugin instances.
+2. Register via `register*Plugin(...)`.
+3. On shutdown/unload, unregister by plugin id (`unregister*Plugin(id)`) or call `clearRegisteredPlugins()`.
+
+Registration validates:
+- non-null plugin pointer
+- non-empty metadata id
+- unique plugin id and unique plugin instance
+- API compatibility (`targetApiVersion` vs runtime public API version)
+
+This boundary keeps plugin management in the public layer while keeping registry storage and ordering internal/unstable.
+
+
+## 7) Compatibility + diagnostics expectations
+
+- Host tools can call `isPluginTargetCompatible(metadata)` for registration preflight before attempting registration.
+- Failed registration results should be surfaced via `pluginRegistrationErrorMessage(error)` to keep diagnostics stable for end users.
+- Plugin instances remain host-owned and must be unregistered before plugin/module unload.
 - Later pack assets override earlier assets by GUID.
 - Conflicts are logged for diagnostics.
 
