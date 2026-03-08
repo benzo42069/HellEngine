@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
+- **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
+- **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.
+- **Rationale**: Reduces coupling between UI domains and shared runtime-facing logic, improves maintainability, and creates explicit extension points for future panels/services while preserving existing behavior.
+- **Status**: Accepted.
+
+
+## 2026-03-08 — Content pipeline/audio runtime boundary cleanup
+- **Context**: `content_pipeline.h` included `audio_system.h`, creating an inverted dependency where generic content interfaces pulled in runtime SDL_mixer headers and forced tooling targets to link/runtime-audio dependencies.
+- **Decision**: Split audio content schema definitions (`AudioBus`, `AudioEventId`, `AudioClipRecord`, `AudioEventBinding`, `AudioContentDatabase`) into `audio_content.h`; update `content_pipeline.h` and `audio_system.h` to depend on that shared lightweight header.
+- **Rationale**: Restores architectural layering: content pipeline types stay data-focused while runtime playback/system concerns remain in `audio_system`.
+## 2026-03-08 — Consolidated FetchContent dependency registration
+- **Context**: Dependency setup in top-level CMake remained operational but fragmented across repeated declaration blocks, making wiring audits harder and inviting accidental duplication during future additions.
+- **Decision**: Introduce a single dependency registration helper (`engine_register_dependency`) that appends each third-party package to one canonical list, then materialize once via `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})`.
+- **Rationale**: Keeps behavior unchanged while making third-party setup auditable, reducing redundancy risk, and clarifying target availability order for downstream linking.
+- **Status**: Accepted.
+
+
+## 2026-03-08 — Clarify renderer stack ownership boundaries
+- **Context**: Rendering ownership had overlapping language across `gpu_bullets`, `gl_bullet_renderer`, `modern_renderer`, `render_pipeline`, and `render2d`, with projectile route checks duplicated inside `RenderPipeline`.
+- **Decision**: Make `RenderPipeline` the explicit owner of projectile render-path selection via `ProjectileRenderPath` (`Disabled`, `ProceduralSpriteBatch`, `GlInstanced`) and rename `useModernRenderer_` to `modernPipelineEnabled_` to clarify that modern mode is a compositing backend toggle.
+- **Decision**: Document subsystem roles in headers and specs: `gl_bullet_renderer` = projectile GL draw backend, `render2d` = generic 2D primitives, `modern_renderer` = post-fx/compositing, `gpu_bullets` = CPU mass-render alternate mode.
+- **Rationale**: Reduces path ambiguity without changing gameplay or render behavior, and keeps authoritative projectile ownership in simulation systems.
+- **Status**: Accepted.
+
 
 ## 2026-03-08 — Product validation via authored vertical slice
 - **Context**: Audit follow-up required proving HellEngine as a coherent product loop (combat → encounter flow → boss phases → replay/package viability), not just subsystem completeness.
@@ -558,4 +583,18 @@
 - **Context**: `engine_core` build was blocked by duplicated `PaletteRampTexture` declarations and a renderer-side unresolved projectile allegiance symbol.
 - **Decision**: Apply a surgical fix: deduplicate `palette_ramp.h/.cpp`, keep one canonical `texture_` + member set, expose `animationFor` publicly, and include `projectiles.h` in `gl_bullet_renderer.cpp`.
 - **Rationale**: Restores compile integrity without redesigning palette or projectile rendering architecture.
+- **Status**: Accepted.
+
+## 2026-03-08 — Public API / Plugin Boundary Hardening
+- **Decision:** Keep the external/public surface constrained to `engine/public` headers and avoid promoting internal runtime classes into the plugin contract.
+- **Decision:** Introduce additive plugin metadata (`PluginMetadata`) plus compatibility validation against runtime public API version.
+- **Decision:** Add explicit plugin lifecycle controls (`unregister*`, `clearRegisteredPlugins`) so hosts/tools can tear down extension state cleanly.
+- **Rationale:** Commercial plugin ecosystems need predictable registration failure reasons and lifecycle boundaries while preserving ABI/API stability.
+- **Compatibility:** Additive-only change (MINOR-safe): existing registration flow semantics are preserved for valid plugins; invalid inputs now produce typed rejection instead of silent ignore.
+
+## 2026-03-08 — GameplaySession ownership facet split
+- **Context**: `GameplaySession` still mixed session orchestration, player combat runtime transitions, progression navigation logic, and presentation event shaping in one update path.
+- **Decision**: Introduce explicit subsystem interfaces in `gameplay_session_subsystems` (`PlayerCombatSubsystem`, `ProgressionSubsystem`, `PresentationSubsystem`) and route `GameplaySession::updateGameplay()` / `onUpgradeNavigation()` through those boundaries.
+- **Rationale**: Keeps deterministic runtime behavior intact while isolating concern-specific logic into testable units with smaller APIs.
+- **Migration Notes**: Existing `GameplaySession` state fields remain available, but gameplay mutation entry points now flow through subsystem interfaces.
 - **Status**: Accepted.

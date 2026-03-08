@@ -34,6 +34,13 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    engine::ToolRuntimeSnapshot okSnapshot;
+    const engine::ControlCenterValidationReport generatedReport = engine::runControlCenterValidation(outDir, okSnapshot);
+    if (generatedReport.filesScanned == 0) {
+        std::cerr << "validator should scan generated demo files\n";
+        return EXIT_FAILURE;
+    }
+
     std::filesystem::remove_all(root);
     std::cout << "editor_tools_tests passed\n";
     return EXIT_SUCCESS;

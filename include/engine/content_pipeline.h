@@ -2,7 +2,7 @@
 
 #include <nlohmann/json_fwd.hpp>
 
-#include <engine/audio_system.h>
+#include <engine/audio_content.h>
 
 #include <cstdint>
 #include <string>

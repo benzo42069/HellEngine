@@ -42,21 +42,12 @@ void GameplaySession::initializeContent(PatternBank& patternBank, PatternPlayer&
 }
 
 void GameplaySession::onUpgradeNavigation(const UpgradeNavAction action) {
-    if (action == UpgradeNavAction::ToggleScreen) {
-        progression_.upgradeScreenOpen = traitSystem_.hasPendingChoices() ? !progression_.upgradeScreenOpen : progression_.upgradeScreenOpen;
-        return;
-    }
-    if (!progression_.upgradeScreenOpen || !traitSystem_.hasPendingChoices()) return;
-
-    if (action == UpgradeNavAction::MoveLeft) { progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + TraitSystem::choiceCount - 1) % TraitSystem::choiceCount; }
-    if (action == UpgradeNavAction::MoveRight) { progression_.focusedUpgradeIndex = (progression_.focusedUpgradeIndex + 1) % TraitSystem::choiceCount; }
-    if (action == UpgradeNavAction::SelectSlot1) progression_.focusedUpgradeIndex = 0;
-    if (action == UpgradeNavAction::SelectSlot2) progression_.focusedUpgradeIndex = 1;
-    if (action == UpgradeNavAction::SelectSlot3) progression_.focusedUpgradeIndex = 2;
-    if (action == UpgradeNavAction::SelectSlot1 || action == UpgradeNavAction::SelectSlot2 || action == UpgradeNavAction::SelectSlot3 || action == UpgradeNavAction::Confirm) {
-        if (traitSystem_.choose(progression_.focusedUpgradeIndex)) progression_.upgradeScreenOpen = false;
-    }
-    if (action == UpgradeNavAction::Reroll) (void)traitSystem_.rerollChoices();
+    ProgressionSubsystem::UpgradeSelectionContext ctx;
+    ctx.hasPendingChoices = traitSystem_.hasPendingChoices();
+    ctx.choiceCount = TraitSystem::choiceCount;
+    ctx.choose = [this](const std::size_t index) { return traitSystem_.choose(index); };
+    ctx.rerollChoices = [this]() { return traitSystem_.rerollChoices(); };
+    progressionRuntime_.onUpgradeNavigation(progression_, ctx, action);
 }
 
 void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputMask) {
@@ -110,19 +101,10 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         }
     };
 
-    playerState_.aimTarget.x = 180.0F * std::cos(static_cast<float>(simulation_.simClock) * 0.9F);
-    playerState_.aimTarget.y = 120.0F * std::sin(static_cast<float>(simulation_.simClock) * 1.3F);
+    playerCombat_.updateAimTarget(playerState_, simulation_.simClock);
 
-    if ((inputMask & InputDefensiveSpecial) != 0U && defensiveSpecial_.tryActivate()) {
-        presentation_.cameraShakeEvents.push_back(ShakeParams {
-            .profile = ShakeProfile::SpecialPulse,
-            .amplitude = 2.0F,
-            .duration = 0.45F,
-            .direction = {0.0F, 0.0F},
-            .frequency = 12.0F,
-            .damping = 3.5F,
-        });
-        presentation_.pendingAudioEvents.push_back(AudioEvent {.type = AudioEventType::DefensiveSpecialActivated, .position = playerState_.playerPos});
+    if (playerCombat_.tryActivateDefensiveSpecial(inputMask, defensiveSpecial_)) {
+        presentationRuntime_.emitDefensiveSpecialActivation(presentation_.cameraShakeEvents, presentation_.pendingAudioEvents, playerState_.playerPos);
     }
 
     const TraitModifiers& traitModsForSpecial = traitSystem_.modifiers();
@@ -131,27 +113,13 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
 
     const ZoneDefinition* zoneBeforeUpdate = runStructure_.currentZone();
 
-    const std::uint32_t grazePoints = projectiles_.collectGrazePoints(playerState_.playerPos, playerState_.playerRadius, defensiveSpecial_.config().grazeBandInnerPadding, defensiveSpecial_.config().grazeBandOuterPadding, simulation_.tickIndex, defensiveSpecial_.config().grazeCooldownTicks);
+    const std::uint32_t grazePoints = playerCombat_.collectGrazePoints(playerState_, projectiles_, defensiveSpecial_, simulation_.tickIndex);
     if (grazePoints > 0) {
         defensiveSpecial_.addGrazePoints(grazePoints);
-        presentation_.cameraShakeEvents.push_back(ShakeParams {
-            .profile = ShakeProfile::GrazeTremor,
-            .amplitude = 0.5F,
-            .duration = 0.10F,
-            .direction = {0.0F, 0.0F},
-            .frequency = 110.0F,
-            .damping = 22.0F,
-        });
-        presentation_.pendingAudioEvents.push_back(AudioEvent {.type = AudioEventType::Graze, .position = playerState_.playerPos});
+        presentationRuntime_.emitGrazeFeedback(presentation_.cameraShakeEvents, presentation_.pendingAudioEvents, playerState_.playerPos);
     }
 
-    const float moveStep = static_cast<float>(dt) * 120.0F;
-    if ((inputMask & InputMoveLeft) != 0U) playerState_.playerPos.x -= moveStep;
-    if ((inputMask & InputMoveRight) != 0U) playerState_.playerPos.x += moveStep;
-    if ((inputMask & InputMoveUp) != 0U) playerState_.playerPos.y -= moveStep;
-    if ((inputMask & InputMoveDown) != 0U) playerState_.playerPos.y += moveStep;
-    playerState_.playerPos.x = std::clamp(playerState_.playerPos.x, 0.0F, static_cast<float>(engineStandards().playfieldWidth));
-    playerState_.playerPos.y = std::clamp(playerState_.playerPos.y, 0.0F, static_cast<float>(engineStandards().playfieldHeight));
+    playerCombat_.applyMovement(playerState_, dt, inputMask);
 
     const auto patternStart = Clock::now();
     if (!config_.stress10k) {

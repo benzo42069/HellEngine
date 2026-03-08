@@ -119,8 +119,8 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
     spriteBatch_.reserve(config_.projectileCapacity + 2048);
 
     std::string modernError;
-    useModernRenderer_ = modernRenderer_.initialize(renderer_, camera_.viewportWidth(), camera_.viewportHeight(), &modernError);
-    if (!useModernRenderer_) {
+    modernPipelineEnabled_ = modernRenderer_.initialize(renderer_, camera_.viewportWidth(), camera_.viewportHeight(), &modernError);
+    if (!modernPipelineEnabled_) {
         logWarn("Modern renderer initialization failed: " + modernError);
     }
     return true;
@@ -173,7 +173,7 @@ void RenderPipeline::refreshDisplayMetrics(SDL_Window* window) {
     dpiScaleY_ = static_cast<float>(drawableH) / static_cast<float>(windowH);
     uiTextScale_ = std::clamp((dpiScaleX_ + dpiScaleY_) * 0.5F, 1.0F, 2.0F);
     camera_.setViewport(drawableW, drawableH);
-    if (useModernRenderer_) {
+    if (modernPipelineEnabled_) {
         std::string resizeError;
         if (!modernRenderer_.resize(drawableW, drawableH, &resizeError)) {
             logWarn("Modern renderer resize failed: " + resizeError);
@@ -232,6 +232,17 @@ bool RenderPipeline::toggleFullscreen(SDL_Window* window) {
 }
 
 
+RenderPipeline::ProjectileRenderPath RenderPipeline::resolveProjectileRenderPath(const GameplaySession& session) const {
+    if (session.bulletSimMode_ != BulletSimulationMode::CpuCollisionDeterministic) {
+        return ProjectileRenderPath::Disabled;
+    }
+    if (!glReady_ || !glBulletRenderer_.initialized() || !paletteRamp_.valid()) {
+        return ProjectileRenderPath::ProceduralSpriteBatch;
+    }
+    return ProjectileRenderPath::GlInstanced;
+}
+
+
 void RenderPipeline::ensureZoneBackground(const GameplaySession& session) {
     if (!renderer_ || !textures_) return;
     const ZoneDefinition* zone = session.runStructure_.currentZone();
@@ -257,6 +268,54 @@ void RenderPipeline::ensureZoneBackground(const GameplaySession& session) {
 
 void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double frameDelta) {
     const GameplaySession& s = snapshot.session;
+    const ProjectileRenderPath projectileRenderPath = resolveProjectileRenderPath(s);
+    if (projectileRenderPath == ProjectileRenderPath::GlInstanced) {
+        const auto& posX = s.projectiles_.posX();
+        const auto& posY = s.projectiles_.posY();
+        const auto& velX = s.projectiles_.velX();
+        const auto& velY = s.projectiles_.velY();
+        const auto& radius = s.projectiles_.radius();
+        const auto& life = s.projectiles_.life();
+        const auto& paletteIndex = s.projectiles_.paletteIndex();
+        const auto& shape = s.projectiles_.shape();
+        const auto& active = s.projectiles_.active();
+        const auto& allegiance = s.projectiles_.allegiance();
+        const auto& enableTrails = s.projectiles_.enableTrails();
+        const auto& trailX = s.projectiles_.trailX();
+        const auto& trailY = s.projectiles_.trailY();
+        const auto& trailHead = s.projectiles_.trailHead();
+        const auto& activeIndices = s.projectiles_.activeIndices();
+        glBulletRenderer_.buildVertexBuffer(
+            posX.data(),
+            posY.data(),
+            velX.data(),
+            velY.data(),
+            radius.data(),
+            life.data(),
+            paletteIndex.data(),
+            shape.data(),
+            active.data(),
+            allegiance.data(),
+            enableTrails.data(),
+            trailX.data(),
+            trailY.data(),
+            trailHead.data(),
+            ProjectileSystem::kTrailLength,
+            activeIndices.data(),
+            s.projectiles_.activeCount(),
+            camera_,
+            spriteAtlas_,
+            paletteRamp_,
+            s.bulletPaletteTable_,
+            s.projectiles_.gradientAnimator(),
+            static_cast<float>(s.simulation_.simClock)
+        );
+    } else if (projectileRenderPath == ProjectileRenderPath::ProceduralSpriteBatch) {
+        s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_, static_cast<float>(s.simulation_.simClock));
+    }
+
+    if (projectileRenderPath != ProjectileRenderPath::Disabled) {
+        s.particleFx_.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
     if (s.bulletSimMode_ == BulletSimulationMode::CpuCollisionDeterministic) {
         const bool canUseGlBullets = glReady_ && glBulletRenderer_.initialized() && paletteRamp_.valid();
         if (canUseGlBullets) {
@@ -303,9 +362,10 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
         } else {
             s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_, static_cast<float>(s.simulation_.simClock));
         }
-        s.particleFx_.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
+        s.presentation_.particleFx.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
         s.projectiles_.debugDraw(debugDraw_, true, true);
     }
+
     s.entitySystem_.debugDraw(debugDraw_);
     debugDraw_.circle(s.playerPos(), s.playerRadius(), Color {120, 255, 170, 255}, 24);
     debugDraw_.circle(s.aimTarget(), 8.0F, Color {120, 180, 255, 220}, 18);
@@ -318,7 +378,7 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     PostFxSettings fx = resolveAutoPostFx(snapshot.session);
     modernRenderer_.setPostFx(fx);
 
-    if (useModernRenderer_) {
+    if (modernPipelineEnabled_) {
         (void)modernRenderer_.beginScene(Color {clearColor[0], clearColor[1], clearColor[2], clearColor[3]});
     } else {
         SDL_SetRenderDrawColor(renderer_, clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
@@ -335,7 +395,7 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     backgroundSystem_.render(spriteBatch_, camera_);
     buildSceneOverlay(snapshot, frameDelta);
     spriteBatch_.flush(renderer_, *textures_);
-    if (glReady_ && paletteRamp_.valid()) {
+    if (resolveProjectileRenderPath(snapshot.session) == ProjectileRenderPath::GlInstanced) {
         glBulletRenderer_.render(camera_, static_cast<float>(snapshot.session.simulation_.simClock), spriteAtlas_, paletteRamp_, camera_.viewportWidth(), camera_.viewportHeight());
     }
     debugDraw_.flush(renderer_, camera_);
@@ -344,7 +404,7 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     toolSuite.drawControlCenter({});
     toolSuite.endFrame();
 
-    if (useModernRenderer_) {
+    if (modernPipelineEnabled_) {
         modernRenderer_.endScene();
         modernRenderer_.present();
     }

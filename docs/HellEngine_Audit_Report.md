@@ -1,3 +1,6 @@
+
+> **2026-03-08 follow-up:** The prior `editor_tools.cpp` monolith risk has been mitigated by splitting editor tooling implementation into focused modules and shared services under `src/engine/editor/`. Functionality is preserved while improving maintainability and extension boundaries.
+
 # HellEngine — Pre-Finalization Architecture Audit
 
 **Auditor role:** Principal Engine Architect / Technical Director  
@@ -10,6 +13,12 @@
 - A product-validation vertical slice was authored and documented to close the previously noted "engine-only" perception risk.
 - Validation runbook now covers combat readability, enemy encounter progression, boss phase flow, deterministic replay, content pack pipeline, HUD/upgrade UI visibility, audio event wiring, and packaging script viability.
 - Follow-up recommendation: preserve this slice as a standing RC smoke gate and add golden replay artifacts to CI.
+**Update 2026-03-08:** Renderer ownership clarification landed with minimal structural change. `RenderPipeline` now owns projectile path selection (`Disabled`/`ProceduralSpriteBatch`/`GlInstanced`), `gl_bullet_renderer` is documented as the GL projectile backend only, `modern_renderer` as compositing/post-fx, `render2d` as shared 2D primitives, and `gpu_bullets` as CPU mass-render alternate mode.
+
+## Audit Addendum — 2026-03-08 (Build/Dependencies)
+- Previous issue: Top-level CMake dependency declarations were operational but fragmented enough to make duplication and wiring audits difficult over time.
+- Consolidation: Third-party registration now uses a single helper and canonical list (`ENGINE_FETCHCONTENT_DEPENDENCIES`) with one materialization point (`FetchContent_MakeAvailable(...)`).
+- Wiring impact: No target link contract changes; `engine_core`, `ContentPacker`, and test targets consume the same dependency targets as before.
 
 ---
 
