@@ -3,6 +3,8 @@
 
 > **2026-03-08 follow-up:** The prior `editor_tools.cpp` monolith risk has been mitigated by splitting editor tooling implementation into focused modules and shared services under `src/engine/editor/`. Functionality is preserved while improving maintainability and extension boundaries.
 
+> **2026-03-08 CMake/tests follow-up:** Remaining Catch2 missing-main risk was closed by applying shared Catch/main detection to every test-target creation path (including manual `content_packer_tests`), so only Catch sources without a local `main(...)` link `Catch2::Catch2WithMain`.
+
 # HellEngine — Pre-Finalization Architecture Audit
 
 **Auditor role:** Principal Engine Architect / Technical Director  
