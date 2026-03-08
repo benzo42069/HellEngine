@@ -12,6 +12,20 @@
 - [x] Confirmed `ContentPacker` path uses `audio_content.h` schema parsing and does not require runtime playback APIs.
 - [x] Removed `ContentPacker` linkage to `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` and dropped SDL include-directory injection.
 - [x] Reconfigured and rebuilt `ContentPacker` to verify clean build with reduced dependency surface.
+## 2026-03-08 — Build reliability verification (clean + incremental)
+- Risks checked:
+  - Generated header flow (`generated/engine/version.h`) and version-file-driven configure drift.
+  - Incremental dependency propagation after representative header and cpp edits.
+  - Clean rebuild behavior from a fully deleted build tree.
+- Fixes made:
+  - Added `CMAKE_CONFIGURE_DEPENDS` on `version/VERSION.txt` in top-level CMake so version-driven configure output stays synchronized automatically.
+- Validation runbook:
+  1. `cmake -E remove_directory build`
+  2. `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug`
+  3. `cmake --build build --target engine_core -j 8`
+  4. `cmake -E touch include/engine/render_pipeline.h && cmake --build build --target engine_core -j 8`
+  5. `cmake -E touch src/engine/render_pipeline.cpp && cmake --build build --target engine_core -j 8`
+- Status: Clean configure/build and incremental rebuild checks completed successfully after installing missing OpenGL development libraries in this container.
 
 ## 2026-03-08 — Vertical slice completion plan (product validation)
 - Scope delivered:

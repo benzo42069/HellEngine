@@ -4,6 +4,10 @@
 - **Context**: `ContentPacker` previously linked SDL2 + SDL2_mixer due to older transitive coupling from content pipeline headers into runtime audio APIs.
 - **Decision**: Keep audio-content parsing in the content pipeline (`audio_content.h` / `parseAudioContentDatabase`) but remove direct SDL2 and SDL2_mixer linkage from the `ContentPacker` target.
 - **Rationale**: The packer compiles JSON/schema parsing utilities only and no longer includes/runtime-calls SDL audio or mixer APIs, so runtime playback libraries are unnecessary for this tool target.
+## 2026-03-08 — Rebuild reliability hardening and validation
+- **Context**: Prior audits flagged potential divergence between source edits and incremental build state, especially around generated/versioned configuration artifacts.
+- **Decision**: Add `CMAKE_CONFIGURE_DEPENDS` for `version/VERSION.txt` and explicitly validate both clean and incremental rebuild paths in the same environment.
+- **Rationale**: Automatic reconfigure on version input changes removes a subtle stale-config class while preserving current target/link structure.
 - **Status**: Accepted.
 
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
