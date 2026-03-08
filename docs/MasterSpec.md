@@ -2,6 +2,9 @@
 
 ## Build Notes
 - 2026-03-08: Public plugin API now includes host-facing compatibility/introspection helpers (`isPluginTargetCompatible`, `pluginRegistrationErrorMessage`) and explicit ownership/ABI boundary notes in `engine/public/plugins.h`; this tightens lifecycle expectations without exposing registry internals or changing runtime behavior.
+- 2026-03-08: Final creator-facing documentation pass completed. External onboarding now has explicit workflows for getting started, build/run, asset import, palette+grayscale shading, pattern authoring, encounter/boss authoring, replay/debug, audio, sample project usage, troubleshooting, plugin/mod integration, and creator performance guidance.
+- 2026-03-08: Release packaging/productization hardening completed. Portable packaging now auto-bundles discovered runtime DLL dependencies from build output, emits a SHA-256 release manifest (`RELEASE_MANIFEST.txt`), and enforces sample-pack replay validation from the packaged bundle. Release validation now checks both artifact presence and manifest coverage for critical binaries/content.
+- 2026-03-08: Runtime run-structure boot now consumes authored `encounters[].zones[]` from the selected content pack when available, falling back to defaults only if no encounter data is present. This aligns the playable vertical slice flow (combat/elite/event/boss sequencing) with content-pipeline authored data instead of hardcoded stage layouts.
 - 2026-03-08: Build reliability verification pass completed. Clean reconfigure/build from a deleted `build/` directory and incremental rebuild checks (`touch` representative header/cpp + rebuild) both behaved consistently in Ninja; expected workflow remains delete build dir, reconfigure, rebuild, then run tests.
 - 2026-03-08: Added `CMAKE_CONFIGURE_DEPENDS` tracking for `version/VERSION.txt` so project version and generated `generated/engine/version.h` are reconfigured automatically when the version file changes, reducing stale configure state risk.
 - 2026-03-08: Public API/plugin boundary hardening added metadata-based plugin registration, compatibility gating against `publicApiVersion()`, duplicate-id protection, and explicit unregister/clear lifecycle endpoints while preserving existing engine run behavior.
@@ -1591,8 +1594,9 @@ Headless mode contract:
 
 ## Audio Runtime and Event Routing
 - `AudioSystem` is a presentation-only runtime service; simulation never depends on audio state.
-- Gameplay emits deterministic audio events (`hit`, `graze`, `player_damage`, `enemy_death`, `boss_warning`, `ui_click`, `ui_confirm`) and runtime flushes them after each simulation tick.
+- Gameplay emits deterministic audio events (`hit`, `graze`, `player_damage`, `enemy_death`, `boss_warning`, `boss_phase_shift`, `defensive_special`, `run_clear`, `ui_click`, `ui_confirm`) and runtime flushes them after each simulation tick.
 - Audio content is data-driven via pack `audio` section (`clips`, `events`, `music`) and loaded at runtime from content pack JSON.
+- Runtime configures playback from authored audio pack records at boot (clip registry + event bindings + optional music loop id) and applies bus/category mix controls (`master/music/sfx`) before event dispatch.
 - Mix model supports buses (`master`, `music`, `sfx`) with independent volume controls (`audioMasterVolume`, `audioMusicVolume`, `audioSfxVolume`).
 - Supported source asset type is WAV via SDL decode/conversion, with deterministic fallback tones when source files are unavailable.
 

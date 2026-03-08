@@ -1,22 +1,16 @@
 # Pattern Authoring Guide
 
-This guide is for content creators authoring bullet patterns that run in deterministic simulation.
+This guide covers practical, deterministic pattern authoring for creators.
 
-## Choose an authoring path
+## 1) Choose an authoring path
 
-HellEngine currently supports two practical paths:
+### Layered patterns (`patterns`)
+Use for straightforward attacks and quick iteration.
 
-1. **Layered patterns** (`patterns` array)
-   - Best for straightforward ring/spiral/spread attacks.
-   - Easier to read for small teams and rapid iteration.
-2. **Compiled graph patterns** (`graphs` array)
-   - Best for reusable authored behavior with explicit flow (`emit`, `wait`, `loop`, modifiers).
-   - Better for scalable libraries and tooling integration.
+### Graph patterns (`graphs`)
+Use for reusable logic flows (`emit`, `wait`, `loop`, modifiers).
 
-## A) Layered pattern workflow (`patterns`)
-
-Minimal example:
-
+## 2) Layered pattern example
 ```json
 {
   "guid": "pattern-my-ring",
@@ -39,22 +33,10 @@ Minimal example:
 }
 ```
 
-Supported emitter types in this path:
-- `radial`
-- `spiral`
-- `spread`
-- `wave`
-- `aimed`
+Supported layer emitter types:
+- `radial`, `spiral`, `spread`, `wave`, `aimed`
 
-Authoring tips:
-- Keep a stable `guid`; this is what other assets should reference.
-- Use `seedOffset` for controlled variation while keeping deterministic replay.
-- Use short sequence windows while iterating, then extend cadence after behavior is validated.
-
-## B) Graph pattern workflow (`graphs`)
-
-Minimal loop graph:
-
+## 3) Graph pattern example
 ```json
 {
   "id": "graph-basic-ring",
@@ -66,35 +48,20 @@ Minimal loop graph:
 }
 ```
 
-Common node types:
+Common graph node families:
 - Emit: `emit_ring`, `emit_spread`, `emit_spiral`, `emit_wave`, `emit_aimed`
 - Flow: `wait`, `loop`
 - Modifiers/utilities: `modifier_rotate`, `modifier_phase`, `random_range`, `difficulty_scalar`
 
-Validation notes:
-- Loop count is compiler-bounded (`<= 64`).
-- Invalid loop targets fail validation and should be fixed in authored graph JSON.
+## 4) Authoring rules
+- Keep GUIDs stable.
+- Prefer GUID-based references from entities.
+- Use `seedOffset`/deterministic parameters instead of runtime randomness assumptions.
+- Keep loop counts practical; add waits to preserve readability.
 
-## C) Binding patterns to enemies/bosses
-
-Entity templates should reference patterns by GUID where possible (`attackPatternGuid`).
-Use name fallback (`attackPatternName`) only for legacy content.
-
-## D) Recommended authoring loop
-
+## 5) Validation loop
 ```bash
 ./build/ContentPacker --input data --output content.pak
 ./build/EngineDemo --headless --ticks 300 --content-pack content.pak
 ./build/EngineDemo --replay-verify --headless --ticks 1200 --seed 1337 --content-pack content.pak
 ```
-
-## E) Common pattern authoring mistakes
-- Reusing GUIDs accidentally across unrelated patterns.
-- Large loop counts without enough `wait` spacing (visual overload, perf spikes).
-- Depending on file ordering instead of explicit references.
-- Treating render-only effects as simulation behavior.
-
-## F) Performance-safe creator defaults
-- Start new patterns at low bullet counts; scale gradually.
-- Prefer composable short loops over giant one-shot bursts.
-- Profile with `F10` perf HUD and headless smoke runs before release.

@@ -12,6 +12,20 @@
 - [x] Plugin lifecycle boundary clarified with explicit host ownership guidance and stable error/compatibility helpers.
 - [x] Mod/content extension boundary reaffirmed (pack layering + override semantics) without widening internals.
 - [x] No runtime behavior changes introduced; updates are boundary clarity and host integration ergonomics.
+## 2026-03-08 — Final creator-facing documentation pass (Completed)
+- [x] Audited creator docs for internal-only assumptions and outdated instructions (notably stale pack metadata/examples).
+- [x] Standardized onboarding around explicit build -> pack -> run -> replay-verify loops.
+- [x] Added dedicated guides for palette/grayscale shader workflow, audio workflow, and sample project usage.
+- [x] Updated core creator docs (asset import, pattern authoring, encounter/boss, replay/debug, troubleshooting, performance, build/run) to align with implemented CLI and content-packer behavior.
+- [x] Reframed `AuthoringGuide.md` as a maintained index to reduce drift across duplicated long-form docs.
+## 2026-03-08 — Release packaging finalization plan (completed)
+- [x] Audit build/package/release scripts for dependency bundle assumptions and missing validation links.
+- [x] Replace single-DLL copy assumption with runtime DLL auto-discovery from build output directories.
+- [x] Add package manifest generation (`RELEASE_MANIFEST.txt`) with deterministic file inventory and SHA-256 hashes.
+- [x] Validate sample packaging end-to-end by replay-verifying `sample-content.pak` both in release build flow and in portable bundle validation.
+- [x] Extend release gate checks to require manifest presence and required artifact references.
+- [x] Update release docs/troubleshooting for manifest, dependency bundling behavior, and failure triage steps.
+- 2026-03-08 progress: Completed authored-encounter runtime wiring so vertical-slice stage/zone flow is sourced from packed encounter JSON (`encounters[].zones[]`) with deterministic fallback to default stages when packs are absent.
 ## 2026-03-08 — Pattern panel modularization follow-up (Completed)
 - [x] Audit remaining dense concerns in `drawPatternGraphEditorPanel` after initial editor split.
 - [x] Separate pattern generation controls, seed/testing controls, graph palette/inspector, and preview-analysis rendering into focused helper methods.
@@ -160,6 +174,17 @@
 - **M8 Boss Vertical Slice**: full boss encounter authored via tools.
 - **M9 Full Demo Loop**: stage map, encounters, rewards, boss, progression.
 - **M10 1.0 RC**: docs/templates/plugin+mod baseline and release-readiness checks passed.
+
+## Audio workflow hardening update (2026-03-08)
+- Audited flow from authored `audio` pack data -> parse (`parseAudioContentDatabase`) -> runtime dispatch.
+- Closed a boundary gap where runtime used hardcoded clip loads even when authored audio metadata existed.
+- Implemented runtime integration updates:
+  - `Runtime` loads authored audio JSON from configured pack search paths.
+  - `AudioSystem` now supports content-driven clip/event registration and event-id dispatch.
+  - Bus/category volume controls are applied through runtime settings (`master/music/sfx`) directly in `AudioSystem`.
+  - Listener position is updated each tick before dispatching queued presentation audio events.
+- Expanded parser support for authored events: `boss_phase_shift`, `defensive_special`, `run_clear`.
+- Scope guardrails kept: no middleware replacement, no simulation/audio coupling, no deterministic boundary changes.
 
 ## Phase Framework Alignment
 This plan uses additive buildable phases that map to the product program sequence:

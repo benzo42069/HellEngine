@@ -1,43 +1,44 @@
-# Plugin and Mod Extension Overview
+# Plugin and Mod Overview
 
-This document describes the supported external extension boundary for HellEngine.
+This guide defines the supported external extension boundary for creators and integrators.
 
-## 1) Public API boundary
-
-External integrations should include only public headers:
+## 1) Public API boundary (stable contract)
+Only include public headers:
 - `include/engine/public/engine.h`
 - `include/engine/public/api.h`
 - `include/engine/public/plugins.h`
 - `include/engine/public/versioning.h`
 
-Do not depend on `include/engine/internal/*` or `src/engine/*` internals for external plugins/mod tooling.
+Do **not** depend on `include/engine/internal/*` or `src/engine/*` internals for shipped plugins/mod tooling.
 
-## 2) Supported plugin types
+## 2) Plugin categories
 
-### Content pack plugins
-Implement `IContentPackPlugin` and register with `registerContentPackPlugin(plugin)`.
+### Content pack plugins (`IContentPackPlugin`)
+- Register with `registerContentPackPlugin(...)`.
+- Provide pack paths or pack providers to extend content load order.
 
-Purpose:
-- Provide additional pack paths at runtime.
-- Extend/override content through pack load order.
+### Shader pack plugins (`IShaderPackPlugin`)
+- Register with `registerShaderPackPlugin(...)`.
+- Provide custom shader-pack metadata for runtime renderer diagnostics/integration.
 
-### Shader pack plugins
-Implement `IShaderPackPlugin` and register with `registerShaderPackPlugin(plugin)`.
+### Tool panel plugins (`IToolPanelPlugin`)
+- Register with `registerToolPanelPlugin(...)`.
+- Add editor/control-center panels without modifying engine core editor code.
 
-Purpose:
-- Surface custom shader packs for runtime diagnostics/HUD and renderer integration.
+## 3) Registration and lifecycle expectations
+Registration rejects:
+- null plugin pointers
+- empty metadata ids
+- duplicate ids or duplicate instances
+- incompatible target API version
 
-### Tool panel plugins
-Implement `IToolPanelPlugin` and register with `registerToolPanelPlugin(plugin)`.
+Lifecycle:
+1. Construct plugin instance.
+2. Register plugin.
+3. Unregister by id when unloading, or call `clearRegisteredPlugins()` during host teardown.
 
-Purpose:
-- Add custom control-center/editor panels without editing core editor modules.
-
-## 3) Mod pack layering behavior
-
-Runtime supports multiple packs via `--content-pack` separated by `;` or `,`.
-
-Example:
+## 4) Mod pack layering behavior
+Runtime accepts multiple packs via `--content-pack`, separated by `;` or `,`.
 
 ```bash
 ./build/EngineDemo --content-pack "mods/base.pak;mods/balance_patch.pak"
@@ -84,3 +85,11 @@ This boundary keeps plugin management in the public layer while keeping registry
 - Host tools can call `isPluginTargetCompatible(metadata)` for registration preflight before attempting registration.
 - Failed registration results should be surfaced via `pluginRegistrationErrorMessage(error)` to keep diagnostics stable for end users.
 - Plugin instances remain host-owned and must be unregistered before plugin/module unload.
+- Later pack assets override earlier assets by GUID.
+- Conflicts are logged for diagnostics.
+
+## 5) Creator-safe extension workflow
+1. Build against public headers only.
+2. Run smoke + replay verify with your pack/plugin.
+3. Pin your integration to a compatible runtime public API version.
+4. Avoid internal include dependencies to reduce breakage risk.

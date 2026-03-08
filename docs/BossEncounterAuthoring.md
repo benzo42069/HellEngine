@@ -1,53 +1,39 @@
-# Boss and Encounter Authoring Workflow
+# Encounter and Boss Authoring
 
-This guide describes how to author boss phases and encounter pacing using current runtime data boundaries.
+This guide describes practical authoring patterns for encounters and boss phase flow.
 
-## 1) Core data ownership model
+## 1) Authoring ownership boundaries
+- `patterns` / `graphs`: attack behavior.
+- `entities`: enemy and boss templates, including phase behavior.
+- `encounters`: pacing, scheduling, and progression orchestration.
 
-- `entities` define enemy/boss runtime templates and combat-facing fields.
-- `encounters` define pacing/timeline/wave scheduling metadata.
-- Pattern assets (`patterns`/`graphs`) define attack behavior that entities execute.
+Keep these boundaries clean to reduce merge conflicts and improve validation quality.
 
-This separation keeps encounters composable and deterministic.
+## 2) Boss authoring checklist
+For each boss entity:
+- Stable `guid`.
+- `boss.phases` authored explicitly.
+- Per-phase pattern binding (`attackPatternGuid` or sequence fields where used).
+- Cadence/interval fields authored for deterministic pacing.
 
-## 2) Boss authoring baseline
+Use readable phase escalation: teach -> pressure -> climax.
 
-Boss entities are authored in `entities` with boss phase definitions (`boss.phases`) and pattern references.
+## 3) Encounter scheduling checklist
+For each encounter:
+- Explicit spawn/schedule events.
+- Deterministic timing values (avoid implicit ordering assumptions).
+- Telegraph and hazard sync events where threat level jumps.
+- References to valid authored entity GUIDs.
 
-Recommended per-phase structure:
-- phase identity/name
-- health/time trigger intent
-- pattern or pattern sequence references
-- cadence controls (e.g., interval/cooldown)
-- telegraph lead behavior where supported by encounter schedule
-
-## 3) Encounter schedule authoring
-
-Encounters should define deterministic wave/schedule events and use explicit ownership boundaries:
-- spawn events
-- telegraph events
-- hazard sync events
-- phase gate events
-
-Keep schedule IDs stable and avoid implicit ordering assumptions.
-
-## 4) Authoring checklist (boss + encounter)
-- Boss template has stable `guid` and references valid pattern IDs.
-- Encounter entries reference existing entities.
-- Telegraph/hazard nodes are authored when high-threat transitions occur.
-- Difficulty scaling uses authored fields (not hard-coded runtime assumptions).
-- All content repacks cleanly with zero validation errors.
-
-## 5) Validation/run loop
-
+## 4) Validation loop
 ```bash
 ./build/ContentPacker --input data --output content.pak
 ./build/EngineDemo --headless --ticks 600 --content-pack content.pak
 ./build/EngineDemo --replay-verify --headless --ticks 1200 --seed 1337 --content-pack content.pak
 ```
 
-## 6) Practical tuning guidance
-- Keep early boss phases readable; increase complexity over time.
-- Pair major pattern changes with clear telegraph windows.
-- Use deterministic cadence values so replay and balancing sessions stay comparable.
-- Treat encounter schedules as pacing assets, not just spawn lists.
+## 5) Common creator mistakes
+- Name-only references when GUID references are available.
+- Boss phases that spike difficulty without telegraph windows.
+- Overlong high-density phases with no recovery pacing.
+- Editing entities/patterns/encounters together without replay verification after each increment.

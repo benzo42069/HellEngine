@@ -1,41 +1,40 @@
 # Performance Guidance for Content Creators
 
-This guide helps creators ship readable, deterministic content without avoidable performance regressions.
+Use this guide to keep content readable and performant before release.
 
-## 1) Creator-first performance goals
-- Preserve readability during high-density bullet moments.
-- Keep deterministic replay verification stable.
-- Avoid authored spikes (burst walls, overlayered effects, pathological loops).
+## 1) Creator performance goals
+- Maintain readable projectile fields.
+- Avoid authored spike patterns that cause avoidable frame-time jumps.
+- Keep replay verification stable for final packs.
 
-## 2) Pattern authoring guidelines
-- Start with low bullet counts; scale in measured steps.
-- Prefer cadence + sequencing over single giant bursts.
-- Use waits and phase spacing in graph loops.
-- Keep loop counts practical even when compiler bounds allow more.
+## 2) Pattern authoring guidance
+- Start low and scale: increase bullet count in small steps.
+- Prefer repeated cadence over one-shot giant bursts.
+- In graph loops, always include spacing (`wait`) when density rises.
+- Reserve peak density for short windows.
 
-## 3) Encounter pacing guidelines
-- Ramp density across encounter timeline rather than front-loading.
-- Pair high-density waves with recovery windows.
-- Reserve maximum-intensity combinations for short boss windows.
+## 3) Encounter/boss pacing guidance
+- Ramp pressure over phases/waves, don’t front-load maximum intensity.
+- Pair intense sections with short recovery windows.
+- Use telegraph windows before major cadence changes.
 
-## 4) Asset guidance
-- Use atlas grouping intentionally (`atlasGroup`) in art import manifests.
-- Keep animation FPS consistent per clip.
-- Validate variant weights and avoid excessive low-value variants.
+## 4) Asset and shader guidance
+- Group import atlases intentionally with `atlasGroup`.
+- Keep animation clip FPS consistent within a clip.
+- Use grayscale/monochrome + palette workflows for recolors instead of duplicating full-color variants.
 
-## 5) Runtime checks creators should run
-
+## 5) Validation commands to run before shipping
 ```bash
 ./build/EngineDemo --headless --ticks 300 --content-pack content.pak
 ./build/EngineDemo --replay-verify --headless --ticks 1200 --seed 1337 --content-pack content.pak
 ```
 
-Use runtime HUD toggles during visual playtests:
+In visual runs, use debug toggles:
 - `F10` perf HUD
 - `` ` `` debug HUD
 
-## 6) Red flags before shipping a pack
-- Replay verify intermittently fails with unchanged seed/content.
-- Significant frame-time jumps tied to a single authored phase.
+## 6) Red flags
+- Replay verify intermittently fails with unchanged seed and pack.
+- One authored phase causes persistent perf drops.
 - Content pack emits repeated validation/fallback warnings.
-- Boss phases combine maximum spawn rate + long duration without readability breaks.
+- High-density patterns are unreadable without telegraph or spacing.

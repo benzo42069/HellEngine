@@ -19,6 +19,7 @@ Authored content sources:
 - `data/audio.json` (music + SFX events, including boss phase and clear cues)
 
 ## What this validates
+- Runtime encounter flow is hydrated from packed `encounters[].zones[]` (no demo-only hardcoded stage graph).
 - Player combat loop (movement, defensive special, projectile output)
 - Projectile readability (palette differentiation + danger field support)
 - Enemy encounter progression (combat/elite/event pacing)
