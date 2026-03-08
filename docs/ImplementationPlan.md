@@ -672,3 +672,8 @@ Completed release-engineering closure work:
 ### Migration notes
 - No call-site API break: runtime still calls `session.updateGameplay()` and drains presentation queues through existing consume methods.
 - Replay/determinism boundaries remain unchanged: refactor preserves tick order and uses same underlying runtime systems.
+
+## 2026-03-08 — RenderPipeline brace mismatch remediation
+- Identified malformed function structure in `src/engine/render_pipeline.cpp` immediately before `buildSceneOverlay(...)`: an extra duplicated signature opened a block that was never closed.
+- Applied minimal fix by deleting the stray duplicate function header + `(void)frameDelta;` line, preserving the intended `buildSceneOverlay` implementation.
+- Validation target: ensure compilation proceeds past `render_pipeline.cpp` and no C2601/C1075 brace-mismatch errors remain.

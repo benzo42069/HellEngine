@@ -1696,3 +1696,8 @@ Behavioral contract remains unchanged: the owning simulation tick order is still
   - zone transition and ambient zone presentation emissions.
 - `GameplaySession` now coordinates subsystem calls rather than embedding full encounter implementation blocks inline.
 - Determinism/replay contract remains unchanged: update order and core runtime systems are preserved.
+
+## Section 15 (Rendering Strategy) — Compile hotfix note (2026-03-08)
+- Root cause: a duplicated `RenderPipeline::buildSceneOverlay(...)` function signature in `src/engine/render_pipeline.cpp` introduced an unmatched opening brace, which caused following member definitions (including `renderFrame`) to be parsed as local functions.
+- Syntax fix applied: removed the stray duplicate opening signature/block and kept the existing `buildSceneOverlay(const SimSnapshot&, const double /*frameDelta*/)` body intact.
+- Behavior impact: none intended; this is a parsing/structure correction only.
