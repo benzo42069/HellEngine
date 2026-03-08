@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-08 — Decision: Creator docs are workflow-first and split by task
+- **Context:** Existing docs had useful detail but mixed internal notes, stale examples, and overlapping pages that increased onboarding friction for external creators.
+- **Decision:** Keep a short index-style `AuthoringGuide.md` and maintain focused workflow guides (build/run, import, palette/grayscale, patterns, encounter/boss, replay/debug, audio, sample usage, troubleshooting, plugins/mods, performance).
+- **Rationale:** External creators need dependable, executable workflows more than architecture prose during first contact with the engine.
+- **Consequence:** Lower doc drift risk (single owner page per workflow) and clearer upgrade path for future creator-facing changes.
+
 ## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
 - **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
 - **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.

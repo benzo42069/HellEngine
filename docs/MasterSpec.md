@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Final creator-facing documentation pass completed. External onboarding now has explicit workflows for getting started, build/run, asset import, palette+grayscale shading, pattern authoring, encounter/boss authoring, replay/debug, audio, sample project usage, troubleshooting, plugin/mod integration, and creator performance guidance.
 - 2026-03-08: Public API/plugin boundary hardening added metadata-based plugin registration, compatibility gating against `publicApiVersion()`, duplicate-id protection, and explicit unregister/clear lifecycle endpoints while preserving existing engine run behavior.
 
 ## Public API / Extensibility Baseline (2026-03-08)

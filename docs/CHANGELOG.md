@@ -1,3 +1,12 @@
+# Changelog
+
+## Unreleased
+### Changed
+- Completed final creator-facing documentation pass with workflow-first onboarding and refreshed guidance for build/run, content authoring, replay/debug, troubleshooting, plugins/mods, and performance.
+- Reworked `docs/AuthoringGuide.md` into a maintained index to reduce stale duplicated instructions.
+
+### Added
+- Added dedicated creator guides: `docs/PaletteAndGrayscaleWorkflow.md`, `docs/AudioWorkflow.md`, and `docs/SampleProjectUsage.md`.
 ## [Unreleased]
 ### Added
 - Public plugin metadata contract (`PluginMetadata`, `IPlugin`) with explicit per-plugin target API version declaration.
@@ -24,8 +33,6 @@
 - Clarified renderer-stack ownership: `render_pipeline` now centrally resolves projectile render path (`Disabled`/`ProceduralSpriteBatch`/`GlInstanced`) and applies it consistently for buffer build + draw submission.
 - Renamed `RenderPipeline` modern mode flag to `modernPipelineEnabled_` to distinguish compositing mode from projectile backend decisions.
 - Added explicit ownership comments in renderer headers (`gpu_bullets`, `gl_bullet_renderer`, `modern_renderer`) to reduce subsystem overlap ambiguity.
-
-# Changelog
 
 ## Unreleased
 ### Changed

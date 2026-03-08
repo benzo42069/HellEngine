@@ -1,6 +1,3 @@
-
-> **2026-03-08 follow-up:** The prior `editor_tools.cpp` monolith risk has been mitigated by splitting editor tooling implementation into focused modules and shared services under `src/engine/editor/`. Functionality is preserved while improving maintainability and extension boundaries.
-
 # HellEngine — Pre-Finalization Architecture Audit
 
 **Auditor role:** Principal Engine Architect / Technical Director  
@@ -391,3 +388,10 @@ Implemented closures:
 
 Residual risk:
 - Installer generation still depends on external NSIS tooling; workflow now degrades with explicit diagnostics when unavailable.
+
+## 2026-03-08 Creator Documentation Audit Update
+- External creator workflows are now documented as first-class guides for onboarding and day-to-day authoring.
+- Internal-only assumptions were removed from primary onboarding pages and replaced with executable command loops aligned to current tooling.
+- Follow-up recommendation: keep one owner per workflow doc and update during feature merges to avoid spec/doc drift.
+
+> **2026-03-08 follow-up:** The prior `editor_tools.cpp` monolith risk has been mitigated by splitting editor tooling implementation into focused modules and shared services under `src/engine/editor/`. Functionality is preserved while improving maintainability and extension boundaries.
