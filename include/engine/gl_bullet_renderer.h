@@ -16,6 +16,8 @@
 
 namespace engine {
 
+// GPU draw backend for projectile presentation when GL resources are available.
+// Ownership: consumes ProjectileSystem SoA snapshots prepared by RenderPipeline.
 class GlBulletRenderer {
   public:
     bool initialize(ShaderCache& shaders, std::uint32_t maxBullets, std::string* error = nullptr);

@@ -8,6 +8,7 @@
 **Codebase snapshot:** HellEngine-main (v0.2.0)  
 **Total implementation:** ~7,700 LOC engine source, ~2,600 LOC headers, ~1,800 LOC tests, ~480K total including third-party
 
+**Update 2026-03-08:** Renderer ownership clarification landed with minimal structural change. `RenderPipeline` now owns projectile path selection (`Disabled`/`ProceduralSpriteBatch`/`GlInstanced`), `gl_bullet_renderer` is documented as the GL projectile backend only, `modern_renderer` as compositing/post-fx, `render2d` as shared 2D primitives, and `gpu_bullets` as CPU mass-render alternate mode.
 
 ## Audit Addendum — 2026-03-08 (Build/Dependencies)
 - Previous issue: Top-level CMake dependency declarations were operational but fragmented enough to make duplication and wiring audits difficult over time.

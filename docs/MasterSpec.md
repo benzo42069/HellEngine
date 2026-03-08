@@ -296,6 +296,18 @@ Typical designer parameters: `N, Δ, Ω, I, S, A, L, a, ωturn, phase` and varia
 - CPU mass bullet render path (`CpuMassBulletRenderSystem`) is a presentation-oriented mass-quad path, not GPU compute simulation.
 - Render remains presentation-only.
 
+### 15.x Renderer Path Ownership Map (2026-03-08)
+- `render_pipeline` owns render-frame orchestration and route selection between renderer backends; simulation ownership stays in `GameplaySession`/`ProjectileSystem`.
+- `gl_bullet_renderer` owns only the OpenGL projectile draw backend (vertex/index generation + draw submission) for deterministic projectile snapshots.
+- `render2d` owns generic 2D presentation primitives (`Camera2D`, `SpriteBatch`, `DebugDraw`, `TextureStore`) shared by gameplay and tooling overlays.
+- `modern_renderer` owns optional scene/post-processing composition (offscreen buffers + post-fx), independent from projectile simulation/path decisions.
+- `gpu_bullets` (current `CpuMassBulletRenderSystem`) is explicitly an alternate CPU mass-render path and does not own authoritative collision/deterministic projectile state.
+- `RenderPipeline::ProjectileRenderPath` is the canonical projectile presentation selector (`Disabled`/`ProceduralSpriteBatch`/`GlInstanced`) to avoid split routing logic across call sites.
+
+### 15.x Roadmap Notes
+- Keep `GpuBulletSystem` alias only for compatibility; prefer `CpuMassBulletRenderSystem` in new code and docs until alias removal is scheduled.
+- Revisit true GPU-sim naming only when compute/SSBO ownership lands as a separate simulation path with replay guarantees.
+
 ### 15.x Implemented GL Bullet Colorization Pipeline (Phase 7)
 - Bullet visuals follow a deterministic authoring-to-render pipeline:
   1. `GrayscaleSpriteAtlas` generates grayscale SDF-like bullet shape atlas pages.

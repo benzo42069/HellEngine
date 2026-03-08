@@ -10,6 +10,9 @@
 - Renamed simulation modes to `CpuCollisionDeterministic` and `CpuMassRender` to remove expectation ambiguity.
 - Improved CPU mass bullet scaling via compact active-slot iteration and added prepared-quad profiling counter support.
 - Updated bullet-path tests and documentation to reflect the new ownership boundaries and scaling expectations.
+- Clarified renderer-stack ownership: `render_pipeline` now centrally resolves projectile render path (`Disabled`/`ProceduralSpriteBatch`/`GlInstanced`) and applies it consistently for buffer build + draw submission.
+- Renamed `RenderPipeline` modern mode flag to `modernPipelineEnabled_` to distinguish compositing mode from projectile backend decisions.
+- Added explicit ownership comments in renderer headers (`gpu_bullets`, `gl_bullet_renderer`, `modern_renderer`) to reduce subsystem overlap ambiguity.
 
 # Changelog
 
