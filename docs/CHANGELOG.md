@@ -10,6 +10,7 @@
 
 ## Unreleased
 ### Changed
+- Consolidated CMake third-party dependency setup under a single registration/materialization flow (`engine_register_dependency` + `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})`) while preserving all existing target wiring and dependency availability.
 - Hardened CMake build hygiene: reject in-source builds, explicitly create generated include output directory before configured-header emission, and remove duplicate `FetchContent_MakeAvailable` dependency materialization to improve clean/incremental rebuild consistency.
 - Fixed Visual Studio/CMake/Ninja `ContentPacker` build failure (`SDL_mixer.h` not found) by explicitly linking `ContentPacker` with `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` while preserving `engine_core` dependency setup.
 - Major external-facing documentation pass for creators/integrators, including new onboarding, pattern authoring, boss/encounter authoring, replay/debug, plugin/mod overview, and creator performance guides.
@@ -21,6 +22,17 @@
 - Updated bullet-path tests and documentation to reflect the new ownership boundaries and scaling expectations.
 
 # Changelog
+
+## Unreleased
+### Changed
+- Decomposed `ControlCenterToolSuite` implementation into modular editor translation units:
+  - `src/engine/editor/editor_tools_core.cpp`
+  - `src/engine/editor/editor_tools_workspace_panel.cpp`
+  - `src/engine/editor/editor_tools_pattern_panel.cpp`
+  - `src/engine/editor/editor_tools_services.cpp`
+- Updated CMake engine source registration to compile editor modules from `src/engine/editor/` while preserving existing editor functionality and public API.
+- Strengthened editor smoke coverage by extending `editor_tools_tests` to validate that generated demo content is scannable by the validator service.
+
 
 
 ## 2026-03-07 — Persistence foundations (settings + profiles + migration)
@@ -46,6 +58,7 @@
 
 ## Unreleased
 ### Changed
+- Removed generic content pipeline header coupling to runtime audio playback headers by introducing `include/engine/audio_content.h` for shared audio pack schema types; this drops transitive `SDL_mixer.h` requirements from content pipeline includes while preserving audio content parsing behavior.
 - Refactored `ControlCenterToolSuite` editor tooling from a single monolithic draw routine into modular domain panel methods (workspace/content browser, pattern graph editor, encounter/wave editor, palette/FX editor, trait/projectile tooling, validator diagnostics).
 - Added shared editor service helpers for encounter asset composition and deterministic panel-state seeding to reduce coupling and improve maintainability without changing editor user behavior.
 - Updated architecture/plan/decision documentation for the new editor module structure and extension guidance.
@@ -101,3 +114,9 @@
 - Corrected `PaletteRampTexture` declaration/definition duplication causing compile failures (`textureId`, `rowV`, `shutdown`, and `texture_` duplicates removed).
 - Restored `GlBulletRenderer` access to `PaletteRampTexture::animationFor` through the class public interface.
 - Fixed `ProjectileAllegiance::Enemy` symbol resolution in `gl_bullet_renderer.cpp` by including the canonical projectile allegiance definition.
+
+## Unreleased
+### Changed
+- Refactored `GameplaySession` responsibility flow by extracting player combat, progression navigation, and presentation event emission into explicit subsystem interfaces (`gameplay_session_subsystems`).
+- Updated `GameplaySession` orchestration to delegate to these subsystem boundaries while preserving deterministic update behavior.
+- Added subsystem implementation unit to `engine_core` build sources.

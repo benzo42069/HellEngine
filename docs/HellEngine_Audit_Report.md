@@ -1,9 +1,18 @@
+
+> **2026-03-08 follow-up:** The prior `editor_tools.cpp` monolith risk has been mitigated by splitting editor tooling implementation into focused modules and shared services under `src/engine/editor/`. Functionality is preserved while improving maintainability and extension boundaries.
+
 # HellEngine — Pre-Finalization Architecture Audit
 
 **Auditor role:** Principal Engine Architect / Technical Director  
 **Date:** 2026-03-05  
 **Codebase snapshot:** HellEngine-main (v0.2.0)  
 **Total implementation:** ~7,700 LOC engine source, ~2,600 LOC headers, ~1,800 LOC tests, ~480K total including third-party
+
+
+## Audit Addendum — 2026-03-08 (Build/Dependencies)
+- Previous issue: Top-level CMake dependency declarations were operational but fragmented enough to make duplication and wiring audits difficult over time.
+- Consolidation: Third-party registration now uses a single helper and canonical list (`ENGINE_FETCHCONTENT_DEPENDENCIES`) with one materialization point (`FetchContent_MakeAvailable(...)`).
+- Wiring impact: No target link contract changes; `engine_core`, `ContentPacker`, and test targets consume the same dependency targets as before.
 
 ---
 
