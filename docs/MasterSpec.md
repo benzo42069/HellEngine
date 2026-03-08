@@ -1631,3 +1631,12 @@ Documentation policy:
 - Resolved a palette-ramp header merge regression that duplicated `PaletteRampTexture` members (`textureId`, `rowV`, `shutdown`, and `texture_`) and blocked renderer compilation.
 - `PaletteRampTexture::animationFor` is now exposed in the public interface to match existing `GlBulletRenderer` usage.
 - `GlBulletRenderer` now explicitly includes `projectiles.h` so `ProjectileAllegiance::Enemy` resolves from the canonical projectile allegiance enum.
+
+## GameplaySession Runtime Ownership (2026-03-08 update)
+
+`GameplaySession` is now treated as a deterministic runtime coordinator with explicit concern facets:
+- **PlayerCombatSubsystem**: updates aim target, movement clamp, defensive-special trigger gating, and graze point collection.
+- **ProgressionSubsystem**: applies upgrade screen navigation and selection/reroll transitions.
+- **PresentationSubsystem**: emits camera-shake/audio feedback events for gameplay-triggered presentation signals.
+
+Behavioral contract remains unchanged: the owning simulation tick order is still orchestrated by `GameplaySession::updateGameplay()`, and replay determinism contracts are preserved.

@@ -552,3 +552,10 @@
 - **Decision**: Apply a surgical fix: deduplicate `palette_ramp.h/.cpp`, keep one canonical `texture_` + member set, expose `animationFor` publicly, and include `projectiles.h` in `gl_bullet_renderer.cpp`.
 - **Rationale**: Restores compile integrity without redesigning palette or projectile rendering architecture.
 - **Status**: Accepted.
+
+## 2026-03-08 — GameplaySession ownership facet split
+- **Context**: `GameplaySession` still mixed session orchestration, player combat runtime transitions, progression navigation logic, and presentation event shaping in one update path.
+- **Decision**: Introduce explicit subsystem interfaces in `gameplay_session_subsystems` (`PlayerCombatSubsystem`, `ProgressionSubsystem`, `PresentationSubsystem`) and route `GameplaySession::updateGameplay()` / `onUpgradeNavigation()` through those boundaries.
+- **Rationale**: Keeps deterministic runtime behavior intact while isolating concern-specific logic into testable units with smaller APIs.
+- **Migration Notes**: Existing `GameplaySession` state fields remain available, but gameplay mutation entry points now flow through subsystem interfaces.
+- **Status**: Accepted.

@@ -134,6 +134,7 @@ add_library(engine_core STATIC
   src/engine/crash_handler.cpp
   src/engine/diagnostics.cpp
   src/engine/gameplay_session.cpp
+  src/engine/gameplay_session_subsystems.cpp
   src/engine/content_pipeline.cpp
   src/engine/content_watcher.cpp
   src/engine/deterministic_rng.cpp

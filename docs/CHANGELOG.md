@@ -91,3 +91,9 @@
 - Corrected `PaletteRampTexture` declaration/definition duplication causing compile failures (`textureId`, `rowV`, `shutdown`, and `texture_` duplicates removed).
 - Restored `GlBulletRenderer` access to `PaletteRampTexture::animationFor` through the class public interface.
 - Fixed `ProjectileAllegiance::Enemy` symbol resolution in `gl_bullet_renderer.cpp` by including the canonical projectile allegiance definition.
+
+## Unreleased
+### Changed
+- Refactored `GameplaySession` responsibility flow by extracting player combat, progression navigation, and presentation event emission into explicit subsystem interfaces (`gameplay_session_subsystems`).
+- Updated `GameplaySession` orchestration to delegate to these subsystem boundaries while preserving deterministic update behavior.
+- Added subsystem implementation unit to `engine_core` build sources.

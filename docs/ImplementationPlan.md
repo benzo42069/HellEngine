@@ -514,3 +514,22 @@ Completed release-engineering closure work:
 - Kept `animationFor` available to renderer call sites by moving it to the public API surface.
 - Fixed `ProjectileAllegiance::Enemy` resolution in `src/engine/gl_bullet_renderer.cpp` via explicit canonical enum header include.
 - Verified `engine_core` builds past the previously failing files.
+
+## 2026-03-08 — GameplaySession responsibility refactor
+
+### Completed
+- Extracted concern-specific runtime interfaces into `include/engine/gameplay_session_subsystems.h` and `src/engine/gameplay_session_subsystems.cpp`.
+- Routed player aim/movement/graze and defensive-special trigger checks through `PlayerCombatSubsystem`.
+- Routed upgrade navigation semantics through `ProgressionSubsystem`.
+- Routed presentation event emission for defensive-special activation and graze feedback through `PresentationSubsystem`.
+- Added new build integration for subsystem implementation (`CMakeLists.txt`).
+
+### Ownership boundaries after refactor
+1. **Session orchestration**: `GameplaySession::updateGameplay()` remains deterministic phase coordinator.
+2. **Player runtime combat state**: `PlayerCombatSubsystem` mutates only player-combat-centric state and queries projectile graze.
+3. **Progression/upgrades/traits input handling**: `ProgressionSubsystem` owns upgrade-screen navigation transitions.
+4. **Presentation event emission**: `PresentationSubsystem` owns camera shake/audio event shaping for combat feedback.
+
+### Migration notes
+- Runtime call sites remain unchanged (`session.onUpgradeNavigation()`, `session.updateGameplay()`), but those entry points now dispatch to subsystem interfaces.
+- No replay hash contract changes were introduced by this split.

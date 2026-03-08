@@ -303,7 +303,7 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
         } else {
             s.projectiles_.renderProcedural(spriteBatch_, s.bulletPaletteTable_, static_cast<float>(s.simulation_.simClock));
         }
-        s.particleFx_.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
+        s.presentation_.particleFx.render(spriteBatch_, bulletTextureId("0", BulletShape::Circle));
         s.projectiles_.debugDraw(debugDraw_, true, true);
     }
     s.entitySystem_.debugDraw(debugDraw_);
