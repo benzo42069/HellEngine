@@ -1,6 +1,24 @@
 # Implementation Plan
 
 
+## 2026-03-07 — Build hygiene and clean rebuild validation
+- Audit findings:
+  - Duplicate `FetchContent_MakeAvailable` invocation created dependency setup ambiguity.
+  - No explicit guard prevented in-source builds, allowing stale generated/config artifacts in the source tree.
+  - Generated header output path relied on implicit directory creation behavior.
+- Changes applied:
+  - Added hard in-source build rejection in top-level `CMakeLists.txt`.
+  - Added explicit `file(MAKE_DIRECTORY .../generated/engine)` before `configure_file` for `version.h`.
+  - Consolidated dependency materialization to one `FetchContent_MakeAvailable(SDL2 SDL2_mixer imgui nlohmann_json Catch2)` call.
+- Clean rebuild workflow (expected):
+  1. `cmake -E remove_directory build`
+  2. `cmake -S . -B build -G <generator>`
+  3. `cmake --build build [--config <cfg>]`
+  4. `ctest --test-dir build [ -C <cfg> ] --output-on-failure`
+- Validation status:
+  - Clean configure from deleted build directory was executed.
+  - Full configure/build in this Linux container is currently blocked by missing system OpenGL development libraries required by `find_package(OpenGL REQUIRED)`.
+
 ## 2026-03-07 — Build hotfix: ContentPacker SDL_mixer include failure
 - Root cause: `ContentPacker` compiled content pipeline units that transitively include `audio_system.h`, but the target lacked SDL2_mixer dependency propagation.
 - Fix applied: Updated `target_link_libraries(ContentPacker ...)` to include `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` in addition to existing JSON dependency.

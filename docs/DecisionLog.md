@@ -1,6 +1,12 @@
 # Decision Log
 
 
+## 2026-03-07 — Build hygiene reliability guardrails
+- **Context**: Audit found stale-state risk factors in the build graph (duplicate dependency materialization calls, potential in-source cache pollution, and generated-header path assumptions).
+- **Decision**: Enforce out-of-source builds, create generated include directory explicitly before `configure_file`, and consolidate third-party dependency setup into a single `FetchContent_MakeAvailable(...)` pass.
+- **Rationale**: Reduces clean/incremental divergence risk and keeps generated/header dependency state deterministic across rebuilds.
+- **Status**: Accepted.
+
 ## 2026-03-07 — ContentPacker SDL_mixer dependency propagation fix
 - **Context**: Visual Studio/CMake/Ninja builds failed in `ContentPacker` with `fatal error C1083: Cannot open include file: 'SDL_mixer.h'` when compiling content pipeline sources that include audio system headers.
 - **Decision**: Keep `engine_core` dependencies unchanged and explicitly link `ContentPacker` to `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer`.

@@ -10,6 +10,10 @@ endif()
 
 project(EngineDemo VERSION ${ENGINE_PROJECT_VERSION} LANGUAGES CXX)
 
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR "In-source builds are not supported. Use: cmake -S . -B build")
+endif()
+
 execute_process(
   COMMAND git -C "${CMAKE_SOURCE_DIR}" rev-parse --short=12 HEAD
   OUTPUT_VARIABLE ENGINE_GIT_HASH
@@ -19,6 +23,8 @@ execute_process(
 if(ENGINE_GIT_HASH STREQUAL "")
   set(ENGINE_GIT_HASH "nogit")
 endif()
+
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/generated/engine")
 
 configure_file(
   "${CMAKE_SOURCE_DIR}/include/engine/version.h.in"
@@ -77,14 +83,13 @@ FetchContent_Declare(
   GIT_TAG v3.11.3
 )
 
-FetchContent_MakeAvailable(SDL2 SDL2_mixer imgui nlohmann_json)
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   GIT_TAG v3.5.2
 )
 
-FetchContent_MakeAvailable(SDL2 imgui nlohmann_json Catch2)
+FetchContent_MakeAvailable(SDL2 SDL2_mixer imgui nlohmann_json Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
