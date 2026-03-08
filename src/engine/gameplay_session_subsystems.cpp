@@ -4,6 +4,8 @@
 #include <engine/gameplay_session.h>
 
 #include <algorithm>
+#include <cmath>
+#include <span>
 
 namespace engine {
 
@@ -53,6 +55,127 @@ void ProgressionSubsystem::onUpgradeNavigation(ProgressionState& progression, co
         if (context.choose && context.choose(progression.focusedUpgradeIndex)) progression.upgradeScreenOpen = false;
     }
     if (action == UpgradeNavAction::Reroll && context.rerollChoices) (void)context.rerollChoices();
+}
+
+
+void EncounterSimulationSubsystem::emitDespawnParticles(ProjectileSystem& projectiles, const BulletPaletteTable& paletteTable, PresentationState& presentation) const {
+    for (const ProjectileDespawnEvent& event : projectiles.despawnEvents()) {
+        Color impactColor = event.paletteIndex == 0
+            ? (event.allegiance == ProjectileAllegiance::Enemy ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
+            : paletteTable.get(event.paletteIndex).impact;
+        if (event.paletteIndex != 0 && impactColor.a == 0) {
+            impactColor = paletteTable.get(event.paletteIndex).core;
+        }
+        presentation.particleFx.burst(event.pos, impactColor);
+        if (event.explodeShards > 0) {
+            const float len = std::sqrt(event.pos.x * event.pos.x + event.pos.y * event.pos.y);
+            const Vec2 dir = len > 0.0001F ? Vec2 {event.pos.x / len, event.pos.y / len} : Vec2 {0.0F, -1.0F};
+            presentation.cameraShakeEvents.push_back(ShakeParams {
+                .profile = ShakeProfile::Explosion,
+                .amplitude = 3.0F,
+                .duration = 0.18F,
+                .direction = dir,
+                .frequency = 36.0F,
+                .damping = 11.0F,
+            });
+        }
+    }
+}
+
+void EncounterSimulationSubsystem::processRuntimeEvents(EntitySystem& entities, EncounterRuntimeState& encounter, std::vector<ShakeParams>& cameraShakes) const {
+    for (const EntityRuntimeEvent& runtimeEvent : entities.runtimeEvents()) {
+        if (runtimeEvent.type == EntityRuntimeEventType::Telegraph) {
+            ++encounter.telegraphCount;
+            cameraShakes.push_back(ShakeParams {
+                .profile = ShakeProfile::Ambient,
+                .amplitude = 0.85F,
+                .duration = 0.15F,
+                .direction = {0.0F, 0.0F},
+                .frequency = 12.0F,
+                .damping = 6.0F,
+            });
+        }
+        if (runtimeEvent.type == EntityRuntimeEventType::HazardSync) {
+            ++encounter.hazardSyncCount;
+        }
+        if (runtimeEvent.type == EntityRuntimeEventType::BossDefeated) {
+        }
+    }
+}
+
+void EncounterSimulationSubsystem::resolveCpuDeterministicCollisions(ProjectileSystem& projectiles, EntitySystem& entities, const PlayerCombatState& playerState, EncounterRuntimeState& encounter, PresentationState& presentation) const {
+    projectiles.buildGrid();
+    if (presentation.dangerFieldEnabled) {
+        presentation.dangerField.buildFromGrid(
+            projectiles.gridHead(),
+            projectiles.gridNext(),
+            projectiles.posX(),
+            projectiles.posY(),
+            projectiles.active(),
+            projectiles.gridX(),
+            projectiles.gridY(),
+            projectiles.worldHalfExtent()
+        );
+    }
+    encounter.collisionTargetCount = 0;
+    encounter.collisionTargets[encounter.collisionTargetCount++] = CollisionTarget {.pos = playerState.playerPos, .radius = playerState.playerRadius, .id = 0U, .team = 0U};
+    entities.appendCollisionTargets(encounter.collisionTargets, encounter.collisionTargetCount);
+    encounter.collisionEventCount = 0;
+    projectiles.resolveCollisions(
+        std::span<const CollisionTarget>(encounter.collisionTargets.data(), encounter.collisionTargetCount),
+        encounter.collisionEvents,
+        encounter.collisionEventCount
+    );
+
+    for (std::uint32_t collisionIndex = 0; collisionIndex < encounter.collisionEventCount; ++collisionIndex) {
+        const CollisionEvent& e = encounter.collisionEvents[collisionIndex];
+        if (e.targetId != 0U || e.bulletIndex >= projectiles.capacity()) continue;
+        const Vec2 hitPos {projectiles.posX()[e.bulletIndex], projectiles.posY()[e.bulletIndex]};
+        const Vec2 dir = {playerState.playerPos.x - hitPos.x, playerState.playerPos.y - hitPos.y};
+        presentation.cameraShakeEvents.push_back(ShakeParams {
+            .profile = ShakeProfile::Impact,
+            .amplitude = 3.5F,
+            .duration = 0.16F,
+            .direction = dir,
+            .frequency = 32.0F,
+            .damping = 12.0F,
+        });
+    }
+
+    entities.processCollisionEvents(std::span<const CollisionEvent>(encounter.collisionEvents.data(), encounter.collisionEventCount));
+    for (std::uint32_t i = 0; i < encounter.collisionEventCount; ++i) {
+        const CollisionEvent& e = encounter.collisionEvents[i];
+        if (e.bulletIndex >= projectiles.capacity()) continue;
+        const Vec2 hitPos {projectiles.posX()[e.bulletIndex], projectiles.posY()[e.bulletIndex]};
+        presentation.pendingAudioEvents.push_back(AudioEvent {.type = AudioEventType::Hit, .position = hitPos});
+    }
+}
+
+void EncounterSimulationSubsystem::emitZoneTransitionFeedback(const ZoneDefinition* zoneBeforeUpdate, const ZoneDefinition* zoneAfterUpdate, const Vec2& playerPos, std::vector<ShakeParams>& cameraShakes, std::vector<AudioEvent>& audioEvents) const {
+    if (zoneBeforeUpdate && zoneAfterUpdate && zoneBeforeUpdate->type != zoneAfterUpdate->type && zoneAfterUpdate->type == ZoneType::Boss) {
+        cameraShakes.push_back(ShakeParams {
+            .profile = ShakeProfile::BossRumble,
+            .amplitude = 4.0F,
+            .duration = 0.4F,
+            .direction = {0.0F, 0.0F},
+            .frequency = 8.0F,
+            .damping = 2.0F,
+        });
+        audioEvents.push_back(AudioEvent {.type = AudioEventType::BossPhaseTransition, .position = playerPos});
+    }
+}
+
+void EncounterSimulationSubsystem::emitAmbientZoneFeedback(const ZoneDefinition* zoneAfterUpdate, std::vector<ShakeParams>& cameraShakes) const {
+    if (zoneAfterUpdate && (zoneAfterUpdate->type == ZoneType::Combat || zoneAfterUpdate->type == ZoneType::Elite || zoneAfterUpdate->type == ZoneType::Boss)) {
+        cameraShakes.push_back(ShakeParams {
+            .profile = ShakeProfile::Ambient,
+            .amplitude = 0.12F,
+            .duration = 0.0F,
+            .direction = {0.0F, 0.0F},
+            .frequency = 2.0F,
+            .damping = 0.0F,
+        });
+    }
 }
 
 void PresentationSubsystem::emitDefensiveSpecialActivation(std::vector<ShakeParams>& cameraShakes, std::vector<AudioEvent>& audioEvents, const Vec2& playerPos) const {

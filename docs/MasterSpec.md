@@ -1,6 +1,8 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Build reliability verification pass completed. Clean reconfigure/build from a deleted `build/` directory and incremental rebuild checks (`touch` representative header/cpp + rebuild) both behaved consistently in Ninja; expected workflow remains delete build dir, reconfigure, rebuild, then run tests.
+- 2026-03-08: Added `CMAKE_CONFIGURE_DEPENDS` tracking for `version/VERSION.txt` so project version and generated `generated/engine/version.h` are reconfigured automatically when the version file changes, reducing stale configure state risk.
 - 2026-03-08: Public API/plugin boundary hardening added metadata-based plugin registration, compatibility gating against `publicApiVersion()`, duplicate-id protection, and explicit unregister/clear lifecycle endpoints while preserving existing engine run behavior.
 
 ## Public API / Extensibility Baseline (2026-03-08)
@@ -13,11 +15,14 @@
 - 2026-03-08: Shared editor services were formalized around content generation and validation (`generateDemoContent`, `runControlCenterValidation`) so panels consume service APIs instead of embedding filesystem/schema logic inline.
 - 2026-03-08: Extension seam preserved and clarified: plugin panels still render through `public_api::toolPanelPlugins()`, while new editor domains can be added as isolated panel/source units without expanding a central monolith.
 
+- 2026-03-08: Pattern editor panel was further split into focused submodules inside `editor_tools_pattern_panel.cpp` so generation controls, seed/testing controls, graph editing (palette + inspector), and preview/analysis each have dedicated draw/build helpers while keeping one coherent panel workflow.
+- 2026-03-08: Pattern extension points are now explicit (`drawPatternGenerationControls`, `drawPatternSeedAndTestingControls`, `drawPatternGraphNodePalette`, `drawPatternGraphNodeInspector`, `buildPatternPreviewAsset`, `drawPatternPreviewAndAnalysis`) to reduce coupling and simplify future tooling additions (e.g., new analysis overlays or generator presets).
+
 
 ## Build Notes
 - 2026-03-08: Removed generic content pipeline -> runtime audio header coupling by extracting audio pack schema types into `audio_content.h`; `content_pipeline.h` no longer includes `audio_system.h`, so SDL_mixer headers are no longer required for generic content/tool include paths. Follow-up: keep runtime playback APIs confined to `audio_system` and avoid reintroducing SDL-facing includes into content headers.
 - 2026-03-08: Consolidated third-party CMake dependency registration into a single `engine_register_dependency(...)` workflow and one `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})` materialization pass. This replaces fragmented declaration patterns with one auditable dependency list while preserving existing targets (`SDL2`, `SDL2_mixer`, `imgui`, `nlohmann_json`, `Catch2`) and downstream link wiring.
-- 2026-03-07: `ContentPacker` now explicitly links `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` because it compiles content pipeline sources that include audio headers; this fixes Visual Studio/Ninja include failures for `SDL_mixer.h` without changing engine runtime behavior.
+- 2026-03-08: `ContentPacker` dependency surface was re-audited after audio schema extraction to `audio_content.h`; it now links only `nlohmann_json` and no longer links SDL2/SDL2_mixer because pack-generation code does not invoke runtime audio APIs.
 - 2026-03-07: Build hygiene hardening pass completed. CMake now rejects in-source builds to prevent cache/source-tree contamination, ensures `${CMAKE_BINARY_DIR}/generated/engine` exists before emitting configured headers, and removes duplicate `FetchContent_MakeAvailable` calls so dependency initialization is single-pass and deterministic across clean/incremental configure runs.
 - 2026-03-07: Clean rebuild workflow baseline is now: remove build tree, reconfigure out-of-source, build, then run tests (`cmake -E remove_directory build`, `cmake -S . -B build ...`, `cmake --build build ...`, `ctest --test-dir build ...`).
 
@@ -316,6 +321,7 @@ Typical designer parameters: `N, Δ, Ω, I, S, A, L, a, ωturn, phase` and varia
 - `render2d` owns generic 2D presentation primitives (`Camera2D`, `SpriteBatch`, `DebugDraw`, `TextureStore`) shared by gameplay and tooling overlays.
 - `modern_renderer` owns optional scene/post-processing composition (offscreen buffers + post-fx), independent from projectile simulation/path decisions.
 - `gpu_bullets` (current `CpuMassBulletRenderSystem`) is explicitly an alternate CPU mass-render path and does not own authoritative collision/deterministic projectile state.
+- Roadmap note: if a future authoritative GPU-simulation path is introduced, it must be a distinct simulation mode with independent replay/hash contracts rather than an extension of current mass-render presentation systems.
 - `RenderPipeline::ProjectileRenderPath` is the canonical projectile presentation selector (`Disabled`/`ProceduralSpriteBatch`/`GlInstanced`) to avoid split routing logic across call sites.
 
 ### 15.x Roadmap Notes
@@ -1675,3 +1681,13 @@ Documentation policy:
 - **PresentationSubsystem**: emits camera-shake/audio feedback events for gameplay-triggered presentation signals.
 
 Behavioral contract remains unchanged: the owning simulation tick order is still orchestrated by `GameplaySession::updateGameplay()`, and replay determinism contracts are preserved.
+
+### Runtime Architecture Update — GameplaySession subsystem continuation (2026-03-08)
+- `GameplaySession` remains deterministic phase orchestrator, but encounter-focused runtime/presentation glue has been extracted into `EncounterSimulationSubsystem`.
+- `EncounterSimulationSubsystem` owns:
+  - projectile despawn presentation reaction shaping,
+  - deterministic CPU collision pipeline coordination (danger-field build + collision target/event processing),
+  - runtime-event to presentation feedback fanout for encounter events,
+  - zone transition and ambient zone presentation emissions.
+- `GameplaySession` now coordinates subsystem calls rather than embedding full encounter implementation blocks inline.
+- Determinism/replay contract remains unchanged: update order and core runtime systems are preserved.
