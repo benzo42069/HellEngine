@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Removed generic content pipeline -> runtime audio header coupling by extracting audio pack schema types into `audio_content.h`; `content_pipeline.h` no longer includes `audio_system.h`, so SDL_mixer headers are no longer required for generic content/tool include paths. Follow-up: keep runtime playback APIs confined to `audio_system` and avoid reintroducing SDL-facing includes into content headers.
 - 2026-03-08: Consolidated third-party CMake dependency registration into a single `engine_register_dependency(...)` workflow and one `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})` materialization pass. This replaces fragmented declaration patterns with one auditable dependency list while preserving existing targets (`SDL2`, `SDL2_mixer`, `imgui`, `nlohmann_json`, `Catch2`) and downstream link wiring.
 - 2026-03-07: `ContentPacker` now explicitly links `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` because it compiles content pipeline sources that include audio headers; this fixes Visual Studio/Ninja include failures for `SDL_mixer.h` without changing engine runtime behavior.
 - 2026-03-07: Build hygiene hardening pass completed. CMake now rejects in-source builds to prevent cache/source-tree contamination, ensures `${CMAKE_BINARY_DIR}/generated/engine` exists before emitting configured headers, and removes duplicate `FetchContent_MakeAvailable` calls so dependency initialization is single-pass and deterministic across clean/incremental configure runs.
