@@ -1,6 +1,14 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Public API/plugin boundary hardening added metadata-based plugin registration, compatibility gating against `publicApiVersion()`, duplicate-id protection, and explicit unregister/clear lifecycle endpoints while preserving existing engine run behavior.
+
+## Public API / Extensibility Baseline (2026-03-08)
+- Stable external boundary remains limited to `include/engine/public/*`; all `include/engine/internal/*` and `src/engine/*` details are explicitly non-contract internals.
+- Plugin contract now uses metadata-first registration (`PluginMetadata`) with explicit target API version checks at registration time.
+- Plugin lifecycle supports register, unregister-by-id, and `clearRegisteredPlugins()` for host-managed teardown and test isolation.
+- Registration rejects null plugins, missing ids, duplicate ids/instances, and incompatible major/minor API targets to preserve runtime safety without exposing runtime internals.
+
 - 2026-03-07: `ContentPacker` now explicitly links `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` because it compiles content pipeline sources that include audio headers; this fixes Visual Studio/Ninja include failures for `SDL_mixer.h` without changing engine runtime behavior.
 - 2026-03-07: Build hygiene hardening pass completed. CMake now rejects in-source builds to prevent cache/source-tree contamination, ensures `${CMAKE_BINARY_DIR}/generated/engine` exists before emitting configured headers, and removes duplicate `FetchContent_MakeAvailable` calls so dependency initialization is single-pass and deterministic across clean/incremental configure runs.
 - 2026-03-07: Clean rebuild workflow baseline is now: remove build tree, reconfigure out-of-source, build, then run tests (`cmake -E remove_directory build`, `cmake -S . -B build ...`, `cmake --build build ...`, `ctest --test-dir build ...`).

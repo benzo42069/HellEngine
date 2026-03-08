@@ -62,3 +62,18 @@ Deprecations are marked and retained for at least one MINOR before MAJOR removal
 2. Validate with headless run + replay verify.
 3. Pin against a compatible runtime version.
 4. Avoid internal include reliance to reduce breakage risk.
+
+## 6) Plugin lifecycle boundary
+
+Expected host lifecycle:
+1. Construct plugin instances.
+2. Register via `register*Plugin(...)`.
+3. On shutdown/unload, unregister by plugin id (`unregister*Plugin(id)`) or call `clearRegisteredPlugins()`.
+
+Registration validates:
+- non-null plugin pointer
+- non-empty metadata id
+- unique plugin id and unique plugin instance
+- API compatibility (`targetApiVersion` vs runtime public API version)
+
+This boundary keeps plugin management in the public layer while keeping registry storage and ordering internal/unstable.

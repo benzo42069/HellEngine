@@ -2,12 +2,21 @@
 
 #include <engine/public/plugins.h>
 
+#include <string>
+#include <vector>
+
 namespace engine::internal {
 
+template <typename T>
+struct PluginRegistryCollection {
+    std::vector<T*> plugins;
+    std::vector<std::string> ids;
+};
+
 struct PluginRegistry {
-    std::vector<public_api::IShaderPackPlugin*> shaderPacks;
-    std::vector<public_api::IContentPackPlugin*> contentPacks;
-    std::vector<public_api::IToolPanelPlugin*> toolPanels;
+    PluginRegistryCollection<public_api::IShaderPackPlugin> shaderPacks;
+    PluginRegistryCollection<public_api::IContentPackPlugin> contentPacks;
+    PluginRegistryCollection<public_api::IToolPanelPlugin> toolPanels;
 };
 
 PluginRegistry& pluginRegistry();

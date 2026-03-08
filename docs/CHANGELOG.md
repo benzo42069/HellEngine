@@ -1,3 +1,13 @@
+## [Unreleased]
+### Added
+- Public plugin metadata contract (`PluginMetadata`, `IPlugin`) with explicit per-plugin target API version declaration.
+- Plugin lifecycle endpoints: `unregisterShaderPackPlugin`, `unregisterContentPackPlugin`, `unregisterToolPanelPlugin`, and `clearRegisteredPlugins`.
+- Typed plugin registration result (`PluginRegistrationResult`) with boundary-safe rejection causes.
+
+### Changed
+- Plugin registration now enforces compatibility/version checks plus duplicate-id and duplicate-instance protection.
+- Public API versioning helpers now include `isApiCompatible(...)` for host/plugin compatibility gating.
+
 ## Unreleased
 ### Changed
 - Hardened CMake build hygiene: reject in-source builds, explicitly create generated include output directory before configured-header emission, and remove duplicate `FetchContent_MakeAvailable` dependency materialization to improve clean/incremental rebuild consistency.

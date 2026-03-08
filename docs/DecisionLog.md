@@ -552,3 +552,11 @@
 - **Decision**: Apply a surgical fix: deduplicate `palette_ramp.h/.cpp`, keep one canonical `texture_` + member set, expose `animationFor` publicly, and include `projectiles.h` in `gl_bullet_renderer.cpp`.
 - **Rationale**: Restores compile integrity without redesigning palette or projectile rendering architecture.
 - **Status**: Accepted.
+
+## 2026-03-08 — Public API / Plugin Boundary Hardening
+- **Decision:** Keep the external/public surface constrained to `engine/public` headers and avoid promoting internal runtime classes into the plugin contract.
+- **Decision:** Introduce additive plugin metadata (`PluginMetadata`) plus compatibility validation against runtime public API version.
+- **Decision:** Add explicit plugin lifecycle controls (`unregister*`, `clearRegisteredPlugins`) so hosts/tools can tear down extension state cleanly.
+- **Rationale:** Commercial plugin ecosystems need predictable registration failure reasons and lifecycle boundaries while preserving ABI/API stability.
+- **Compatibility:** Additive-only change (MINOR-safe): existing registration flow semantics are preserved for valid plugins; invalid inputs now produce typed rejection instead of silent ignore.
+

@@ -53,3 +53,25 @@ See `engine/public/versioning.h`:
 - Legacy integrations using internal headers should be migrated to `engine/public` includes.
 - Treat all `engine/internal` and non-public headers as unstable implementation details.
 
+
+## Plugin lifecycle + compatibility
+
+Plugins provide `PluginMetadata` (id, display name, target API version) via `IPlugin::metadata()`.
+
+Registration returns `PluginRegistrationResult` and may reject with:
+- `NullPlugin`
+- `MissingId`
+- `IncompatibleApiVersion`
+- `DuplicateId`
+- `DuplicateInstance`
+
+Lifecycle controls:
+- Register with `register*Plugin(...)`
+- Unregister with `unregister*Plugin(pluginId)`
+- Clear all registries using `clearRegisteredPlugins()` (recommended for host shutdown/tests)
+
+Compatibility check uses `isApiCompatible(pluginTarget, publicApiVersion())`:
+- Major must match exactly.
+- Plugin minor must be <= runtime minor.
+
+This keeps extensibility stable while avoiding exposure of runtime internals.

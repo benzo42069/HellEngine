@@ -1,3 +1,10 @@
+## Public API / Extensibility Hardening (2026-03-08)
+- [x] Audit existing public headers and plugin registry implementation for boundary leakage.
+- [x] Add metadata-based plugin contract with version compatibility checks at registration boundaries.
+- [x] Add lifecycle APIs for unregister and full registry clear to support controlled host/plugin teardown.
+- [x] Preserve runtime behavior by keeping extension storage internal (`engine::internal::PluginRegistry`).
+- [x] Extend public API tests to cover duplicate-instance rejection, incompatible-version rejection, and unregister behavior.
+
 # Implementation Plan
 
 
