@@ -9,6 +9,12 @@
 
 # Decision Log
 
+## 2026-03-08 — Catch2 missing-main class fix via unified test helper
+- **Context**: Catch-based tests were still split across multiple registration paths, and any Catch source wired through the plain-test path could miss `Catch2::Catch2WithMain`, causing unresolved `main`/`LNK1120` on Windows.
+- **Decision**: Replace the split plain/catch registration API with one `engine_add_test(...)` helper that inspects test source content for Catch includes and applies Catch linking/discovery automatically when needed.
+- **Implementation**: Added `engine_source_uses_catch(...)` + `engine_add_test(...)` in `CMakeLists.txt`; migrated all helper-call test targets to this unified path so Catch target class behavior is consistent.
+- **Consequence**: Catch targets (including `render2d_tests`, `pattern_tests`, and any future Catch-authored tests) consistently receive `Catch2::Catch2WithMain`, while plain `main()` tests remain unchanged.
+
 ## 2026-03-08 — Catch2 test target and runtime DLL deployment standardization
 - **Context**: Windows test builds were failing in two modes: some Catch-based targets were linked without a Catch2-provided test main (`unresolved external symbol main`/`LNK1120`), and some Catch targets crashed during discovery with `0xc0000135` because SDL runtime DLLs were not present beside the test executable.
 - **Decision**: Centralize test wiring in CMake helper functions: one helper for plain `main()` tests and one helper for Catch tests that always links `Catch2::Catch2WithMain` and registers discovery consistently.

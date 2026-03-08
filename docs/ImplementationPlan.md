@@ -1,3 +1,9 @@
+## 2026-03-08 — Catch2 main-link consistency follow-up (completed)
+- [x] Audit all test-target registration call sites and confirm Catch-based target class by source includes.
+- [x] Replace split `engine_add_plain_test` / `engine_add_catch_test` usage with unified `engine_add_test` path.
+- [x] Implement helper-level Catch detection (`#include <catch2/...>`) and enforce `Catch2::Catch2WithMain` + `catch_discover_tests` for that class.
+- [x] Preserve existing target names/discovery shape while removing per-target wiring drift risk.
+
 ## 2026-03-08 — Test/CMake hardening: Catch2 linkage + runtime DLL deployment
 ### Problem
 - Catch-target setup had drift across individual test definitions, allowing targets to compile as Catch tests without linking `Catch2::Catch2WithMain`.

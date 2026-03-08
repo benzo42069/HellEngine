@@ -1,3 +1,8 @@
+## Unreleased
+### Fixed
+- Fixed remaining Windows Catch test link failures caused by inconsistent test-helper routing: Catch-authored targets registered through plain wiring could miss `Catch2::Catch2WithMain` and fail with unresolved `main`/`LNK1120`.
+- Unified helper-path test registration via `engine_add_test(...)` + source-based Catch detection so Catch targets consistently link `Catch2::Catch2WithMain` and use `catch_discover_tests` (covering targets such as `render2d_tests`, `pattern_tests`, and `entity_tests` class checks during audit).
+
 # Changelog
 
 ## Unreleased
