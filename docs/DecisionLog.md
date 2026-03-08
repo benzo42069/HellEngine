@@ -1,5 +1,10 @@
 # Decision Log
 
+## 2026-03-08 — Release packaging reliability + sample bundle validation hardening
+- **Context**: Release scripts packaged expected binaries/content but had weak dependency discovery (`SDL2.dll` only), no signed inventory/trace artifact, and no explicit sample-pack execution check from the produced portable folder.
+- **Decision**: Extend packaging to (1) discover/copy all runtime DLLs from release build output, (2) generate `RELEASE_MANIFEST.txt` with file inventory + SHA-256 hashes, and (3) run replay verification using `sample-content.pak` from within the packaged bundle.
+- **Decision**: Extend release validation to require the manifest and verify required entry fragments for core release artifacts.
+- **Rationale**: Improves practical distribution readiness and troubleshooting confidence while preserving existing successful build/package behavior.
 ## 2026-03-08 — Run-structure driven by authored encounter zones
 - **Context**: Vertical-slice validation required encounter pacing (combat/elite/event/boss) to run through authored content-pack data, but runtime stage flow was still sourced from hardcoded defaults.
 - **Decision**: Add a content-pack boot path that reads `encounters[].zones[]` and hydrates `RunStructure` stages from authored encounter definitions; keep default stage initialization as fallback when packs are missing/invalid.
