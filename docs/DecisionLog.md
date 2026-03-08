@@ -1,3 +1,9 @@
+## 2026-03-08 — Catch2 missing-main completion across all test target paths
+- **Context**: The earlier Catch2 fix covered most helper-based targets, but manual test target creation (`content_packer_tests`) still bypassed shared Catch-main linkage logic, leaving room for unresolved-main link failures when a Catch source is introduced on a non-helper path.
+- **Decision**: Centralize Catch-main eligibility in reusable CMake helpers by combining Catch-include detection with explicit `main(...)` detection, and reuse that helper for both `engine_add_test(...)` and manually declared test executables.
+- **Implementation**: Added `engine_source_defines_main(...)` and `engine_link_catch_main_if_needed(...)`; updated `engine_add_test(...)` and the `content_packer_tests` target to call the same linkage helper.
+- **Consequence**: Every test target creation path now enforces the same rule: Catch sources without their own `main` link `Catch2::Catch2WithMain`; non-Catch or self-main tests remain unchanged.
+
 ## 2026-03-08 — Audio authoring/runtime boundary hardening
 - **Context**: Runtime playback still loaded hardcoded WAV paths while content pipeline already parsed authored audio records; event schema and runtime dispatch were partially disconnected.
 - **Decision**: Route runtime playback through authored `AudioContentDatabase` records (clip registry + event bindings + buses) and make `Runtime` dispatch authored `AudioEventId` values instead of hardcoded `SoundId` members.

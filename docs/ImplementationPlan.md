@@ -1,3 +1,9 @@
+## 2026-03-08 — Catch2 main-link completion for remaining test targets (completed)
+- [x] Audited all CMake test target creation paths (`engine_add_test` and manual `add_executable` definitions).
+- [x] Added helper-level `main` detection so Catch2 main linkage is only applied when a Catch source does not define its own entry point.
+- [x] Applied the shared linkage helper to `content_packer_tests` so manual target creation cannot drift from Catch2 main-link policy.
+- [x] Preserved existing test names and discovery behavior (`catch_discover_tests` for Catch targets without local main, `add_test` for others).
+
 ## 2026-03-08 — Catch2 main-link consistency follow-up (completed)
 - [x] Audit all test-target registration call sites and confirm Catch-based target class by source includes.
 - [x] Replace split `engine_add_plain_test` / `engine_add_catch_test` usage with unified `engine_add_test` path.
