@@ -399,3 +399,5 @@ Residual risk:
 - Mitigation: Split responsibilities into focused helper methods with clear boundaries while preserving a single coherent panel for usability.
 - Extension points now documented and code-level explicit: generation controls, seed/testing controls, node palette, node inspector, preview asset builder, and preview/analysis renderer.
 - Residual risk: UI is still one window by design; future overflow should prefer adding focused collapsible sections before adding new top-level panels.
+- Render-path routing ownership was finalized by removing duplicate projectile path branches from `RenderPipeline::buildSceneOverlay` and enforcing single-source `ProjectileRenderPath` selection.
+- Palette/grayscale template ownership was documented and clarified (`GrayscaleSpriteAtlas` template source, `paletteRamp_` GL LUT authority, `proceduralPaletteRamp_` procedural staging).
