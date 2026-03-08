@@ -32,6 +32,26 @@ int main() {
         return EXIT_FAILURE;
     }
 
+
+    engine::StageDefinition authoredStage;
+    authoredStage.name = "Vertical Slice - Ember Crossing";
+    authoredStage.zones = {
+        engine::ZoneDefinition {.type = engine::ZoneType::Combat, .durationSeconds = 45.0F},
+        engine::ZoneDefinition {.type = engine::ZoneType::Elite, .durationSeconds = 55.0F},
+        engine::ZoneDefinition {.type = engine::ZoneType::Event, .durationSeconds = 35.0F},
+        engine::ZoneDefinition {.type = engine::ZoneType::Boss, .durationSeconds = 120.0F},
+    };
+    run.setStages({authoredStage});
+
+    if (run.stageCount() != 1 || run.stages()[0].zones.size() != 4) {
+        std::cerr << "authored stage load mismatch\n";
+        return EXIT_FAILURE;
+    }
+    if (run.currentZone()->type != engine::ZoneType::Combat || run.zoneTimeRemaining() != 45.0F) {
+        std::cerr << "authored stage initial zone mismatch\n";
+        return EXIT_FAILURE;
+    }
+
     run.reset();
     for (int i = 0; i < 8000 && run.state() == engine::RunState::InProgress; ++i) {
         const auto* zone = run.currentZone();

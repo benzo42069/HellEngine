@@ -77,30 +77,6 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         }
     }
 
-    auto emitDespawnParticles = [this]() {
-        for (const ProjectileDespawnEvent& event : projectiles_.despawnEvents()) {
-            Color impactColor = event.paletteIndex == 0
-                ? (event.allegiance == ProjectileAllegiance::Enemy ? Color {255, 220, 120, 220} : Color {120, 220, 255, 220})
-                : bulletPaletteTable_.get(event.paletteIndex).impact;
-            if (event.paletteIndex != 0 && impactColor.a == 0) {
-                impactColor = bulletPaletteTable_.get(event.paletteIndex).core;
-            }
-            presentation_.particleFx.burst(event.pos, impactColor);
-            if (event.explodeShards > 0) {
-                const float len = std::sqrt(event.pos.x * event.pos.x + event.pos.y * event.pos.y);
-                const Vec2 dir = len > 0.0001F ? Vec2 {event.pos.x / len, event.pos.y / len} : Vec2 {0.0F, -1.0F};
-                presentation_.cameraShakeEvents.push_back(ShakeParams {
-                    .profile = ShakeProfile::Explosion,
-                    .amplitude = 3.0F,
-                    .duration = 0.18F,
-                    .direction = dir,
-                    .frequency = 36.0F,
-                    .damping = 11.0F,
-                });
-            }
-        }
-    };
-
     playerCombat_.updateAimTarget(playerState_, simulation_.simClock);
 
     if (playerCombat_.tryActivateDefensiveSpecial(inputMask, defensiveSpecial_)) {
@@ -196,105 +172,22 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         profiler_.addZoneTime(PerfZone::Patterns, std::chrono::duration<double, std::milli>(Clock::now() - patternStart).count());
         const auto bulletStart = Clock::now();
         entitySystem_.update(static_cast<float>(dt) * dilation.enemyMovement, projectiles_, playerState_.playerPos, em);
-        for (const EntityRuntimeEvent& runtimeEvent : entitySystem_.runtimeEvents()) {
-            if (runtimeEvent.type == EntityRuntimeEventType::Telegraph) {
-                ++encounter_.telegraphCount;
-                presentation_.cameraShakeEvents.push_back(ShakeParams {
-                    .profile = ShakeProfile::Ambient,
-                    .amplitude = 0.85F,
-                    .duration = 0.15F,
-                    .direction = {0.0F, 0.0F},
-                    .frequency = 12.0F,
-                    .damping = 6.0F,
-                });
-            }
-            if (runtimeEvent.type == EntityRuntimeEventType::HazardSync) {
-                ++encounter_.hazardSyncCount;
-            }
-            if (runtimeEvent.type == EntityRuntimeEventType::BossDefeated) {
-            }
-        }
+        encounterRuntime_.processRuntimeEvents(entitySystem_, encounter_, presentation_.cameraShakeEvents);
         profiler_.addZoneTime(PerfZone::Bullets, std::chrono::duration<double, std::milli>(Clock::now() - bulletStart).count());
     }
 
     if (bulletSimMode_ == BulletSimulationMode::CpuCollisionDeterministic) {
         projectiles_.updateMotion(static_cast<float>(dt), dilation.enemyProjectiles, dilation.playerProjectiles);
-        emitDespawnParticles();
-        projectiles_.buildGrid();
-        if (presentation_.dangerFieldEnabled) {
-            presentation_.dangerField.buildFromGrid(
-                projectiles_.gridHead(),
-                projectiles_.gridNext(),
-                projectiles_.posX(),
-                projectiles_.posY(),
-                projectiles_.active(),
-                projectiles_.gridX(),
-                projectiles_.gridY(),
-                projectiles_.worldHalfExtent()
-            );
-        }
-        encounter_.collisionTargetCount = 0;
-        encounter_.collisionTargets[encounter_.collisionTargetCount++] = CollisionTarget {.pos = playerState_.playerPos, .radius = playerState_.playerRadius, .id = 0U, .team = 0U};
-        entitySystem_.appendCollisionTargets(encounter_.collisionTargets, encounter_.collisionTargetCount);
-        encounter_.collisionEventCount = 0;
-        projectiles_.resolveCollisions(
-            std::span<const CollisionTarget>(encounter_.collisionTargets.data(), encounter_.collisionTargetCount),
-            encounter_.collisionEvents,
-            encounter_.collisionEventCount
-        );
-        emitDespawnParticles();
-        for (std::uint32_t collisionIndex = 0; collisionIndex < encounter_.collisionEventCount; ++collisionIndex) {
-            const CollisionEvent& e = encounter_.collisionEvents[collisionIndex];
-            if (e.targetId != 0U || e.bulletIndex >= projectiles_.capacity()) continue;
-            const Vec2 hitPos {projectiles_.posX()[e.bulletIndex], projectiles_.posY()[e.bulletIndex]};
-            const Vec2 dir = {playerState_.playerPos.x - hitPos.x, playerState_.playerPos.y - hitPos.y};
-            presentation_.cameraShakeEvents.push_back(ShakeParams {
-                .profile = ShakeProfile::Impact,
-                .amplitude = 3.5F,
-                .duration = 0.16F,
-                .direction = dir,
-                .frequency = 32.0F,
-                .damping = 12.0F,
-            });
-        }
-        bool enemyHit = false;
-        for (std::uint32_t i = 0; i < encounter_.collisionEventCount; ++i) {
-            if (encounter_.collisionEvents[i].targetId >= 1000U) { enemyHit = true; break; }
-        }
-        entitySystem_.processCollisionEvents(std::span<const CollisionEvent>(encounter_.collisionEvents.data(), encounter_.collisionEventCount));
-        for (std::uint32_t i = 0; i < encounter_.collisionEventCount; ++i) {
-            const CollisionEvent& e = encounter_.collisionEvents[i];
-            if (e.bulletIndex >= projectiles_.capacity()) continue;
-            const Vec2 hitPos {projectiles_.posX()[e.bulletIndex], projectiles_.posY()[e.bulletIndex]};
-            presentation_.pendingAudioEvents.push_back(AudioEvent {.type = AudioEventType::Hit, .position = hitPos});
-        }
-        (void)enemyHit;
+        encounterRuntime_.emitDespawnParticles(projectiles_, bulletPaletteTable_, presentation_);
+        encounterRuntime_.resolveCpuDeterministicCollisions(projectiles_, entitySystem_, playerState_, encounter_, presentation_);
+        encounterRuntime_.emitDespawnParticles(projectiles_, bulletPaletteTable_, presentation_);
     }
 
     presentation_.particleFx.update(static_cast<float>(dt));
     runStructure_.update(static_cast<float>(dt), entitySystem_.stats().defeatedBosses, playerState_.playerHealth > 0.0F);
     const ZoneDefinition* zoneAfterUpdate = runStructure_.currentZone();
-    if (zoneBeforeUpdate && zoneAfterUpdate && zoneBeforeUpdate->type != zoneAfterUpdate->type && zoneAfterUpdate->type == ZoneType::Boss) {
-        presentation_.cameraShakeEvents.push_back(ShakeParams {
-            .profile = ShakeProfile::BossRumble,
-            .amplitude = 4.0F,
-            .duration = 0.4F,
-            .direction = {0.0F, 0.0F},
-            .frequency = 8.0F,
-            .damping = 2.0F,
-        });
-        presentation_.pendingAudioEvents.push_back(AudioEvent {.type = AudioEventType::BossPhaseTransition, .position = playerState_.playerPos});
-    }
-    if (zoneAfterUpdate && (zoneAfterUpdate->type == ZoneType::Combat || zoneAfterUpdate->type == ZoneType::Elite || zoneAfterUpdate->type == ZoneType::Boss)) {
-        presentation_.cameraShakeEvents.push_back(ShakeParams {
-            .profile = ShakeProfile::Ambient,
-            .amplitude = 0.12F,
-            .duration = 0.0F,
-            .direction = {0.0F, 0.0F},
-            .frequency = 2.0F,
-            .damping = 0.0F,
-        });
-    }
+    encounterRuntime_.emitZoneTransitionFeedback(zoneBeforeUpdate, zoneAfterUpdate, playerState_.playerPos, presentation_.cameraShakeEvents, presentation_.pendingAudioEvents);
+    encounterRuntime_.emitAmbientZoneFeedback(zoneAfterUpdate, presentation_.cameraShakeEvents);
     simulation_.simClock += dt;
     encounter_.encounterClockSeconds += static_cast<float>(dt);
     ++simulation_.tickIndex;

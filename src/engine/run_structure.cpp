@@ -1,6 +1,7 @@
 #include <engine/run_structure.h>
 
 #include <algorithm>
+#include <utility>
 
 namespace engine {
 
@@ -21,6 +22,11 @@ void RunStructure::initializeDefaults() {
         stages_.push_back(stage);
     }
 
+    reset();
+}
+
+void RunStructure::setStages(std::vector<StageDefinition> stages) {
+    stages_ = std::move(stages);
     reset();
 }
 

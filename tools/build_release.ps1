@@ -19,6 +19,18 @@ Param(
 
 $ErrorActionPreference = "Stop"
 
+
+function Assert-PathExists {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$Description
+    )
+
+    if (-not (Test-Path $Path)) {
+        throw "[build_release] Missing $Description at '$Path'"
+    }
+}
+
 function Get-BuiltExecutablePath {
     param(
         [Parameter(Mandatory = $true)][string]$BuildDir,
@@ -76,6 +88,9 @@ if (-not $SkipBenchmarks) {
 }
 
 if (-not $SkipPack) {
+    Assert-PathExists -Path "data" -Description "default content input directory"
+    Assert-PathExists -Path $PackInputDir -Description "sample content input directory"
+
     $packerExe = Get-BuiltExecutablePath -BuildDir $BuildDir -Name "ContentPacker"
     Write-Host "[build_release] Building default content pack: $PackOutput"
     & $packerExe --input data --output $PackOutput --pack-id $PackId
@@ -93,7 +108,16 @@ if (-not $SkipPack) {
         if ($LASTEXITCODE -ne 0) {
             throw "ContentPacker failed for sample pack with exit code $LASTEXITCODE"
         }
+
+        $engineExe = Get-BuiltExecutablePath -BuildDir $BuildDir -Name "EngineDemo"
+        Write-Host "[build_release] Replay verify against sample pack '$sampleOutput'"
+        & $engineExe --replay-verify --headless --ticks 300 --seed $ReplaySeed --content-pack $sampleOutput
+        if ($LASTEXITCODE -ne 0) {
+            throw "Replay verification against sample pack failed with exit code $LASTEXITCODE"
+        }
     }
+
+    Assert-PathExists -Path $PackOutput -Description "generated default content pack"
 }
 
 if (-not $SkipReplayVerify) {

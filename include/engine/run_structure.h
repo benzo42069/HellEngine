@@ -33,6 +33,7 @@ struct StageDefinition {
 class RunStructure {
   public:
     void initializeDefaults();
+    void setStages(std::vector<StageDefinition> stages);
     void reset();
     void update(float dt, std::uint32_t defeatedBossesTotal, bool playerAlive);
 

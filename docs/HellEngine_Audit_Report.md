@@ -395,3 +395,12 @@ Residual risk:
 - Follow-up recommendation: keep one owner per workflow doc and update during feature merges to avoid spec/doc drift.
 
 > **2026-03-08 follow-up:** The prior `editor_tools.cpp` monolith risk has been mitigated by splitting editor tooling implementation into focused modules and shared services under `src/engine/editor/`. Functionality is preserved while improving maintainability and extension boundaries.
+
+## Pattern panel modularization follow-up (2026-03-08)
+- Status: Completed refinement pass after initial editor decomposition.
+- Previous risk: Pattern tooling remained feature-dense inside one large draw function (generation, testing, graph editing, preview diagnostics).
+- Mitigation: Split responsibilities into focused helper methods with clear boundaries while preserving a single coherent panel for usability.
+- Extension points now documented and code-level explicit: generation controls, seed/testing controls, node palette, node inspector, preview asset builder, and preview/analysis renderer.
+- Residual risk: UI is still one window by design; future overflow should prefer adding focused collapsible sections before adding new top-level panels.
+- Render-path routing ownership was finalized by removing duplicate projectile path branches from `RenderPipeline::buildSceneOverlay` and enforcing single-source `ProjectileRenderPath` selection.
+- Palette/grayscale template ownership was documented and clarified (`GrayscaleSpriteAtlas` template source, `paletteRamp_` GL LUT authority, `proceduralPaletteRamp_` procedural staging).
