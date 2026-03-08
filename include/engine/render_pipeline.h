@@ -77,9 +77,11 @@ class RenderPipeline {
     EngineConfig config_ {};
     ShaderCache shaderCache_ {};
     GrayscaleSpriteAtlas spriteAtlas_ {};
+    // Authoritative ramp sampled by GL projectile shaders (`GlBulletRenderer`).
     PaletteRampTexture paletteRamp_ {};
     GlBulletRenderer glBulletRenderer_ {};
-    PaletteRampTexture paletteRampTexture_ {};
+    // Legacy/SDL sprite-generation ramp staging (non-GL projectile paths).
+    PaletteRampTexture proceduralPaletteRamp_ {};
 };
 
 } // namespace engine

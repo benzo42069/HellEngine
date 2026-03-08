@@ -8,6 +8,32 @@
 # Implementation Plan
 
 - 2026-03-08 progress: Completed authored-encounter runtime wiring so vertical-slice stage/zone flow is sourced from packed encounter JSON (`encounters[].zones[]`) with deterministic fallback to default stages when packs are absent.
+## 2026-03-08 — Pattern panel modularization follow-up (Completed)
+- [x] Audit remaining dense concerns in `drawPatternGraphEditorPanel` after initial editor split.
+- [x] Separate pattern generation controls, seed/testing controls, graph palette/inspector, and preview-analysis rendering into focused helper methods.
+- [x] Keep one coherent panel workflow to avoid tightly-coupled fragmented windows.
+- [x] Preserve behavior and save/compile flow for preview graphs.
+- [x] Document module responsibilities and extension seams in spec/log/changelog docs.
+## 2026-03-08 — ContentPacker SDL2_mixer dependency audit/removal
+- [x] Audited `tools_content_packer` and content pipeline sources for SDL/SDL_mixer usage.
+- [x] Confirmed `ContentPacker` path uses `audio_content.h` schema parsing and does not require runtime playback APIs.
+- [x] Removed `ContentPacker` linkage to `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` and dropped SDL include-directory injection.
+- [x] Reconfigured and rebuilt `ContentPacker` to verify clean build with reduced dependency surface.
+## 2026-03-08 — Build reliability verification (clean + incremental)
+- Risks checked:
+  - Generated header flow (`generated/engine/version.h`) and version-file-driven configure drift.
+  - Incremental dependency propagation after representative header and cpp edits.
+  - Clean rebuild behavior from a fully deleted build tree.
+- Fixes made:
+  - Added `CMAKE_CONFIGURE_DEPENDS` on `version/VERSION.txt` in top-level CMake so version-driven configure output stays synchronized automatically.
+- Validation runbook:
+  1. `cmake -E remove_directory build`
+  2. `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug`
+  3. `cmake --build build --target engine_core -j 8`
+  4. `cmake -E touch include/engine/render_pipeline.h && cmake --build build --target engine_core -j 8`
+  5. `cmake -E touch src/engine/render_pipeline.cpp && cmake --build build --target engine_core -j 8`
+- Status: Clean configure/build and incremental rebuild checks completed successfully after installing missing OpenGL development libraries in this container.
+
 ## 2026-03-08 — Vertical slice completion plan (product validation)
 - Scope delivered:
   - Authored two representative sample encounters (`Ember Crossing`, `Seraph Rematch`) with staged combat/boss/replay metadata.
@@ -52,6 +78,8 @@
   - Preserved behavior: deterministic projectile mode renders GL-instanced bullets when available, otherwise falls back to procedural SpriteBatch path.
   - Renamed `useModernRenderer_` to `modernPipelineEnabled_` for clearer pipeline ownership semantics.
   - Added subsystem role notes to renderer-related headers and MasterSpec/DecisionLog/Changelog.
+  - Removed duplicated projectile-render routing inside `RenderPipeline::buildSceneOverlay`; projectile path is now resolved once and applied uniformly for buffer prep, procedural fallback, and debug/pfx follow-up.
+  - Renamed internal procedural palette-ramp staging member to `proceduralPaletteRamp_` to avoid confusion with shader-authoritative `paletteRamp_`.
 - Remaining roadmap notes:
   - `GpuBulletSystem` alias remains for compatibility and should be retired in a future cleanup phase once downstream usage is migrated.
   - Any future true GPU simulation path must be introduced as a separate authoritative simulation mode, not by overloading current mass-render terminology.
@@ -590,3 +618,21 @@ Completed release-engineering closure work:
 ### Migration notes
 - Runtime call sites remain unchanged (`session.onUpgradeNavigation()`, `session.updateGameplay()`), but those entry points now dispatch to subsystem interfaces.
 - No replay hash contract changes were introduced by this split.
+
+## 2026-03-08 — GameplaySession decomposition continuation (encounter ownership cleanup)
+
+### Completed
+- Added `EncounterSimulationSubsystem` to isolate encounter-runtime and presentation-facing collision/event handling from `GameplaySession`.
+- Moved deterministic CPU-collision pipeline wiring (danger-field build, collision target/event setup, hit shake/audio emission) into `EncounterSimulationSubsystem::resolveCpuDeterministicCollisions`.
+- Moved projectile-despawn particle/shake emission into `EncounterSimulationSubsystem::emitDespawnParticles`.
+- Moved zone transition + ambient zone presentation feedback emission into explicit encounter subsystem methods.
+- Replaced inline entity runtime-event fanout inside `GameplaySession::updateGameplay()` with `EncounterSimulationSubsystem::processRuntimeEvents`.
+
+### Ownership boundaries after this pass
+1. **Session orchestration** stays in `GameplaySession::updateGameplay()` and remains deterministic tick coordinator.
+2. **Encounter simulation coordination** now lives in `EncounterSimulationSubsystem` for collision/runtime-event processing and zone-feedback outputs.
+3. **Presentation-facing encounter outputs** (camera shake + audio events from despawns/collisions/zone transitions) are emitted through encounter/presentation subsystem interfaces, not ad-hoc inline blocks.
+
+### Migration notes
+- No call-site API break: runtime still calls `session.updateGameplay()` and drains presentation queues through existing consume methods.
+- Replay/determinism boundaries remain unchanged: refactor preserves tick order and uses same underlying runtime systems.

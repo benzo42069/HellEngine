@@ -8,6 +8,7 @@
 #include <cctype>
 #include <cmath>
 #include <filesystem>
+#include <random>
 
 namespace engine {
 
