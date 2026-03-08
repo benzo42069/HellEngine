@@ -65,6 +65,8 @@ bool materialParamBlockFromJson(const nlohmann::json& json, MaterialParamBlock& 
 bool parseShaderManifest(const nlohmann::json& json, ShaderManifest& out, std::string& error);
 bool validateShaderManifest(const ShaderManifest& manifest, std::string& error);
 
+// Scene/post-processing orchestrator for modern rendering mode.
+// It owns offscreen targets and post-fx passes, not projectile simulation content.
 class RendererModernPipeline {
   public:
     bool initialize(SDL_Renderer* renderer, int width, int height, std::string* error = nullptr);

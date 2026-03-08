@@ -1,6 +1,21 @@
 # Implementation Plan
 
 
+## 2026-03-08 — Renderer ownership clarification pass
+- Audit findings:
+  - Projectile routing conditions were duplicated in-frame (`buildSceneOverlay` and `renderFrame`) and mixed with backend availability checks.
+  - Naming overlap (`useModernRenderer_`) obscured the distinction between modern composition mode and projectile backend choice.
+  - Renderer subsystem responsibilities were only partially documented in code and planning docs.
+- Changes applied:
+  - Added `RenderPipeline::ProjectileRenderPath` and centralized selection in `resolveProjectileRenderPath(...)`.
+  - Preserved behavior: deterministic projectile mode renders GL-instanced bullets when available, otherwise falls back to procedural SpriteBatch path.
+  - Renamed `useModernRenderer_` to `modernPipelineEnabled_` for clearer pipeline ownership semantics.
+  - Added subsystem role notes to renderer-related headers and MasterSpec/DecisionLog/Changelog.
+- Remaining roadmap notes:
+  - `GpuBulletSystem` alias remains for compatibility and should be retired in a future cleanup phase once downstream usage is migrated.
+  - Any future true GPU simulation path must be introduced as a separate authoritative simulation mode, not by overloading current mass-render terminology.
+
+
 ## 2026-03-07 — Build hygiene and clean rebuild validation
 - Audit findings:
   - Duplicate `FetchContent_MakeAvailable` invocation created dependency setup ambiguity.

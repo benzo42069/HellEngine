@@ -9,6 +9,7 @@
 
 namespace engine {
 
+// Simulation mode selector owned by GameplaySession update logic.
 enum class BulletSimulationMode {
     CpuCollisionDeterministic,
     CpuMassRender,
@@ -26,6 +27,8 @@ struct GpuBullet {
     float angularVelocityDegPerSec {0.0F};
 };
 
+// Presentation-only mass-quad renderer for non-authoritative bullet visuals.
+// This system does not own collision or deterministic gameplay simulation.
 class CpuMassBulletRenderSystem {
   public:
     void initialize(std::uint32_t capacity, float worldHalfExtent);
@@ -54,6 +57,7 @@ class CpuMassBulletRenderSystem {
     std::uint32_t preparedQuadCount_ {0};
 };
 
+// Backward-compatible alias; prefer CpuMassBulletRenderSystem in new code.
 using GpuBulletSystem = CpuMassBulletRenderSystem;
 
 } // namespace engine

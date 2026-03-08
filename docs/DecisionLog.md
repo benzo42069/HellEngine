@@ -1,6 +1,14 @@
 # Decision Log
 
 
+## 2026-03-08 — Clarify renderer stack ownership boundaries
+- **Context**: Rendering ownership had overlapping language across `gpu_bullets`, `gl_bullet_renderer`, `modern_renderer`, `render_pipeline`, and `render2d`, with projectile route checks duplicated inside `RenderPipeline`.
+- **Decision**: Make `RenderPipeline` the explicit owner of projectile render-path selection via `ProjectileRenderPath` (`Disabled`, `ProceduralSpriteBatch`, `GlInstanced`) and rename `useModernRenderer_` to `modernPipelineEnabled_` to clarify that modern mode is a compositing backend toggle.
+- **Decision**: Document subsystem roles in headers and specs: `gl_bullet_renderer` = projectile GL draw backend, `render2d` = generic 2D primitives, `modern_renderer` = post-fx/compositing, `gpu_bullets` = CPU mass-render alternate mode.
+- **Rationale**: Reduces path ambiguity without changing gameplay or render behavior, and keeps authoritative projectile ownership in simulation systems.
+- **Status**: Accepted.
+
+
 ## 2026-03-07 — Build hygiene reliability guardrails
 - **Context**: Audit found stale-state risk factors in the build graph (duplicate dependency materialization calls, potential in-source cache pollution, and generated-header path assumptions).
 - **Decision**: Enforce out-of-source builds, create generated include directory explicitly before `configure_file`, and consolidate third-party dependency setup into a single `FetchContent_MakeAvailable(...)` pass.

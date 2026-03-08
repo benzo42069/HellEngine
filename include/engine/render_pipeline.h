@@ -44,6 +44,13 @@ class RenderPipeline {
     void generatePatternSignatures(const PatternBank& bank, std::uint64_t seed);
 
   private:
+    enum class ProjectileRenderPath {
+        Disabled,
+        ProceduralSpriteBatch,
+        GlInstanced,
+    };
+
+    [[nodiscard]] ProjectileRenderPath resolveProjectileRenderPath(const GameplaySession& session) const;
     void buildSceneOverlay(const SimSnapshot& snapshot, double frameDelta);
     void ensureZoneBackground(const GameplaySession& session);
 
@@ -59,7 +66,7 @@ class RenderPipeline {
     Camera2D camera_;
     std::unique_ptr<TextureStore> textures_;
     RendererModernPipeline modernRenderer_ {};
-    bool useModernRenderer_ {false};
+    bool modernPipelineEnabled_ {false};
     SpriteBatch spriteBatch_;
     DebugDraw debugDraw_;
     DebugText debugText_;
