@@ -421,6 +421,7 @@ Completed items:
 - Implemented core `AudioSystem` runtime service with SDL audio callback mixer, content-driven clip/event registration, and music loop support.
 - Wired gameplay event hooks for: hit, graze, player damage, enemy death, boss warning, UI click, UI confirm.
 - Added content pipeline integration by allowing `ContentPacker` to include `audio` section in generated pack and by parsing audio metadata through `parseAudioContentDatabase`.
+- 2026-03-08 boundary fix: moved audio content schema declarations into `include/engine/audio_content.h` so generic content pipeline interfaces no longer transitively require `audio_system.h`/`SDL_mixer.h`; runtime playback APIs remain isolated in `AudioSystem`.
 - Added runtime config volume controls (`audioMasterVolume`, `audioMusicVolume`, `audioSfxVolume`) and command-line overrides (`--audio-master`, `--audio-music`, `--audio-sfx`).
 - Added smoke-level tests covering audio content parsing and config volume parsing/overrides.
 

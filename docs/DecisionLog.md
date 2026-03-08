@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-03-08 — Content pipeline/audio runtime boundary cleanup
+- **Context**: `content_pipeline.h` included `audio_system.h`, creating an inverted dependency where generic content interfaces pulled in runtime SDL_mixer headers and forced tooling targets to link/runtime-audio dependencies.
+- **Decision**: Split audio content schema definitions (`AudioBus`, `AudioEventId`, `AudioClipRecord`, `AudioEventBinding`, `AudioContentDatabase`) into `audio_content.h`; update `content_pipeline.h` and `audio_system.h` to depend on that shared lightweight header.
+- **Rationale**: Restores architectural layering: content pipeline types stay data-focused while runtime playback/system concerns remain in `audio_system`.
+- **Status**: Accepted.
+
 
 ## 2026-03-07 — Build hygiene reliability guardrails
 - **Context**: Audit found stale-state risk factors in the build graph (duplicate dependency materialization calls, potential in-source cache pollution, and generated-header path assumptions).
