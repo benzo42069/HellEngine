@@ -7,7 +7,7 @@
 #include <iostream>
 
 namespace {
-bool near(const float a, const float b, const float eps = 0.01F) {
+bool nearlyEqual(const float a, const float b, const float eps = 0.01F) {
     return std::fabs(a - b) <= eps;
 }
 }
@@ -32,7 +32,7 @@ int main() {
         return EXIT_FAILURE;
     }
     if (loaded.materialName != input.materialName || loaded.mode != engine::MaterialColorizationMode::GradientRamp
-        || !near(loaded.palette.paletteGlow.b, 0.9F) || !near(loaded.beamScrollSpeed, 1.5F)) {
+        || !nearlyEqual(loaded.palette.paletteGlow.b, 0.9F) || !nearlyEqual(loaded.beamScrollSpeed, 1.5F)) {
         std::cerr << "material parameter roundtrip mismatch\n";
         return EXIT_FAILURE;
     }
@@ -45,7 +45,7 @@ int main() {
         {1.0F, {1.0F, 1.0F, 1.0F, 1.0F}},
     };
     const auto lut = engine::generateGradientLut(gradient, 32);
-    if (lut.size() != 32 || !near(lut.front().r, 0.0F) || !near(lut.back().r, 1.0F)) {
+    if (lut.size() != 32 || !nearlyEqual(lut.front().r, 0.0F) || !nearlyEqual(lut.back().r, 1.0F)) {
         std::cerr << "gradient LUT test failed\n";
         return EXIT_FAILURE;
     }

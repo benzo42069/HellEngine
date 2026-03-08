@@ -677,3 +677,9 @@ Completed release-engineering closure work:
 - Identified malformed function structure in `src/engine/render_pipeline.cpp` immediately before `buildSceneOverlay(...)`: an extra duplicated signature opened a block that was never closed.
 - Applied minimal fix by deleting the stray duplicate function header + `(void)frameDelta;` line, preserving the intended `buildSceneOverlay` implementation.
 - Validation target: ensure compilation proceeds past `render_pipeline.cpp` and no C2601/C1075 brace-mismatch errors remain.
+
+## 2026-03-08 — Completed: modern_renderer_tests parser fix
+- Audited `tests/modern_renderer_tests.cpp` top-of-file helper declaration and early test logic.
+- Identified macro collision risk on helper name `near` causing parser corruption near `const` parameter tokens under MSVC environments.
+- Applied minimal fix by renaming helper to `nearlyEqual` and updating call sites only.
+- Attempted `modern_renderer_tests` target rebuild; environment lacked OpenGL development libraries during CMake configure, then validated the test file with a direct compiler syntax-only check.

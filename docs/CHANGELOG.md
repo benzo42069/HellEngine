@@ -164,3 +164,7 @@
 ## Unreleased
 ### Fixed
 - Fixed a brace/function-structure mismatch in `src/engine/render_pipeline.cpp` where a duplicated `buildSceneOverlay(...)` signature introduced an unmatched `{` and caused subsequent member functions (including `renderFrame`) to parse as illegal local definitions.
+
+## Unreleased
+### Fixed
+- Fixed MSVC syntax build failure in `tests/modern_renderer_tests.cpp` by renaming helper `near(...)` to `nearlyEqual(...)` to avoid Windows macro collision that produced parser errors around `const` near file top.
