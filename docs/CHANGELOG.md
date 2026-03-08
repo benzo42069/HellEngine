@@ -13,6 +13,17 @@
 
 # Changelog
 
+## Unreleased
+### Changed
+- Decomposed `ControlCenterToolSuite` implementation into modular editor translation units:
+  - `src/engine/editor/editor_tools_core.cpp`
+  - `src/engine/editor/editor_tools_workspace_panel.cpp`
+  - `src/engine/editor/editor_tools_pattern_panel.cpp`
+  - `src/engine/editor/editor_tools_services.cpp`
+- Updated CMake engine source registration to compile editor modules from `src/engine/editor/` while preserving existing editor functionality and public API.
+- Strengthened editor smoke coverage by extending `editor_tools_tests` to validate that generated demo content is scannable by the validator service.
+
+
 
 ## 2026-03-07 — Persistence foundations (settings + profiles + migration)
 - Added persistence module for user settings and profile/save-slot baselines with explicit schema versioning (`schemaVersion: 2`) and migration from legacy v1 JSON layouts.

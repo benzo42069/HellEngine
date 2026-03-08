@@ -156,6 +156,10 @@ add_library(engine_core STATIC
   src/engine/difficulty_scaling.cpp
   src/engine/encounter_graph.cpp
   src/engine/editor_tools.cpp
+  src/engine/editor/editor_tools_core.cpp
+  src/engine/editor/editor_tools_services.cpp
+  src/engine/editor/editor_tools_workspace_panel.cpp
+  src/engine/editor/editor_tools_pattern_panel.cpp
   src/engine/entities.cpp
   src/engine/gpu_bullets.cpp
   src/engine/gl_bullet_renderer.cpp

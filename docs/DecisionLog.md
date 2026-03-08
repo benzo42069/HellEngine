@@ -1,5 +1,12 @@
 # Decision Log
 
+## 2026-03-08 — ControlCenterToolSuite modular editor decomposition
+- **Context**: Audit findings identified `editor_tools.cpp` as an overly broad tooling monolith spanning workspace shell, content browser, pattern graph authoring, palette/FX controls, diagnostics, encounter authoring, and shared utility logic.
+- **Decision**: Keep the public `ControlCenterToolSuite` API stable, but split implementation into focused modules: core lifecycle/orchestration, workspace+content browser panels, pattern/encounter/trait/projectile panels, and shared editor services.
+- **Rationale**: Reduces coupling between UI domains and shared runtime-facing logic, improves maintainability, and creates explicit extension points for future panels/services while preserving existing behavior.
+- **Status**: Accepted.
+
+
 ## 2026-03-08 — Content pipeline/audio runtime boundary cleanup
 - **Context**: `content_pipeline.h` included `audio_system.h`, creating an inverted dependency where generic content interfaces pulled in runtime SDL_mixer headers and forced tooling targets to link/runtime-audio dependencies.
 - **Decision**: Split audio content schema definitions (`AudioBus`, `AudioEventId`, `AudioClipRecord`, `AudioEventBinding`, `AudioContentDatabase`) into `audio_content.h`; update `content_pipeline.h` and `audio_system.h` to depend on that shared lightweight header.

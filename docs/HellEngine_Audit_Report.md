@@ -1,3 +1,6 @@
+
+> **2026-03-08 follow-up:** The prior `editor_tools.cpp` monolith risk has been mitigated by splitting editor tooling implementation into focused modules and shared services under `src/engine/editor/`. Functionality is preserved while improving maintainability and extension boundaries.
+
 # HellEngine — Pre-Finalization Architecture Audit
 
 **Auditor role:** Principal Engine Architect / Technical Director  

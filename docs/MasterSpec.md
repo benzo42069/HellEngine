@@ -1,6 +1,12 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-08: Editor tooling architecture was decomposed from the single `src/engine/editor_tools.cpp` unit into modular editor translation units under `src/engine/editor/` (`editor_tools_core`, `editor_tools_workspace_panel`, `editor_tools_pattern_panel`, and `editor_tools_services`).
+- 2026-03-08: Shared editor services were formalized around content generation and validation (`generateDemoContent`, `runControlCenterValidation`) so panels consume service APIs instead of embedding filesystem/schema logic inline.
+- 2026-03-08: Extension seam preserved and clarified: plugin panels still render through `public_api::toolPanelPlugins()`, while new editor domains can be added as isolated panel/source units without expanding a central monolith.
+
+
+## Build Notes
 - 2026-03-08: Removed generic content pipeline -> runtime audio header coupling by extracting audio pack schema types into `audio_content.h`; `content_pipeline.h` no longer includes `audio_system.h`, so SDL_mixer headers are no longer required for generic content/tool include paths. Follow-up: keep runtime playback APIs confined to `audio_system` and avoid reintroducing SDL-facing includes into content headers.
 - 2026-03-08: Consolidated third-party CMake dependency registration into a single `engine_register_dependency(...)` workflow and one `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})` materialization pass. This replaces fragmented declaration patterns with one auditable dependency list while preserving existing targets (`SDL2`, `SDL2_mixer`, `imgui`, `nlohmann_json`, `Catch2`) and downstream link wiring.
 - 2026-03-07: `ContentPacker` now explicitly links `${ENGINEDEMO_SDL_TARGET}` and `SDL2_mixer::SDL2_mixer` because it compiles content pipeline sources that include audio headers; this fixes Visual Studio/Ninja include failures for `SDL_mixer.h` without changing engine runtime behavior.
