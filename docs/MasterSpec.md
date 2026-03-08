@@ -15,6 +15,9 @@
 - 2026-03-08: Shared editor services were formalized around content generation and validation (`generateDemoContent`, `runControlCenterValidation`) so panels consume service APIs instead of embedding filesystem/schema logic inline.
 - 2026-03-08: Extension seam preserved and clarified: plugin panels still render through `public_api::toolPanelPlugins()`, while new editor domains can be added as isolated panel/source units without expanding a central monolith.
 
+- 2026-03-08: Pattern editor panel was further split into focused submodules inside `editor_tools_pattern_panel.cpp` so generation controls, seed/testing controls, graph editing (palette + inspector), and preview/analysis each have dedicated draw/build helpers while keeping one coherent panel workflow.
+- 2026-03-08: Pattern extension points are now explicit (`drawPatternGenerationControls`, `drawPatternSeedAndTestingControls`, `drawPatternGraphNodePalette`, `drawPatternGraphNodeInspector`, `buildPatternPreviewAsset`, `drawPatternPreviewAndAnalysis`) to reduce coupling and simplify future tooling additions (e.g., new analysis overlays or generator presets).
+
 
 ## Build Notes
 - 2026-03-08: Removed generic content pipeline -> runtime audio header coupling by extracting audio pack schema types into `audio_content.h`; `content_pipeline.h` no longer includes `audio_system.h`, so SDL_mixer headers are no longer required for generic content/tool include paths. Follow-up: keep runtime playback APIs confined to `audio_system` and avoid reintroducing SDL-facing includes into content headers.

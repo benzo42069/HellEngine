@@ -7,6 +7,12 @@
 
 # Implementation Plan
 
+## 2026-03-08 — Pattern panel modularization follow-up (Completed)
+- [x] Audit remaining dense concerns in `drawPatternGraphEditorPanel` after initial editor split.
+- [x] Separate pattern generation controls, seed/testing controls, graph palette/inspector, and preview-analysis rendering into focused helper methods.
+- [x] Keep one coherent panel workflow to avoid tightly-coupled fragmented windows.
+- [x] Preserve behavior and save/compile flow for preview graphs.
+- [x] Document module responsibilities and extension seams in spec/log/changelog docs.
 ## 2026-03-08 — ContentPacker SDL2_mixer dependency audit/removal
 - [x] Audited `tools_content_packer` and content pipeline sources for SDL/SDL_mixer usage.
 - [x] Confirmed `ContentPacker` path uses `audio_content.h` schema parsing and does not require runtime playback APIs.

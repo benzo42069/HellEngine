@@ -14,6 +14,8 @@
 
 namespace engine {
 
+struct PatternGraphAsset;
+
 struct ToolRuntimeSnapshot {
     std::uint64_t tick {0};
     int fps {0};
@@ -125,6 +127,12 @@ class ControlCenterToolSuite {
     void drawWorkspaceShell(const ToolRuntimeSnapshot& snapshot);
     void drawPaletteFxEditorPanel(const ToolRuntimeSnapshot& snapshot);
     void drawPatternGraphEditorPanel(const ToolRuntimeSnapshot& snapshot);
+    void drawPatternGenerationControls();
+    void drawPatternSeedAndTestingControls();
+    void drawPatternGraphNodePalette();
+    void drawPatternGraphNodeInspector();
+    void drawPatternPreviewAndAnalysis(const PatternGraphAsset& previewAsset);
+    [[nodiscard]] PatternGraphAsset buildPatternPreviewAsset() const;
     void drawProjectileEditorPanel();
     void drawEncounterWaveEditorPanel();
     void drawTraitUpgradePanel(const ToolRuntimeSnapshot& snapshot);

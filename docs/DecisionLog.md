@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-03-08 — Pattern panel responsibility split inside editor tooling
+- **Context**: After the first editor decomposition, the pattern panel still mixed generation tuning, seed/testing actions, graph editing, and preview diagnostics in one dense function body.
+- **Decision**: Keep a single Pattern Graph Editor window for workflow continuity, but split implementation into focused helper modules for generation controls, seed/testing, graph editing, preview-asset construction, and simulation/analysis rendering.
+- **Rationale**: Preserves user flow and existing behavior while reducing coupling, clarifying ownership, and creating extension points for future tooling features.
 ## 2026-03-08 — ContentPacker runtime-audio dependency trim
 - **Context**: `ContentPacker` previously linked SDL2 + SDL2_mixer due to older transitive coupling from content pipeline headers into runtime audio APIs.
 - **Decision**: Keep audio-content parsing in the content pipeline (`audio_content.h` / `parseAudioContentDatabase`) but remove direct SDL2 and SDL2_mixer linkage from the `ContentPacker` target.

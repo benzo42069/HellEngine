@@ -17,13 +17,31 @@
 namespace engine {
 
 void ControlCenterToolSuite::drawPatternGraphEditorPanel(const ToolRuntimeSnapshot& snapshot) {
-if (showPatternEditor_) {
+    (void)snapshot;
+    if (!showPatternEditor_) {
+        return;
+    }
+
     ImGui::Begin("Pattern Graph Editor + Generator");
     ImGui::TextUnformatted("Compiled graph authoring (node palette + inspector + preview sandbox).");
 
+    drawPatternGenerationControls();
+    drawPatternSeedAndTestingControls();
+
+    ensurePatternGraphSeeded();
+    drawPatternGraphNodePalette();
+    drawPatternGraphNodeInspector();
+
+    const PatternGraphAsset previewAsset = buildPatternPreviewAsset();
+    drawPatternPreviewAndAnalysis(previewAsset);
+
+    ImGui::End();
+}
+
+void ControlCenterToolSuite::drawPatternGenerationControls() {
+    ImGui::SeparatorText("Generation Controls");
     const char* styles[] = {"Balanced", "Spiral Dance", "Burst Fan", "Sniper Lanes"};
     ImGui::Combo("Style Preset", &patternGenerator_.stylePreset, styles, 4);
-    ImGui::InputScalar("Seed", ImGuiDataType_U64, &patternGenerator_.seed);
     ImGui::SliderFloat("Density", &patternGenerator_.density, 0.0F, 1.0F);
     ImGui::SliderFloat("Speed", &patternGenerator_.speed, 0.0F, 1.0F);
     ImGui::SliderFloat("Symmetry", &patternGenerator_.symmetry, 0.0F, 1.0F);
@@ -44,21 +62,32 @@ if (showPatternEditor_) {
     patternGenerator_.dodgeGapEstimate = r.metrics.averageDodgeGapEstimate;
     patternGenerator_.bulletsPerSecond = r.metrics.estimatedBulletsPerSecond;
     std::copy(r.metrics.densityHeatmap.begin(), r.metrics.densityHeatmap.end(), patternGenerator_.heatmap.begin());
+}
 
+void ControlCenterToolSuite::drawPatternSeedAndTestingControls() {
+    ImGui::SeparatorText("Seed + Testing");
+    ImGui::InputScalar("Seed", ImGuiDataType_U64, &patternGenerator_.seed);
     ImGui::Text("Estimated difficulty: %.2f", patternGenerator_.difficultyScore);
+    ImGui::Text("Dodge gap estimate: %.2f", patternGenerator_.dodgeGapEstimate);
+    ImGui::Text("Estimated bullets/s: %.2f", patternGenerator_.bulletsPerSecond);
     ImGui::PlotLines("Density Heatmap", patternGenerator_.heatmap.data(), static_cast<int>(patternGenerator_.heatmap.size()), 0, nullptr, 0.0F, 1.0F, ImVec2(0.0F, 70.0F));
+
     if (ImGui::Button("Generate Graph")) {
         patternGenerator_.requestGenerate = true;
         statusMessage_ = "Pattern graph generation requested";
     }
     ImGui::SameLine();
-    if (ImGui::Button("Mutate")) patternGenerator_.requestMutate = true;
+    if (ImGui::Button("Mutate")) {
+        patternGenerator_.requestMutate = true;
+    }
     ImGui::SameLine();
-    if (ImGui::Button("Remix")) patternGenerator_.requestRemix = true;
+    if (ImGui::Button("Remix")) {
+        patternGenerator_.requestRemix = true;
+    }
+}
 
-    ensurePatternGraphSeeded();
-
-    ImGui::SeparatorText("Node Palette");
+void ControlCenterToolSuite::drawPatternGraphNodePalette() {
+    ImGui::SeparatorText("Graph Editing: Node Palette");
     const char* nodeTypes[] = {"Emit Ring", "Emit Spread", "Emit Spiral", "Emit Wave", "Emit Aimed", "Wait", "Loop", "Rotate", "Phase", "Random"};
     for (int i = 0; i < 10; ++i) {
         ImGui::PushID(i);
@@ -75,11 +104,17 @@ if (showPatternEditor_) {
             graphNodeTarget_.push_back("010-emit");
             selectedGraphNode_ = static_cast<int>(graphNodeIds_.size()) - 1;
         }
-        if (i < 9) ImGui::SameLine();
+        if (i < 9) {
+            ImGui::SameLine();
+        }
         ImGui::PopID();
     }
+}
 
-    ImGui::SeparatorText("Node Inspector");
+void ControlCenterToolSuite::drawPatternGraphNodeInspector() {
+    ImGui::SeparatorText("Graph Editing: Node Inspector");
+    const char* nodeTypes[] = {"Emit Ring", "Emit Spread", "Emit Spiral", "Emit Wave", "Emit Aimed", "Wait", "Loop", "Rotate", "Phase", "Random"};
+
     for (std::size_t i = 0; i < graphNodeIds_.size(); ++i) {
         ImGui::PushID(static_cast<int>(i));
         if (ImGui::Selectable(graphNodeIds_[i].c_str(), selectedGraphNode_ == static_cast<int>(i))) {
@@ -87,20 +122,26 @@ if (showPatternEditor_) {
         }
         ImGui::PopID();
     }
+
     selectedGraphNode_ = std::clamp(selectedGraphNode_, 0, static_cast<int>(graphNodeIds_.size()) - 1);
-    if (!graphNodeIds_.empty()) {
-        const std::size_t i = static_cast<std::size_t>(selectedGraphNode_);
-        ImGui::InputText("Node ID", &graphNodeIds_[i]);
-        ImGui::Combo("Node Type", &graphNodeTypes_[i], nodeTypes, 10);
-        ImGui::SliderFloat("A", &graphNodeA_[i], -360.0F, 360.0F);
-        ImGui::SliderFloat("B", &graphNodeB_[i], -360.0F, 360.0F);
-        ImGui::SliderFloat("C", &graphNodeC_[i], -360.0F, 360.0F);
-        ImGui::SliderFloat("D", &graphNodeD_[i], -360.0F, 360.0F);
-        ImGui::InputText("Loop Target", &graphNodeTarget_[i]);
+    if (graphNodeIds_.empty()) {
+        return;
     }
 
+    const std::size_t i = static_cast<std::size_t>(selectedGraphNode_);
+    ImGui::InputText("Node ID", &graphNodeIds_[i]);
+    ImGui::Combo("Node Type", &graphNodeTypes_[i], nodeTypes, 10);
+    ImGui::SliderFloat("A", &graphNodeA_[i], -360.0F, 360.0F);
+    ImGui::SliderFloat("B", &graphNodeB_[i], -360.0F, 360.0F);
+    ImGui::SliderFloat("C", &graphNodeC_[i], -360.0F, 360.0F);
+    ImGui::SliderFloat("D", &graphNodeD_[i], -360.0F, 360.0F);
+    ImGui::InputText("Loop Target", &graphNodeTarget_[i]);
+}
+
+PatternGraphAsset ControlCenterToolSuite::buildPatternPreviewAsset() const {
     PatternGraphAsset previewAsset;
     previewAsset.id = "editor-preview";
+
     for (std::size_t i = 0; i < graphNodeIds_.size(); ++i) {
         PatternGraphNode node;
         node.id = graphNodeIds_[i];
@@ -120,10 +161,15 @@ if (showPatternEditor_) {
         previewAsset.nodes.push_back(std::move(node));
     }
 
+    return previewAsset;
+}
+
+void ControlCenterToolSuite::drawPatternPreviewAndAnalysis(const PatternGraphAsset& previewAsset) {
     PatternGraphCompiler graphCompiler;
     CompiledPatternGraph compiled;
     const bool previewOk = graphCompiler.compile(previewAsset, compiled);
-    ImGui::SeparatorText("Preview Sandbox");
+
+    ImGui::SeparatorText("Simulation Preview + Analysis");
     ImGui::Text("Compile: %s", previewOk ? "PASS" : "FAIL");
     ImGui::Text("Ops: %d", static_cast<int>(compiled.ops.size()));
     ImGui::Text("Estimated spawns/s: %.1f", compiled.staticSpawnRateEstimatePerSecond);
@@ -141,9 +187,6 @@ if (showPatternEditor_) {
             statusMessage_ = "Save failed: " + err;
         }
     }
-
-    ImGui::End();
-}
 }
 
 void ControlCenterToolSuite::drawProjectileEditorPanel() {
