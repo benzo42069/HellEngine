@@ -1,3 +1,9 @@
+## 2026-03-08 — Missing-main closure for content_packer_tests and entity_tests
+- **Context**: Build Engineering reported remaining unresolved `main` / `LNK1120` failures for `content_packer_tests.exe` and `entity_tests.exe`, indicating those targets could still bypass Catch2-main linkage under helper classification drift.
+- **Decision**: Keep the fix minimal in shared CMake logic by adding a narrow target-name safety override inside `engine_link_catch_main_if_needed(...)` for `content_packer_tests` and `entity_tests`.
+- **Implementation**: If either target does not define a local `main(...)`, force Catch classification and link `Catch2::Catch2WithMain`; all other targets remain governed by existing source-include + main detection.
+- **Consequence**: The two failing targets now align with the Catch missing-main policy without changing target names, test registration structure, or discovery behavior.
+
 ## 2026-03-08 — Catch2 missing-main completion across all test target paths
 - **Context**: The earlier Catch2 fix covered most helper-based targets, but manual test target creation (`content_packer_tests`) still bypassed shared Catch-main linkage logic, leaving room for unresolved-main link failures when a Catch source is introduced on a non-helper path.
 - **Decision**: Centralize Catch-main eligibility in reusable CMake helpers by combining Catch-include detection with explicit `main(...)` detection, and reuse that helper for both `engine_add_test(...)` and manually declared test executables.
