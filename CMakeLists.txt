@@ -309,6 +309,7 @@ function(engine_link_catch_main_if_needed target_name source_file)
     editor_tools_tests
     boss_phase_tests
     entity_tests
+    pattern_graph_perf_tests
   )
   if(target_name IN_LIST _engine_force_catch_main_targets)
     set(_engine_test_is_catch TRUE)

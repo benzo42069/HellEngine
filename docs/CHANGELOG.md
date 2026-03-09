@@ -1,3 +1,8 @@
+## Unreleased
+### Fixed
+- Fixed remaining Windows missing-main linker failure for `pattern_graph_perf_tests` by guaranteeing `Catch2::Catch2WithMain` linkage via `_engine_force_catch_main_targets` in `engine_link_catch_main_if_needed(...)`.
+- Noted clean-rebuild requirement (delete build directory, reconfigure, rebuild) so regenerated linker/discovery rules are applied.
+
 - Fixed final Windows test linker blocker for `editor_tools_tests` (`unresolved external symbol main`, `LNK1120`) by explicitly linking `Catch2::Catch2WithMain` in target setup while preserving existing discovery and runtime DLL deployment behavior.
 - Operational follow-up: run a clean rebuild from a deleted build directory so regenerated linker/discovery commands take effect.
 ## Unreleased
