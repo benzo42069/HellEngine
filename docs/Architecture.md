@@ -189,3 +189,15 @@ Ownership rule: simulation authority is never inferred from renderer naming; det
 - `RenderPipeline::buildSceneOverlay` now routes projectile presentation through `GlBulletRenderer` when OpenGL is ready and the renderer is initialized.
 - `GlBulletRenderer` consumes Projectile SoA data (including trails) each frame, resolves palette/gradient color on CPU, builds preallocated quad buffers, and submits one indexed draw.
 - SpriteBatch procedural bullet rendering remains the fallback path if GL init fails or is unavailable.
+
+## Runtime ownership update (2026-03-09)
+
+`GameplaySession` ownership boundaries are now finalized as:
+- **Coordinator role** (`GameplaySession`): deterministic phase orchestration and subsystem sequencing.
+- **Session orchestration policy** (`SessionOrchestrationSubsystem`): content hot-reload poll cadence/fanout and progression cadence/debug policy transitions.
+- **Player combat runtime** (`PlayerCombatSubsystem`): aim/movement/defensive-special trigger/graze collection.
+- **Progression runtime** (`ProgressionSubsystem`): upgrade navigation mutation flow.
+- **Encounter runtime** (`EncounterSimulationSubsystem`): collision/runtime-event handling and encounter-scoped presentation feedback.
+- **Presentation shaping** (`PresentationSubsystem`): non-sim feedback event emission (camera/audio).
+
+Deterministic/replay contract is unchanged: subsystem calls still execute from `GameplaySession::updateGameplay()` in stable fixed-tick order.
