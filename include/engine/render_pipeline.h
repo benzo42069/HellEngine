@@ -44,6 +44,9 @@ class RenderPipeline {
     void generatePatternSignatures(const PatternBank& bank, std::uint64_t seed);
 
   private:
+    // Central projectile presentation routing. GameplaySession simulation mode gates
+    // whether projectile visuals are rendered at all; renderer/backend readiness only
+    // selects GL instanced vs procedural SDL SpriteBatch submission.
     enum class ProjectileRenderPath {
         Disabled,
         ProceduralSpriteBatch,

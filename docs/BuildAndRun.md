@@ -10,6 +10,7 @@ This page is the command reference for compiling and running HellEngine locally.
 - Dear ImGui (fetched via CMake FetchContent)
 - nlohmann_json (fetched via CMake FetchContent)
 - GLAD (vendored at `third_party/glad`)
+- Catch2 (used for Catch-authored test executables via `Catch2::Catch2WithMain` + `catch_discover_tests`; standalone tests intentionally keep explicit `main()` and use `add_test`)
 - Catch2 (used for Catch-authored tests with auto-linked `Catch2::Catch2WithMain`; non-Catch tests remain custom `main()` executables wired through CTest)
 - SDL_mixer (actively used by `AudioSystem` for runtime WAV playback and event-driven bus/category mixing)
 
@@ -80,6 +81,12 @@ Stress mode:
 - `--difficulty <name>`
 
 ## Run tests
+
+Test model notes:
+- Catch test sources without a local `main(...)` are auto-linked with `Catch2::Catch2WithMain` and discovered with `catch_discover_tests`.
+- Standalone tests that intentionally define `main(...)` are registered as plain CTest commands.
+- On Windows, runtime DLLs are copied beside each test executable at build time so both direct test execution and Catch discovery can launch successfully.
+
 
 ### Windows
 ```powershell

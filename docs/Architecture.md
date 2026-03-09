@@ -34,6 +34,9 @@
    - logger tail buffering for crash reports
 
 5. **Tooling/editor** (`editor_tools.*`)
+   - module split: `editor_tools_core`, `editor_tools_workspace_panel`, `editor_tools_pattern_panel`, `editor_tools_gameplay_panel`, `editor_tools_services`
+   - workflow-oriented shell: content browsing + inspector + telemetry preview + validator
+   - focused authoring panels: pattern graph/generation, palette/FX template editing, gameplay/encounter tooling
    - in-engine control center
    - pattern graph editing/preview
    - validation status and debug controls
@@ -66,6 +69,16 @@
 
 
 ## Renderer ownership boundaries (finalized)
+
+### Renderer subsystem role matrix
+- `render_pipeline`: frame orchestration owner (context lifecycle, projectile path decision, scene composition ordering).
+- `render2d`: SDL-side 2D drawing primitives and shared utilities (`SpriteBatch`, `DebugDraw`, `DebugText`, camera/texture helpers).
+- `modern_renderer`: post-processing/composition pipeline owner (offscreen targets + fullscreen passes only).
+- `gl_bullet_renderer`: OpenGL projectile draw backend owner (consumes projectile SoA snapshots and submits GL draws).
+- `gpu_bullets` (`CpuMassBulletRenderSystem`): non-authoritative CPU mass-render presentation path for `CpuMassRender` mode.
+
+Ownership rule: simulation authority is never inferred from renderer naming; deterministic gameplay ownership remains in simulation/session systems.
+
 
 - `render_pipeline` is the sole orchestration layer for renderer-path selection and frame composition; projectile-path checks are resolved once via `ProjectileRenderPath` and consumed consistently for prep + submit.
 - `gl_bullet_renderer` owns only OpenGL projectile draw preparation/submission from projectile SoA snapshots.
@@ -183,3 +196,15 @@
 - `RenderPipeline::buildSceneOverlay` now routes projectile presentation through `GlBulletRenderer` when OpenGL is ready and the renderer is initialized.
 - `GlBulletRenderer` consumes Projectile SoA data (including trails) each frame, resolves palette/gradient color on CPU, builds preallocated quad buffers, and submits one indexed draw.
 - SpriteBatch procedural bullet rendering remains the fallback path if GL init fails or is unavailable.
+
+## Runtime ownership update (2026-03-09)
+
+`GameplaySession` ownership boundaries are now finalized as:
+- **Coordinator role** (`GameplaySession`): deterministic phase orchestration and subsystem sequencing.
+- **Session orchestration policy** (`SessionOrchestrationSubsystem`): content hot-reload poll cadence/fanout and progression cadence/debug policy transitions.
+- **Player combat runtime** (`PlayerCombatSubsystem`): aim/movement/defensive-special trigger/graze collection.
+- **Progression runtime** (`ProgressionSubsystem`): upgrade navigation mutation flow.
+- **Encounter runtime** (`EncounterSimulationSubsystem`): collision/runtime-event handling and encounter-scoped presentation feedback.
+- **Presentation shaping** (`PresentationSubsystem`): non-sim feedback event emission (camera/audio).
+
+Deterministic/replay contract is unchanged: subsystem calls still execute from `GameplaySession::updateGameplay()` in stable fixed-tick order.

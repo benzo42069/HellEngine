@@ -4,6 +4,8 @@ This guide covers practical, deterministic pattern authoring for creators.
 
 ## 1) Choose an authoring path
 
+> Editor note: use **Workflow Shortcuts → Pattern Pass** in Control Center to automatically focus on content browser + inspector + pattern editor + preview panels.
+
 ### Layered patterns (`patterns`)
 Use for straightforward attacks and quick iteration.
 
