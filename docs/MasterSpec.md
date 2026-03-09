@@ -1773,3 +1773,8 @@ Extensibility note:
   - Converted `tests/entity_tests.cpp` from standalone `int main()` to Catch assertions.
   - Updated CMake test registration so Catch-discovered tests can still inherit test dependency metadata (`DEPENDS`) and so `content_packer_tests` keeps its dependency on `content_packer_generate` without custom argv plumbing.
 - Validation contract: this fix requires a deleted-build-directory clean rebuild to ensure stale executables/cached link metadata are not reused.
+
+## Test Build Hotfix — editor_tools_tests Catch2 entrypoint alignment (2026-03-09)
+- Root cause: `tests/editor_tools_tests.cpp` still defined a standalone global `main()`, so `engine_add_test(editor_tools_tests ...)` detected a user entrypoint and intentionally skipped linking `Catch2::Catch2WithMain`; however the target is part of the Catch-based test suite contract.
+- Exact fix: converted `editor_tools_tests.cpp` from standalone `int main()` flow to a Catch `TEST_CASE`, enabling the existing CMake helper to link `Catch2::Catch2WithMain` consistently.
+- Build note: a deleted-build-directory clean rebuild is required to fully refresh stale CMake/link state on Windows.

@@ -839,3 +839,9 @@ Completed release-engineering closure work:
 ### Implemented
 - Completed steps 1-4.
 - Kept scope constrained to test sources + CMake test registration helper behavior.
+
+## 2026-03-09 — editor_tools_tests missing-main closure
+- Audited `editor_tools_tests` registration and confirmed it uses the shared `engine_add_test(...)` path.
+- Verified source behavior: the test file still provided its own `main()`, preventing Catch main linkage in helper logic.
+- Applied minimal, scoped correction: migrated the file to Catch `TEST_CASE` so shared linkage rules attach `Catch2::Catch2WithMain`.
+- Validation note: a clean rebuild flow (delete build directory, reconfigure, then rebuild) is required to ensure link behavior is refreshed.

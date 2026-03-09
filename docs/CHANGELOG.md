@@ -256,3 +256,9 @@
 - Fixed remaining Windows missing-main linker failures for `content_packer_tests` and `entity_tests` by converting both test sources to Catch `TEST_CASE` style and relying on `Catch2::Catch2WithMain` for executable entrypoint ownership.
 - Updated CMake test registration so Catch-discovered tests can still receive dependency metadata; `content_packer_tests` now preserves dependency ordering on `content_packer_generate` without standalone main argv handling.
 - Required a deleted-build-directory clean rebuild to fully apply test target/linkage changes.
+
+## Unreleased
+### Fixed
+- Fixed remaining Windows missing-main linker failure for `editor_tools_tests` by converting `tests/editor_tools_tests.cpp` from standalone `main()` to Catch `TEST_CASE` style so `Catch2::Catch2WithMain` is linked through existing shared CMake test helpers.
+- Kept `editor_tools_tests` target naming and runtime DLL deployment behavior unchanged.
+- Required a deleted-build-directory clean rebuild to fully apply refreshed CMake/link state.

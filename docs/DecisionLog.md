@@ -804,3 +804,10 @@
   - `content_packer_tests` now validates generated pack output by probing expected generated pak locations instead of consuming custom process argv.
   - CMake `engine_register_test(...)` now forwards `DEPENDS` metadata when using `catch_discover_tests(...)`, preserving generation-before-validation ordering for discovered Catch tests.
   - Clean rebuild is mandatory after deleting the build directory.
+
+## 2026-03-09 — Decision: keep editor_tools_tests in shared Catch ownership
+- Context: `editor_tools_tests` was the remaining test executable reporting unresolved `main` during Windows linking.
+- Decision: preserve target name and deployment behavior, and align with suite convention by keeping this target Catch-based instead of introducing bespoke standalone entrypoint logic.
+- Implemented action: replaced standalone `main()` in `tests/editor_tools_tests.cpp` with Catch `TEST_CASE` assertions so existing build helpers supply `Catch2::Catch2WithMain` automatically.
+- Consequence: test entrypoint ownership is centralized, and future helper-driven test registration remains consistent.
+- Operational note: force a clean rebuild (delete build directory) to avoid stale linker/configuration artifacts.
