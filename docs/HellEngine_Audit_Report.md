@@ -1,3 +1,9 @@
+## Audit Update — 2026-03-09 (Tests/CMake Main Ownership)
+- Root cause confirmed in shared helper logic: Catch enablement was inferred via include-text scanning and supplemented by force-listed targets, which left non-matching Catch tests vulnerable to linking without an entrypoint (`main` unresolved/LNK1120).
+- Systemic rule adopted: executable ownership of `main()` is the only classifier. If test source defines `main()`, it is standalone; otherwise the target links `Catch2::Catch2WithMain` and uses Catch discovery.
+- Exact fix applied in `CMakeLists.txt`: removed `engine_source_uses_catch(...)` and force-target exceptions from `engine_link_catch_main_if_needed(...)`; restored previously hard-patched outliers (`boss_phase_tests`, `editor_tools_tests`) to the shared helper path.
+- Operational note: a full clean rebuild is required so CMake regenerates link lines and Catch discovery metadata for all tests.
+
 > **2026-03-09 boss_phase_tests linker closure:** Root cause for last red build was missing guaranteed Catch entrypoint ownership on `boss_phase_tests.exe`, yielding unresolved `main`/`LNK1120` on Windows. Applied minimal CMake target fix to explicitly link `Catch2::Catch2WithMain` while keeping target naming, Catch discovery flow, and runtime DLL deployment behavior intact. Validation requires clean rebuild from a deleted build directory so regenerated linker/test-discovery commands are active.
 
 # HellEngine Audit Report

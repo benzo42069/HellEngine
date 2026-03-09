@@ -1,3 +1,10 @@
+## 2026-03-09 - Shared test helper: systemic Catch main rule
+- Fixed unresolved `main` / `LNK1120` failures across remaining test executables by updating shared CMake test creation logic.
+- Root cause: Catch classification relied on include matching and per-target force-lists, allowing Catch-based targets to miss `Catch2::Catch2WithMain`.
+- New rule: tests without an explicit `main()` always link `Catch2::Catch2WithMain`; only explicit standalone tests with a real `main()` skip Catch main.
+- Exact CMake changes: removed `engine_source_uses_catch(...)` and target force-list behavior; simplified `engine_link_catch_main_if_needed(...)` to gate only on `engine_source_defines_main(...)`; restored `boss_phase_tests` and `editor_tools_tests` to `engine_add_test(...)` shared path.
+- Note: perform a full clean rebuild (delete build directory) so regenerated link/discovery commands take effect.
+
 ## Unreleased
 ### Fixed
 - Fixed remaining Windows missing-main linker failure for `pattern_graph_perf_tests` by guaranteeing `Catch2::Catch2WithMain` linkage via `_engine_force_catch_main_targets` in `engine_link_catch_main_if_needed(...)`.
