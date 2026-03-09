@@ -1,79 +1,68 @@
 #include <engine/entities.h>
 #include <engine/patterns.h>
 
-#include <cstdlib>
+#include <catch2/catch_test_macros.hpp>
+
 #include <fstream>
-#include <iostream>
 
 #include <nlohmann/json.hpp>
 
-int main(int argc, char** argv) {
-    if (argc < 2) {
-        std::cerr << "usage: content_packer_tests <pak_path>\n";
-        return EXIT_FAILURE;
+TEST_CASE("Content packer output includes required metadata and content", "[content_packer]") {
+    const char* pakCandidates[] = {
+        "content_test.pak",
+        "../content_test.pak",
+    };
+
+    const char* pakPath = nullptr;
+    for (const char* candidate : pakCandidates) {
+        std::ifstream probe(candidate);
+        if (probe.good()) {
+            pakPath = candidate;
+            break;
+        }
     }
+
+    REQUIRE(pakPath != nullptr);
 
     engine::PatternBank patternBank;
-    if (!patternBank.loadFromFile(argv[1])) {
-        std::cerr << "failed to load generated pak patterns\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(patternBank.loadFromFile(pakPath));
 
     engine::EntityDatabase entityDb;
-    if (!entityDb.loadFromFile(argv[1])) {
-        std::cerr << "failed to load generated pak entities\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(entityDb.loadFromFile(pakPath));
 
-    if (patternBank.patterns().empty() || entityDb.templates().empty()) {
-        std::cerr << "generated pak missing expected content\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE_FALSE(patternBank.patterns().empty());
+    REQUIRE_FALSE(entityDb.templates().empty());
 
-    std::ifstream in(argv[1]);
-    if (!in.good()) {
-        std::cerr << "failed to open generated pak json\n";
-        return EXIT_FAILURE;
-    }
+    std::ifstream in(pakPath);
+    REQUIRE(in.good());
 
     nlohmann::json pakJson;
     in >> pakJson;
 
-    if (!pakJson.contains("importRegistry") || !pakJson["importRegistry"].is_array()) {
-        std::cerr << "generated pak missing importRegistry\n";
-        return EXIT_FAILURE;
-    }
-    if (!pakJson.contains("schemaVersion") || pakJson["schemaVersion"].get<int>() != 2) {
-        std::cerr << "generated pak missing expected schemaVersion=2\n";
-        return EXIT_FAILURE;
-    }
-    if (!pakJson.contains("packVersion") || pakJson["packVersion"].get<int>() != 4) {
-        std::cerr << "generated pak missing expected packVersion=4\n";
-        return EXIT_FAILURE;
-    }
-    if (!pakJson.contains("compatibility") || !pakJson["compatibility"].is_object()) {
-        std::cerr << "generated pak missing compatibility metadata\n";
-        return EXIT_FAILURE;
-    }
-    const auto& compatibility = pakJson["compatibility"];
-    if (!compatibility.contains("minRuntimePackVersion") || compatibility["minRuntimePackVersion"].get<int>() != 2 ||
-        !compatibility.contains("maxRuntimePackVersion") || compatibility["maxRuntimePackVersion"].get<int>() != 4) {
-        std::cerr << "generated pak compatibility range mismatch\n";
-        return EXIT_FAILURE;
-    }
-    if (!pakJson.contains("atlasBuild") || !pakJson["atlasBuild"].is_array()) {
-        std::cerr << "generated pak missing atlasBuild metadata\n";
-        return EXIT_FAILURE;
-    }
-    if (!pakJson.contains("animationBuild") || !pakJson["animationBuild"].is_array()) {
-        std::cerr << "generated pak missing animationBuild metadata\n";
-        return EXIT_FAILURE;
-    }
-    if (!pakJson.contains("variantBuild") || !pakJson["variantBuild"].is_array()) {
-        std::cerr << "generated pak missing variantBuild metadata\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(pakJson.contains("importRegistry"));
+    REQUIRE(pakJson["importRegistry"].is_array());
 
-    std::cout << "content_packer_tests passed\n";
-    return EXIT_SUCCESS;
+    REQUIRE(pakJson.contains("schemaVersion"));
+    REQUIRE(pakJson["schemaVersion"].get<int>() == 2);
+
+    REQUIRE(pakJson.contains("packVersion"));
+    REQUIRE(pakJson["packVersion"].get<int>() == 4);
+
+    REQUIRE(pakJson.contains("compatibility"));
+    REQUIRE(pakJson["compatibility"].is_object());
+
+    const auto& compatibility = pakJson["compatibility"];
+    REQUIRE(compatibility.contains("minRuntimePackVersion"));
+    REQUIRE(compatibility["minRuntimePackVersion"].get<int>() == 2);
+    REQUIRE(compatibility.contains("maxRuntimePackVersion"));
+    REQUIRE(compatibility["maxRuntimePackVersion"].get<int>() == 4);
+
+    REQUIRE(pakJson.contains("atlasBuild"));
+    REQUIRE(pakJson["atlasBuild"].is_array());
+
+    REQUIRE(pakJson.contains("animationBuild"));
+    REQUIRE(pakJson["animationBuild"].is_array());
+
+    REQUIRE(pakJson.contains("variantBuild"));
+    REQUIRE(pakJson["variantBuild"].is_array());
 }

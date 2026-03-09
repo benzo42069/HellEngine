@@ -1760,3 +1760,12 @@ Behavioral guarantee remains unchanged:
 
 Extensibility note:
 - future session-level cadence/policy additions (e.g., scheduled tutorial prompts, deterministic telemetry windows) should be added to `SessionOrchestrationSubsystem` rather than inlining additional policy branches into `GameplaySession::updateGameplay()`.
+
+## Test Build Hotfix — content_packer_tests + entity_tests missing-main closure (2026-03-09)
+- Root cause recorded by build engineering: the two remaining failing test targets were not consistently on the Catch-owned entrypoint path across environments, producing `unresolved external symbol main` / `LNK1120` in failing Windows link steps.
+- Chosen approach: standardize both tests onto Catch `TEST_CASE` style and rely on `Catch2::Catch2WithMain` as the single entrypoint provider for consistency with the rest of the suite.
+- Exact fixes:
+  - Converted `tests/content_packer_tests.cpp` from standalone `int main(...)` to Catch assertions.
+  - Converted `tests/entity_tests.cpp` from standalone `int main()` to Catch assertions.
+  - Updated CMake test registration so Catch-discovered tests can still inherit test dependency metadata (`DEPENDS`) and so `content_packer_tests` keeps its dependency on `content_packer_generate` without custom argv plumbing.
+- Validation contract: this fix requires a deleted-build-directory clean rebuild to ensure stale executables/cached link metadata are not reused.
