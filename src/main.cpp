@@ -13,11 +13,18 @@
 #include <engine/version.h>
 
 #include <filesystem>
+#include <atomic>
 #include <exception>
 #include <string>
 
 int main(int argc, char** argv) {
 #ifdef _WIN32
+    static std::atomic_flag mainEntered = ATOMIC_FLAG_INIT;
+    if (mainEntered.test_and_set()) {
+        engine::logError("Detected recursive entry into main on Windows; aborting to prevent stack overflow.");
+        return 2;
+    }
+
     SDL_SetMainReady();
 #endif
     engine::Logger::instance().setLevel(engine::LogLevel::Info);
