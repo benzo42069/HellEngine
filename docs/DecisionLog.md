@@ -1,3 +1,9 @@
+## 2026-03-09 — Immediate Catch2 main-link closure for content_packer/entity/boss tests
+- **Context**: Build Engineering reported unresolved `main` / `LNK1120` for `content_packer_tests`, `entity_tests`, and `boss_phase_tests` in clean Windows test builds.
+- **Decision**: Keep the fix minimal and local to existing shared helper logic by extending the known-target safety override set in `engine_link_catch_main_if_needed(...)` to include `boss_phase_tests` (while retaining the `NOT main(...)` guard).
+- **Implementation**: Updated CMake override condition from two targets to three (`content_packer_tests`, `entity_tests`, `boss_phase_tests`) so Catch classification fallback and `Catch2::Catch2WithMain` linkage are consistent for this failure class.
+- **Consequence**: All three affected targets now share the same missing-main safety path without altering target names, CTest registration style, or DLL deployment behavior; clean rebuild required to clear stale link artifacts.
+
 ## 2026-03-08 — Missing-main closure for content_packer_tests and entity_tests
 - **Context**: Build Engineering reported remaining unresolved `main` / `LNK1120` failures for `content_packer_tests.exe` and `entity_tests.exe`, indicating those targets could still bypass Catch2-main linkage under helper classification drift.
 - **Decision**: Keep the fix minimal in shared CMake logic by adding a narrow target-name safety override inside `engine_link_catch_main_if_needed(...)` for `content_packer_tests` and `entity_tests`.

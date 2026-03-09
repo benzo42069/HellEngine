@@ -1,3 +1,10 @@
+## 2026-03-09 — Immediate Build Fix: missing Catch main for remaining test executables (completed)
+- [x] Audited `content_packer_tests`, `entity_tests`, and `boss_phase_tests` target wiring against working Catch-based targets.
+- [x] Confirmed root cause: shared helper safety override covered only two targets, leaving `boss_phase_tests` outside the forced Catch classification guard when no local `main(...)` exists.
+- [x] Applied smallest safe CMake change by extending the existing `engine_link_catch_main_if_needed(...)` override target set to include `boss_phase_tests`.
+- [x] Preserved target names, discovery behavior, and Windows runtime DLL deployment steps.
+- [x] Noted clean rebuild requirement (delete build dir, reconfigure, rebuild) to guarantee fresh link inputs.
+
 ## 2026-03-08 — Build Engineering follow-up: content_packer_tests/entity_tests missing-main fix (completed)
 - [x] Audited `content_packer_tests` and `entity_tests` target definitions versus working Catch test targets.
 - [x] Applied minimal shared-helper fix in `engine_link_catch_main_if_needed(...)` for the two named targets.
