@@ -45,7 +45,7 @@ function Copy-RuntimeDependencies {
     $copied = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
 
     foreach ($dir in $candidateDirs) {
-        Get-ChildItem -Path $dir -Filter "*.dll" -File | ForEach-Object {
+        Get-ChildItem -Path $dir -Filter "*.dll" -File | Sort-Object Name | ForEach-Object {
             if ($copied.Add($_.Name)) {
                 Copy-Item $_.FullName (Join-Path $DestinationDir $_.Name)
             }
@@ -68,19 +68,23 @@ function Write-ReleaseManifest {
 
     $manifestLines = @(
         "# HellEngine Portable Release Manifest",
-        "GeneratedUtc=$([DateTime]::UtcNow.ToString('o'))",
-        "PortableDir=$PortableDir",
+        "FormatVersion=1",
         "",
         "## File Inventory"
     )
 
-    Get-ChildItem -Path $PortableDir -File -Recurse |
-        Sort-Object FullName |
-        ForEach-Object {
-            $relative = [System.IO.Path]::GetRelativePath($PortableDir, $_.FullName)
-            $hash = (Get-FileHash -Algorithm SHA256 -Path $_.FullName).Hash
-            $manifestLines += "$relative | $($_.Length) bytes | SHA256=$hash"
+    $files = Get-ChildItem -Path $PortableDir -File -Recurse | ForEach-Object {
+        [PSCustomObject]@{
+            Relative = [System.IO.Path]::GetRelativePath($PortableDir, $_.FullName)
+            FullName = $_.FullName
+            Length = $_.Length
         }
+    } | Sort-Object Relative
+
+    foreach ($file in $files) {
+        $hash = (Get-FileHash -Algorithm SHA256 -Path $file.FullName).Hash
+        $manifestLines += "$($file.Relative) | $($file.Length) bytes | SHA256=$hash"
+    }
 
     Set-Content -Path $ManifestPath -Value $manifestLines -Encoding UTF8
 }

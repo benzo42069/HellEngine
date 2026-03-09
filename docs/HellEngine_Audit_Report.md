@@ -1,3 +1,7 @@
+## 2026-03-09 Build/Release reliability closure update
+- Top-level runtime binaries now share the same runtime-DLL deployment mechanism as tests (`TARGET_RUNTIME_DLLS` via `engine_deploy_runtime_dlls`), reducing clean/incremental drift risk on Windows.
+- Portable release manifest generation no longer includes timestamp/path entropy; inventory is stable-sorted by relative path with fixed format metadata for reproducible release validation diffs.
+
 > **2026-03-08 extensibility update:** Public/plugin/mod boundaries were tightened without widening internals: host-facing compatibility/error helper APIs were added to the public plugin contract, while registry storage/order remains internal and non-contract.
 
 

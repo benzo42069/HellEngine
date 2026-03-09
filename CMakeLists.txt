@@ -265,6 +265,9 @@ function(engine_deploy_runtime_dlls target_name)
   endif()
 endfunction()
 
+engine_deploy_runtime_dlls(EngineDemo)
+engine_deploy_runtime_dlls(ContentPacker)
+
 function(engine_source_uses_catch out_var source_file)
   if(IS_ABSOLUTE "${source_file}")
     set(_engine_test_source_path "${source_file}")

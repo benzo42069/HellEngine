@@ -53,7 +53,7 @@ Portable bundles intentionally include:
 - source/content examples: `data/`, `assets/`, `examples/`
 - configuration and docs: `engine_config.json`, `BuildAndRun.md`, `BuildAndRelease.md`, `VERSION.txt`
 - runtime DLL dependencies auto-discovered from build output (`*.dll` in `build-release/Release` and `build-release`)
-- release manifest: `RELEASE_MANIFEST.txt` with full file inventory, sizes, and SHA-256 hashes
+- release manifest: `RELEASE_MANIFEST.txt` with deterministic format/version header and stable sorted full file inventory, sizes, and SHA-256 hashes
 
 ## Content pack compatibility enforcement
 - Runtime pack compatibility version is now centralized as `kRuntimePackVersion = 4`.
