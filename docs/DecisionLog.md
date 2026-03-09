@@ -34,6 +34,16 @@
 
 # Decision Log
 
+## 2026-03-09 — Keep one editor window but split gameplay tooling module
+- **Decision:** Keep the existing single Control Center window workflow while extracting gameplay-focused panels into a dedicated translation unit (`editor_tools_gameplay_panel.cpp`).
+- **Rationale:** The previous pattern panel file still contained projectile/encounter/trait workflows, increasing cognitive load and maintenance friction. Separating these responsibilities improves maintainability without changing user-facing behavior.
+- **Result:** Clear module boundaries: workspace shell/content flow, pattern authoring, gameplay authoring, palette/FX + standards, and services/validation.
+
+## 2026-03-09 — Add explicit workflow shortcuts instead of adding more top-level panels
+- **Decision:** Add in-workspace workflow shortcuts (Content Pass, Pattern Pass, Palette/FX Pass, Diagnostics Pass) that toggle panel visibility defaults.
+- **Rationale:** This improves clarity for creators and reduces panel hunting while avoiding arbitrary visual churn or new persistent UI complexity.
+- **Result:** Faster task-oriented navigation with stable existing panel behavior and state.
+
 ## 2026-03-08 — Catch2 missing-main class fix via unified test helper
 - **Context**: Catch-based tests were still split across multiple registration paths, and any Catch source wired through the plain-test path could miss `Catch2::Catch2WithMain`, causing unresolved `main`/`LNK1120` on Windows.
 - **Decision**: Replace the split plain/catch registration API with one `engine_add_test(...)` helper that inspects test source content for Catch includes and applies Catch linking/discovery automatically when needed.

@@ -9,6 +9,12 @@
 
 # Changelog
 
+## 2026-03-09 — Editor tooling structure closure + UX polish
+- Added `src/engine/editor/editor_tools_gameplay_panel.cpp` and moved gameplay authoring responsibilities out of the pattern panel (projectile debug, encounter/wave editor, trait/upgrade preview, and encounter asset helpers).
+- Updated CMake source registration to compile the new gameplay editor module.
+- Improved workspace UX with explicit workflow shortcuts (Content, Pattern, Palette/FX, Diagnostics), dynamic content browser scanning from `data/`, and clearer empty states/rescan guidance.
+- Preserved existing runtime/editor behavior while reducing panel responsibility density and improving workflow discoverability.
+
 ## Unreleased
 ### Fixed
 - Standardized Catch2 target setup through shared CMake helpers so all Catch-based test executables are linked with `Catch2::Catch2WithMain`, eliminating Windows `unresolved external symbol main`/`LNK1120` failures caused by per-target drift.

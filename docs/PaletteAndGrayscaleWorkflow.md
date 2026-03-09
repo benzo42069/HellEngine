@@ -3,6 +3,8 @@
 This guide explains how creators author palette templates and connect them to grayscale/monochrome asset workflows.
 
 ## 1) Where palette data lives
+> Editor note: use **Workflow Shortcuts → Palette/FX Pass** in Control Center to focus palette + preview panels before editing templates.
+
 - Palette templates: `data/palettes/palette_fx_templates.json`
 - Asset import manifests (grayscale/monochrome flags): `data/art_import_manifest.json` (or your own manifest file)
 

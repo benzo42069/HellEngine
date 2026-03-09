@@ -34,6 +34,9 @@
    - logger tail buffering for crash reports
 
 5. **Tooling/editor** (`editor_tools.*`)
+   - module split: `editor_tools_core`, `editor_tools_workspace_panel`, `editor_tools_pattern_panel`, `editor_tools_gameplay_panel`, `editor_tools_services`
+   - workflow-oriented shell: content browsing + inspector + telemetry preview + validator
+   - focused authoring panels: pattern graph/generation, palette/FX template editing, gameplay/encounter tooling
    - in-engine control center
    - pattern graph editing/preview
    - validation status and debug controls

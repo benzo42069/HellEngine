@@ -1,5 +1,10 @@
 ## 2026-03-09 — Immediate Build Fix: missing Catch main for remaining test executables (completed)
 
+- [x] Audited editor panel ownership and identified mixed gameplay responsibilities inside the pattern panel implementation unit.
+- [x] Split gameplay authoring panels (projectile debug, encounter/wave editor, trait/upgrade preview, encounter asset helpers) into `editor_tools_gameplay_panel.cpp` to reduce mega-panel coupling.
+- [x] Added workspace workflow shortcuts for core creator flows (content, pattern, palette/FX, diagnostics) without changing runtime behavior.
+- [x] Improved empty/error UX states by replacing static content browser seeds with live `data/` scanning and explicit “Rescan Content” guidance when no files are found.
+
 - [x] Build/release reliability audit completed for clean rebuild, incremental rebuild, release packaging, and runtime DLL deployment paths.
 - [x] Applied minimal CMake closure: route `EngineDemo` and `ContentPacker` through existing `engine_deploy_runtime_dlls(...)` helper for consistent post-build runtime dependency deployment on Windows.
 - [x] Hardened packaging determinism: `RELEASE_MANIFEST.txt` now emits stable sorted relative-path inventory with fixed format metadata (no generated timestamp/path noise).
