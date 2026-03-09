@@ -1,4 +1,10 @@
 ## 2026-03-09 — Immediate Build Fix: missing Catch main for remaining test executables (completed)
+
+- [x] Build/release reliability audit completed for clean rebuild, incremental rebuild, release packaging, and runtime DLL deployment paths.
+- [x] Applied minimal CMake closure: route `EngineDemo` and `ContentPacker` through existing `engine_deploy_runtime_dlls(...)` helper for consistent post-build runtime dependency deployment on Windows.
+- [x] Hardened packaging determinism: `RELEASE_MANIFEST.txt` now emits stable sorted relative-path inventory with fixed format metadata (no generated timestamp/path noise).
+- [x] Updated build/release docs to reflect Catch2 usage, deterministic manifest expectations, and final release workflow constraints.
+
 - [x] Audited `content_packer_tests`, `entity_tests`, and `boss_phase_tests` target wiring against working Catch-based targets.
 - [x] Confirmed root cause: shared helper safety override covered only two targets, leaving `boss_phase_tests` outside the forced Catch classification guard when no local `main(...)` exists.
 - [x] Applied smallest safe CMake change by extending the existing `engine_link_catch_main_if_needed(...)` override target set to include `boss_phase_tests`.
