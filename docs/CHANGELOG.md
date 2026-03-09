@@ -1,3 +1,7 @@
+## Unreleased
+### Fixed
+- Fixed final Windows missing-main linker failure for `boss_phase_tests` by explicitly linking `Catch2::Catch2WithMain` in target setup while preserving Catch discovery and runtime DLL deployment behavior; requires a full clean rebuild so regenerated link commands are used.
+
 # Changelog
 
 ## Unreleased

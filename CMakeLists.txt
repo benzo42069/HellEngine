@@ -377,7 +377,11 @@ engine_add_test(content_import_pipeline_tests tests/content_import_pipeline_test
 engine_add_test(entity_tests tests/entity_tests.cpp)
 engine_add_test(trait_tests tests/trait_tests.cpp)
 engine_add_test(archetype_tests tests/archetype_tests.cpp)
-engine_add_test(boss_phase_tests tests/boss_phase_tests.cpp)
+engine_add_test_target(boss_phase_tests tests/boss_phase_tests.cpp)
+# Final missing-main guard: keep explicit Catch2 main linkage for this target.
+target_link_libraries(boss_phase_tests PRIVATE Catch2::Catch2WithMain)
+set_property(TARGET boss_phase_tests PROPERTY ENGINE_TEST_USES_CATCH_DISCOVERY TRUE)
+engine_register_test(boss_phase_tests)
 engine_add_test(run_structure_tests tests/run_structure_tests.cpp)
 engine_add_test(meta_progression_tests tests/meta_progression_tests.cpp)
 engine_add_test(persistence_tests tests/persistence_tests.cpp)

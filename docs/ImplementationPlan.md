@@ -1,3 +1,10 @@
+## 2026-03-09 — Final missing-main fix: boss_phase_tests (completed)
+- [x] Audited `boss_phase_tests` CMake target wiring against known-good Catch targets (`content_packer_tests`, `entity_tests`, `pattern_tests`).
+- [x] Confirmed root cause: the target still needed explicit Catch2 entrypoint linkage to guarantee `main` ownership under Windows link behavior.
+- [x] Applied minimal CMake fix: switched `boss_phase_tests` to explicit `engine_add_test_target(...)` + `target_link_libraries(... Catch2::Catch2WithMain)` + forced Catch discovery property + `engine_register_test(...)`.
+- [x] Preserved target name, test discovery behavior, and runtime DLL deployment logic (`engine_deploy_runtime_dlls(...)` still invoked in helper path).
+- [x] Recorded clean rebuild requirement (delete build directory, reconfigure, rebuild) to ensure regenerated linker/discovery steps are used.
+
 ## 2026-03-09 — Build hotfix: missing-main tests + empty copy_if_different (completed)
 - [x] Audited failing test targets: `content_packer_tests`, `editor_tools_tests`, `boss_phase_tests`, and `entity_tests`.
 - [x] Applied smallest safe CMake fix in shared helper: forced Catch classification list for those four targets while preserving `NOT main(...)` guard before linking `Catch2::Catch2WithMain`.
