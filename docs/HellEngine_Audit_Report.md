@@ -421,3 +421,18 @@ Residual risk:
   1. Catch target-definition drift allowed some Catch executables to be defined without `Catch2::Catch2WithMain`, producing missing `main` link failures.
   2. Runtime DLL deployment for tests was not standardized, causing `0xc0000135` during Catch discovery when SDL2/SDL2_mixer DLLs were unavailable beside test binaries.
 - The remediation introduces centralized CMake helpers for plain and Catch tests and a single reusable Windows DLL deployment helper (`TARGET_RUNTIME_DLLS` copy) applied to all test targets.
+
+## Audit Follow-up (2026-03-09): GameplaySession ownership finalization
+- **Status**: Addressed.
+- Implemented a final ownership cleanup pass by introducing `SessionOrchestrationSubsystem` and moving the remaining policy-heavy orchestration logic out of `GameplaySession::updateGameplay()`.
+
+### What moved out of `GameplaySession`
+- content hot-reload polling cadence and content-type dispatch/fanout.
+- periodic upgrade cadence policy and upgrade-debug policy application.
+
+### Final boundary result
+- `GameplaySession` is now a deterministic coordinator that sequences dedicated subsystems rather than embedding policy logic inline.
+- Runtime behavior contract is preserved: deterministic update order and replay behavior are unchanged.
+
+### Extensibility guidance
+- New session policy/cadence features should be introduced via `SessionOrchestrationSubsystem` to avoid reintroducing orchestration-policy coupling inside `GameplaySession`.

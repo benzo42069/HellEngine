@@ -190,3 +190,8 @@
 ### Fixed
 - Fixed Windows test-link missing-main failures for `render2d_tests` and `pattern_tests` by switching both targets to the shared Catch2 helper path (`engine_add_catch_test`) so `Catch2::Catch2WithMain` is linked consistently.
 - Converted `tests/render2d_tests.cpp` and `tests/pattern_tests.cpp` to Catch `TEST_CASE` style so test entrypoint ownership remains centralized in Catch2 main.
+
+## 2026-03-09
+- Finalized GameplaySession runtime ownership cleanup by adding `SessionOrchestrationSubsystem` for session-level hot-reload cadence and upgrade cadence/debug policy.
+- Delegated remaining orchestration-policy blocks out of `GameplaySession::updateGameplay()` while preserving deterministic tick order and replay-sensitive behavior.
+- Extended `gameplay_session_state_tests` with coverage for orchestration subsystem upgrade cadence and debug-option application paths.
