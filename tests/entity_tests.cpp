@@ -2,21 +2,17 @@
 #include <engine/patterns.h>
 #include <engine/projectiles.h>
 
-#include <cstdlib>
-#include <iostream>
+#include <catch2/catch_test_macros.hpp>
 
-int main() {
+TEST_CASE("Entity system spawns enemies and emits projectile/resource stats", "[entity]") {
     engine::EntityDatabase db;
-    if (!db.loadFromFile("data/entities.json") && !db.loadFromFile("../data/entities.json")) {
-        std::cerr << "failed to load entities\n";
-        return EXIT_FAILURE;
-    }
+    const bool entitiesLoaded = db.loadFromFile("data/entities.json") || db.loadFromFile("../data/entities.json");
+    REQUIRE(entitiesLoaded);
 
     engine::PatternBank pb;
-    if (!pb.loadFromFile("assets/patterns/sandbox_patterns.json") && !pb.loadFromFile("../assets/patterns/sandbox_patterns.json")) {
-        std::cerr << "failed to load patterns\n";
-        return EXIT_FAILURE;
-    }
+    const bool patternsLoaded = pb.loadFromFile("assets/patterns/sandbox_patterns.json")
+        || pb.loadFromFile("../assets/patterns/sandbox_patterns.json");
+    REQUIRE(patternsLoaded);
 
     engine::ProjectileSystem proj;
     proj.initialize(20000, 420.0F, 32, 18);
@@ -33,21 +29,9 @@ int main() {
     }
 
     const auto& stats = sys.stats();
-    if (stats.aliveEnemies == 0) {
-        std::cerr << "expected alive enemies from spawn rules\n";
-        return EXIT_FAILURE;
-    }
-
-    if (proj.stats().activeCount == 0) {
-        std::cerr << "expected projectile fire from enemy attack patterns\n";
-        return EXIT_FAILURE;
-    }
-
-    if (stats.harvestedNodes == 0 || stats.upgradeCurrency <= 0.0F || stats.healthRecoveryAccum <= 0.0F) {
-        std::cerr << "expected harvested resource yields (currency/health/buff)\n";
-        return EXIT_FAILURE;
-    }
-
-    std::cout << "entity_tests passed\n";
-    return EXIT_SUCCESS;
+    REQUIRE(stats.aliveEnemies > 0);
+    REQUIRE(proj.stats().activeCount > 0);
+    REQUIRE(stats.harvestedNodes > 0);
+    REQUIRE(stats.upgradeCurrency > 0.0F);
+    REQUIRE(stats.healthRecoveryAccum > 0.0F);
 }

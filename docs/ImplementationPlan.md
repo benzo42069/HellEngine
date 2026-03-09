@@ -819,3 +819,13 @@ Completed release-engineering closure work:
 - Extended `gameplay_session_state_tests` with subsystem-level checks for:
   - deterministic upgrade cadence gating behavior
   - upgrade debug option application behavior (HUD toggles + rarity force path)
+
+## 2026-03-09 — Missing-main closure plan (content_packer_tests/entity_tests)
+1. Audit current test sources and CMake registration for guaranteed entrypoint ownership.
+2. Convert both failing targets to Catch `TEST_CASE` implementations (no local `main`).
+3. Ensure CMake registration links Catch main and preserves `content_packer_generate` ordering dependency.
+4. Delete build directory, reconfigure, rebuild, and run targeted tests plus full ctest pass.
+
+### Implemented
+- Completed steps 1-4.
+- Kept scope constrained to test sources + CMake test registration helper behavior.

@@ -232,3 +232,9 @@
 - Finalized GameplaySession runtime ownership cleanup by adding `SessionOrchestrationSubsystem` for session-level hot-reload cadence and upgrade cadence/debug policy.
 - Delegated remaining orchestration-policy blocks out of `GameplaySession::updateGameplay()` while preserving deterministic tick order and replay-sensitive behavior.
 - Extended `gameplay_session_state_tests` with coverage for orchestration subsystem upgrade cadence and debug-option application paths.
+
+## Unreleased
+### Fixed
+- Fixed remaining Windows missing-main linker failures for `content_packer_tests` and `entity_tests` by converting both test sources to Catch `TEST_CASE` style and relying on `Catch2::Catch2WithMain` for executable entrypoint ownership.
+- Updated CMake test registration so Catch-discovered tests can still receive dependency metadata; `content_packer_tests` now preserves dependency ordering on `content_packer_generate` without standalone main argv handling.
+- Required a deleted-build-directory clean rebuild to fully apply test target/linkage changes.

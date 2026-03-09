@@ -784,3 +784,15 @@
 - **Rationale**: Completes runtime ownership partitioning so `GameplaySession` acts as deterministic phase coordinator rather than policy + orchestration + runtime mutator in one unit.
 - **Determinism note**: Preserved tick-gated cadence (`kHotReloadPollTicks`, 300-tick upgrade roll cadence) and existing side-effect ordering.
 - **Migration Notes**: Public API unchanged (`GameplaySession::updateGameplay()`, `onUpgradeNavigation()`); behavior remains stable while internals are delegated.
+
+## 2026-03-09 — Decision: resolve remaining missing-main failures by full Catch standardization
+- Context: `content_packer_tests.exe` and `entity_tests.exe` were the final linker failures (`main` unresolved) blocking green builds.
+- Options considered:
+  1. Keep standalone mains and harden ad-hoc entrypoint handling.
+  2. Convert to standard Catch tests and centralize entrypoint ownership through `Catch2::Catch2WithMain`.
+- Decision: Option (2).
+- Rationale: aligns with the working suite pattern, removes per-target entrypoint drift, and is the fastest low-risk path to green.
+- Consequences:
+  - `content_packer_tests` now validates generated pack output by probing expected generated pak locations instead of consuming custom process argv.
+  - CMake `engine_register_test(...)` now forwards `DEPENDS` metadata when using `catch_discover_tests(...)`, preserving generation-before-validation ordering for discovered Catch tests.
+  - Clean rebuild is mandatory after deleting the build directory.
