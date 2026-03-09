@@ -140,6 +140,7 @@ class ControlCenterToolSuite {
     EncounterGraphAsset buildEncounterAsset() const;
     void ensurePatternGraphSeeded();
     void ensureEncounterNodesSeeded();
+    void refreshContentBrowserEntries();
     void appendConsole(const std::string& message);
 
     bool initialized_ {false};

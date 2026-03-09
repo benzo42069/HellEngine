@@ -1,7 +1,9 @@
 #pragma once
 
 #include <engine/camera_shake.h>
+#include <engine/content_watcher.h>
 #include <engine/config.h>
+#include <engine/editor_tools.h>
 #include <engine/input_system.h>
 #include <engine/projectiles.h>
 #include <engine/standards.h>
@@ -60,6 +62,21 @@ class EncounterSimulationSubsystem {
     void resolveCpuDeterministicCollisions(ProjectileSystem& projectiles, EntitySystem& entities, const PlayerCombatState& playerState, EncounterRuntimeState& encounter, PresentationState& presentation) const;
     void emitZoneTransitionFeedback(const ZoneDefinition* zoneBeforeUpdate, const ZoneDefinition* zoneAfterUpdate, const Vec2& playerPos, std::vector<ShakeParams>& cameraShakes, std::vector<AudioEvent>& audioEvents) const;
     void emitAmbientZoneFeedback(const ZoneDefinition* zoneAfterUpdate, std::vector<ShakeParams>& cameraShakes) const;
+};
+
+class SessionOrchestrationSubsystem {
+  public:
+    struct HotReloadCallbacks {
+        std::function<void(const std::string&)> reloadPatterns {};
+        std::function<void(const std::string&)> reloadEntities {};
+        std::function<void(const std::string&)> reloadTraits {};
+        std::function<void(const std::string&)> reloadDifficulty {};
+        std::function<void(const std::string&)> reloadPalettes {};
+    };
+
+    void pollContentHotReloads(ContentWatcher& watcher, std::uint64_t tickIndex, std::uint64_t pollIntervalTicks, std::uint64_t& nextPollTick, const HotReloadCallbacks& callbacks) const;
+    void updateUpgradeCadence(std::uint64_t tickIndex, bool hasPendingChoices, bool& upgradeScreenOpen, const std::function<bool()>& rollChoices) const;
+    void applyUpgradeDebugOptions(const UpgradeDebugOptions& options, bool hasPendingChoices, bool& perfHudOpen, bool& dangerFieldEnabled, bool& upgradeScreenOpen, const std::function<bool()>& rollChoices, const std::function<void(TraitRarity)>& forcePendingRarity) const;
 };
 
 } // namespace engine

@@ -49,6 +49,8 @@ class AudioSystem {
 
     [[nodiscard]] float busGain(AudioBus bus) const;
     [[nodiscard]] float resolvePlaybackGain(const LoadedClip& clip, float eventGain) const;
+    void clearLoadedSounds();
+    void startMusicIfConfigured();
 
     bool initialized_ {false};
     std::vector<Mix_Chunk*> sounds_;

@@ -14,6 +14,22 @@ Internal implementation details are intentionally separated under:
 
 External modules should only include headers from `engine/public`.
 
+## Public surface closure (v1)
+
+Supported/stable surface for external integrations:
+
+- Engine embedding and launch: `EngineHost`, `EngineLaunchOptions`, `publicApiVersion()`
+- Versioning helpers: `ApiVersion`, `isApiCompatible(...)`, `ENGINE_DEPRECATED(...)`
+- Plugin contracts: `IPlugin`, `IContentPackPlugin`, `IShaderPackPlugin`, `IToolPanelPlugin`
+- Plugin lifecycle helpers: `register*Plugin(...)`, `unregister*Plugin(...)`, `clearRegisteredPlugins()`
+- Compatibility/diagnostics helpers: `isPluginTargetCompatible(...)`, `pluginRegistrationErrorMessage(...)`
+
+Not part of the public contract (intentionally unstable):
+
+- Any file under `include/engine/internal/*`
+- Any file under `src/engine/*`
+- Internal container/layout details for plugin registries and load-order storage
+
 ## Stable boundary
 
 - `engine::public_api::EngineHost` (PIMPL-backed) provides a small host entry point for embedding/running the engine without including heavy runtime internals.
@@ -38,6 +54,23 @@ Current runtime exposes registration and diagnostics/HUD visibility; renderer-si
 Implement `IToolPanelPlugin` and register via `registerToolPanelPlugin(plugin)`.
 
 Registered panels are drawn by the control center each frame, enabling custom tools without editing core `editor_tools.cpp` logic.
+
+## Plugin lifecycle contract (host expectations)
+
+Expected integration flow:
+
+1. Construct plugin instance(s) in host/plugin module.
+2. Populate `PluginMetadata` with stable plugin id and target API version.
+3. Optional preflight: call `isPluginTargetCompatible(metadata)`.
+4. Register via `register*Plugin(...)`.
+5. Surface failures using `pluginRegistrationErrorMessage(...)`.
+6. Before module unload/shutdown, unregister by id (or call `clearRegisteredPlugins()`).
+
+Ownership model:
+
+- Plugin objects are host-owned.
+- Registry stores non-owning pointers.
+- Destroying plugin instances before unregistering is unsupported and unsafe.
 
 ## Versioning + deprecation policy
 
@@ -89,3 +122,13 @@ This keeps extensibility stable while avoiding exposure of runtime internals.
 - Mod authors should prefer content-pack extension (`--content-pack` layering) over runtime/internal symbol coupling.
 - Public plugin hooks are intentionally narrow: content paths, shader-pack descriptors, tool panel draw callbacks.
 - Internal load-order storage and registry structure are not API contract and may evolve between versions.
+
+## Mod/content extension structure (supported)
+
+- Base game and mods are layered as content packs via `--content-pack`.
+- Multiple pack paths are separated with `;` or `,`.
+- Merge order is left-to-right; later packs override earlier entries by `guid`.
+- Conflict overrides are logged for diagnostics.
+- Plugin-provided content pack paths are appended after CLI/base pack paths and follow the same merge semantics.
+
+This is the supported commercial-v1 extension path for gameplay/content mods.

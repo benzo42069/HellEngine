@@ -47,6 +47,37 @@ int main() {
     }
 
 
+
+    engine::SessionOrchestrationSubsystem orchestration;
+    bool upgradeOpen = false;
+    orchestration.updateUpgradeCadence(300, false, upgradeOpen, []() { return true; });
+    if (!upgradeOpen) {
+        std::cerr << "upgrade cadence mismatch\n";
+        return 1;
+    }
+
+    bool perfHudOpen = false;
+    bool dangerFieldEnabled = false;
+    bool rarityForced = false;
+    engine::UpgradeDebugOptions debugOptions;
+    debugOptions.showPerfHud = true;
+    debugOptions.showDangerField = true;
+    debugOptions.spawnUpgradeScreen = false;
+    debugOptions.forcedRarity = static_cast<int>(engine::TraitRarity::Rare);
+    orchestration.applyUpgradeDebugOptions(
+        debugOptions,
+        true,
+        perfHudOpen,
+        dangerFieldEnabled,
+        upgradeOpen,
+        []() { return false; },
+        [&](const engine::TraitRarity) { rarityForced = true; }
+    );
+    if (!perfHudOpen || !dangerFieldEnabled || !rarityForced) {
+        std::cerr << "upgrade debug options mismatch\n";
+        return 1;
+    }
+
     engine::EncounterSimulationSubsystem encounterSubsystem;
     std::vector<engine::ShakeParams> shakes;
     std::vector<engine::AudioEvent> audio;
