@@ -249,10 +249,6 @@ add_executable(EngineDemo
 
 target_link_libraries(EngineDemo PRIVATE engine_core)
 
-if(WIN32)
-  target_compile_definitions(EngineDemo PRIVATE SDL_MAIN_HANDLED)
-endif()
-
 function(engine_deploy_runtime_dlls target_name)
   if(WIN32)
     add_custom_command(
