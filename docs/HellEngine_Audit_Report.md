@@ -11,6 +11,8 @@
 
 # HellEngine — Pre-Finalization Architecture Audit
 
+> **2026-03-09 CMake/tests finalization:** Test-target wiring now follows a single two-step helper model (`engine_add_test_target` + `engine_register_test`) with source-based Catch classification and no target-name exceptions; Catch targets without local `main(...)` link `Catch2::Catch2WithMain`, standalone tests keep explicit `main(...)`, and runtime DLL deployment remains applied before execution/discovery on Windows.
+
 **Auditor role:** Principal Engine Architect / Technical Director  
 **Date:** 2026-03-05  
 **Codebase snapshot:** HellEngine-main (v0.2.0)  

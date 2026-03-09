@@ -34,6 +34,12 @@
 
 # Decision Log
 
+## 2026-03-09 — Unified test target model and registration contract
+- **Context**: Test wiring had accumulated mixed helper/manual paths and target-specific Catch safety overrides, creating long-term drift risk for missing-main and discovery behavior.
+- **Decision**: Use one shared model for all test targets: build/link/deploy in `engine_add_test_target(...)`, registration in `engine_register_test(...)`, Catch classification by source + local `main(...)` detection, no per-target overrides.
+- **Rationale**: Keeps target names stable while making Catch-vs-standalone behavior explicit, auditable, and consistent across Windows discovery and regular CTest execution.
+- **Status**: Implemented.
+
 ## 2026-03-08 — Catch2 missing-main class fix via unified test helper
 - **Context**: Catch-based tests were still split across multiple registration paths, and any Catch source wired through the plain-test path could miss `Catch2::Catch2WithMain`, causing unresolved `main`/`LNK1120` on Windows.
 - **Decision**: Replace the split plain/catch registration API with one `engine_add_test(...)` helper that inspects test source content for Catch includes and applies Catch linking/discovery automatically when needed.

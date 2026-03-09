@@ -1,3 +1,10 @@
+## 2026-03-09 — Finalize test infrastructure and target consistency (completed)
+- [x] Audited every test target in `CMakeLists.txt` and verified Catch vs standalone categories based on source-level includes and local `main(...)`.
+- [x] Removed ad hoc target-name Catch safety overrides; classification now follows one coherent rule set for all targets.
+- [x] Split test helper responsibilities into `engine_add_test_target(...)` (build/link/deploy) and `engine_register_test(...)` (Catch discovery vs plain `add_test` registration).
+- [x] Migrated `content_packer_tests` to the same target helper path while preserving its generated-pack dependency chain (`content_packer_generate` -> `content_packer_tests`).
+- [x] Updated testing docs to reflect final model: Catch tests use `Catch2::Catch2WithMain` unless they intentionally define `main`, standalone tests intentionally keep explicit `main`, and Windows DLL deployment is required for both execution and discovery.
+
 ## 2026-03-09 — Immediate Build Fix: missing Catch main for remaining test executables (completed)
 
 - [x] Build/release reliability audit completed for clean rebuild, incremental rebuild, release packaging, and runtime DLL deployment paths.
