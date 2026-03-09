@@ -1,3 +1,10 @@
+## 2026-03-09 — Decision: keep subsystem callback contract, fix call-site lambdas
+- **Context:** Post-refactor `GameplaySession` passed lambdas returning `TraitSystem::rollChoices()` into orchestration APIs that accept `const std::function<bool()>&`.
+- **Root cause:** Return-type mismatch (`std::array<Trait, 3>` vs `bool`) at call sites, not in subsystem API definitions.
+- **Decision:** Preserve `SessionOrchestrationSubsystem` API and apply a surgical call-site fix only.
+- **Implementation:** Added explicit `-> bool` lambdas in `GameplaySession::updateGameplay(...)`; each lambda calls `rollChoices()` for its side effects and returns `true` to satisfy the contract.
+- **Consequence:** Compile failure resolved with no architecture/API changes and no broadened gameplay-system refactor scope.
+
 ## 2026-03-09 — Final documentation/productization presentation framing
 - **Context**: Creator workflows were largely implemented but product-facing entry points remained fragmented (no repository README and overlap between index docs), reducing external usability despite mature engine/package tooling.
 - **Decision**: Establish a clear documentation information architecture and treat the repository root README as the commercial-facing front door, with `GettingStarted` as execution-first onboarding and `AuthoringGuide` as the persistent creator index.

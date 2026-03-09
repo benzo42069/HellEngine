@@ -1,6 +1,8 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-09: Fixed `GameplaySession` upgrade-orchestration callback signature mismatch after refactor. Root cause: lambdas passed to `SessionOrchestrationSubsystem::updateUpgradeCadence(...)` and `applyUpgradeDebugOptions(...)` returned `TraitSystem::rollChoices()` (`std::array<Trait, 3>`) while subsystem contract expects `std::function<bool()>`. Minimal behavior-preserving fix: explicit `-> bool` lambdas now call `rollChoices()` for side effects and return `true` when invoked.
+
 - 2026-03-09: Final external-facing documentation and package polish pass completed. Added first-class repository `README.md`, refreshed creator indexing (`AuthoringGuide` + `GettingStarted`), and aligned product-facing docs around the concrete build -> pack -> run -> replay-verify loop. Updated architecture/plan/decision/changelog/audit records to explicitly capture final creator workflow coverage and stale-doc cleanup outcomes.
 
 - 2026-03-09: Polished vertical-slice content pass completed for showcase readiness. `sample_slice_stage_01` now escalates through a mixed elite lane (`Basic Enemy Shooter` + new `Vanguard Lancer`), tighter event downtime, and an authored boss phase order that explicitly includes `Spread Lattice` between `Wave Weave` and `Composed Helix`. This keeps encounter pacing authored through content-pack JSON while improving readability/variety and preserving deterministic replay workflow + packaging paths.
