@@ -102,7 +102,10 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
             simulation_.tickIndex,
             traitSystem_.hasPendingChoices(),
             progression_.upgradeScreenOpen,
-            [this]() { return traitSystem_.rollChoices(); }
+            [this]() -> bool {
+                (void)traitSystem_.rollChoices();
+                return true;
+            }
         );
         const UpgradeDebugOptions& upgradeDebug = debugTools_.toolSuite.upgradeDebugOptions();
         sessionOrchestration_.applyUpgradeDebugOptions(
@@ -111,7 +114,10 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
             debugTools_.perfHudOpen,
             presentation_.dangerFieldEnabled,
             progression_.upgradeScreenOpen,
-            [this]() { return traitSystem_.rollChoices(); },
+            [this]() -> bool {
+                (void)traitSystem_.rollChoices();
+                return true;
+            },
             [this](const TraitRarity rarity) { traitSystem_.forcePendingRarity(rarity); }
         );
 

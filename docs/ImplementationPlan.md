@@ -1,3 +1,9 @@
+## 2026-03-09 — Runtime build fix: upgrade callback signature mismatch (completed)
+- [x] Audited `GameplaySession` lambda callbacks passed to `SessionOrchestrationSubsystem::updateUpgradeCadence(...)` and `applyUpgradeDebugOptions(...)` against subsystem header contracts.
+- [x] Confirmed root cause: callbacks returned `TraitSystem::rollChoices()` (`std::array<Trait, 3>`) despite APIs requiring `std::function<bool()>`.
+- [x] Applied smallest safe compile fix: explicit `-> bool` lambdas that execute `rollChoices()` and return `true`; preserved existing upgrade-screen opening behavior without API redesign.
+- [x] Rebuilt compile path to validate `gameplay_session.cpp` compiles cleanly.
+
 ## 2026-03-09 — Final external-facing documentation/package polish pass (completed)
 - [x] Completed mandatory pre-pass audit of spec/architecture/plan/decision/changelog/audit + creator workflow docs.
 - [x] Added polished external `README.md` with accurate feature summary, versioning, quickstart, structure, and workflow links.
