@@ -233,6 +233,8 @@ bool RenderPipeline::toggleFullscreen(SDL_Window* window) {
 
 
 RenderPipeline::ProjectileRenderPath RenderPipeline::resolveProjectileRenderPath(const GameplaySession& session) const {
+    // Simulation ownership gate: only deterministic collision mode owns authoritative
+    // projectile visuals in the core frame path.
     if (session.bulletSimMode_ != BulletSimulationMode::CpuCollisionDeterministic) {
         return ProjectileRenderPath::Disabled;
     }
@@ -270,6 +272,7 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
     const GameplaySession& s = snapshot.session;
     const ProjectileRenderPath projectileRenderPath = resolveProjectileRenderPath(s);
 
+    // RenderPipeline owns backend selection; subsystems only execute their specific draw prep.
     if (projectileRenderPath == ProjectileRenderPath::GlInstanced) {
         const auto& posX = s.projectiles_.posX();
         const auto& posY = s.projectiles_.posY();

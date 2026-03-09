@@ -1,5 +1,7 @@
 ## Unreleased
 ### Fixed
+- Finalized renderer stack ownership contract across code/docs: `render_pipeline` orchestrates path selection, `render2d` provides shared SDL 2D primitives, `modern_renderer` handles post-FX composition, `gl_bullet_renderer` handles GL projectile submission, and `gpu_bullets` remains presentation-only (`CpuMassRender`) with no deterministic gameplay authority.
+- Added explicit `ProjectileRenderPath` ownership comments in `render_pipeline` to keep backend selection centralized and reduce future overlap drift.
 - Finalized CMake test target consistency by introducing a two-step helper flow (`engine_add_test_target` + `engine_register_test`), removing target-name Catch overrides, and keeping Catch/non-Catch registration behavior uniform across all test executables.
 - Preserved and codified runtime DLL deployment for test executables so Windows execution and Catch discovery continue to resolve SDL/other runtime dependencies reliably.
 - Fixed remaining missing-main linker failures (`unresolved external symbol main`, `LNK1120`) for `content_packer_tests`, `entity_tests`, and `boss_phase_tests` by extending the shared CMake Catch safety override to include `boss_phase_tests`, ensuring `Catch2::Catch2WithMain` is linked whenever these targets lack a local `main(...)`.

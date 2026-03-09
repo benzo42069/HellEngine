@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-09: Renderer ownership closure pass finalized subsystem roles without behavioral changes: `render_pipeline` remains the sole projectile-path orchestrator, `gl_bullet_renderer` remains GL projectile draw-only, `render2d` remains shared SDL 2D primitive infrastructure, `modern_renderer` remains post-FX/compositing only, and `gpu_bullets` remains presentation-only CPU mass-render path (`CpuMassRender`) with no authoritative collision ownership.
 - 2026-03-09: Finalized test infrastructure consistency model. All test executables now go through `engine_add_test_target(...)` + `engine_register_test(...)`; Catch classification uses source inspection only (no per-target safety overrides), Catch targets without `main(...)` link `Catch2::Catch2WithMain` and use `catch_discover_tests`, standalone tests keep explicit `main(...)` and register through `add_test(...)`. Windows runtime DLL deployment remains mandatory via `engine_deploy_runtime_dlls(...)` before test/discovery execution.
 - 2026-03-09: Build/release reproducibility closure pass completed. CMake now deploys runtime DLL dependencies for top-level runtime tools (`EngineDemo`, `ContentPacker`) using the same `TARGET_RUNTIME_DLLS` post-build flow as tests, eliminating stale/manual DLL copy drift between clean and incremental builds. Portable manifest generation is now deterministic (stable sorted relative paths, static format header, no timestamp/path entropy) so repeated package runs from identical inputs produce identical manifest content.
 

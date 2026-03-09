@@ -1,3 +1,9 @@
+## 2026-03-09 — Renderer stack ownership finalization
+- [x] Audited `render2d`, `render_pipeline`, `modern_renderer`, `gl_bullet_renderer`, and `gpu_bullets` boundaries against current runtime behavior.
+- [x] Confirmed projectile backend selection remains centralized in `RenderPipeline::resolveProjectileRenderPath(...)`.
+- [x] Added explicit inline ownership comments to prevent backend/simulation responsibility drift.
+- [x] Updated architecture/spec/decision/changelog/audit and renderer notes to freeze the final ownership contract.
+- [x] Preserved behavior/perf: no rendering-path logic changes and no simulation-authority transfer in this pass.
 ## 2026-03-09 — Finalize test infrastructure and target consistency (completed)
 - [x] Audited every test target in `CMakeLists.txt` and verified Catch vs standalone categories based on source-level includes and local `main(...)`.
 - [x] Removed ad hoc target-name Catch safety overrides; classification now follows one coherent rule set for all targets.

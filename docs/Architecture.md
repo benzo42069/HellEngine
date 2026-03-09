@@ -63,6 +63,16 @@
 
 ## Renderer ownership boundaries (finalized)
 
+### Renderer subsystem role matrix
+- `render_pipeline`: frame orchestration owner (context lifecycle, projectile path decision, scene composition ordering).
+- `render2d`: SDL-side 2D drawing primitives and shared utilities (`SpriteBatch`, `DebugDraw`, `DebugText`, camera/texture helpers).
+- `modern_renderer`: post-processing/composition pipeline owner (offscreen targets + fullscreen passes only).
+- `gl_bullet_renderer`: OpenGL projectile draw backend owner (consumes projectile SoA snapshots and submits GL draws).
+- `gpu_bullets` (`CpuMassBulletRenderSystem`): non-authoritative CPU mass-render presentation path for `CpuMassRender` mode.
+
+Ownership rule: simulation authority is never inferred from renderer naming; deterministic gameplay ownership remains in simulation/session systems.
+
+
 - `render_pipeline` is the sole orchestration layer for renderer-path selection and frame composition; projectile-path checks are resolved once via `ProjectileRenderPath` and consumed consistently for prep + submit.
 - `gl_bullet_renderer` owns only OpenGL projectile draw preparation/submission from projectile SoA snapshots.
 - `render2d` owns generic 2D primitives (`SpriteBatch`, `DebugDraw`, `DebugText`, camera transforms, and texture atlas/store helpers).
