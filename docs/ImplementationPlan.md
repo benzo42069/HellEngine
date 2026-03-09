@@ -1,3 +1,8 @@
+## 2026-03-09 — Final external-facing documentation/package polish pass (completed)
+- [x] Completed mandatory pre-pass audit of spec/architecture/plan/decision/changelog/audit + creator workflow docs.
+- [x] Added polished external `README.md` with accurate feature summary, versioning, quickstart, structure, and workflow links.
+- [x] Tightened onboarding/index docs (`GettingStarted`, `AuthoringGuide`) to cover project structure, testing, and release validation flow.
+- [x] Updated architecture + logs (`MasterSpec`, `DecisionLog`, `CHANGELOG`, audit report) to record final documentation state and stale-content corrections.
 ## 2026-03-09 — Final vertical-slice polish pass (completed)
 - [x] Raised encounter readability/pressure using authored content only (no runtime hardcoding): mixed elite composition plus retuned zone durations in `sample_slice_stage_01`.
 - [x] Added a new authored enemy profile (`Vanguard Lancer`) to exercise enemy flow/pattern/palette systems during the elite lane.

@@ -1,3 +1,8 @@
+## 2026-03-09 — Final documentation/productization presentation framing
+- **Context**: Creator workflows were largely implemented but product-facing entry points remained fragmented (no repository README and overlap between index docs), reducing external usability despite mature engine/package tooling.
+- **Decision**: Establish a clear documentation information architecture and treat the repository root README as the commercial-facing front door, with `GettingStarted` as execution-first onboarding and `AuthoringGuide` as the persistent creator index.
+- **Implementation**: Added `README.md`; refreshed `docs/AuthoringGuide.md` and `docs/GettingStarted.md` to align around concrete build/pack/run/replay/testing/release steps; logged final state updates in architecture/spec/changelog/audit docs.
+- **Consequence**: External developers now have a predictable entry path with reduced stale-internal assumptions while preserving existing technical behavior and script/tool contracts.
 ## 2026-03-09 — Vertical slice encounter polish remains content-authored
 - **Decision:** Final showcase tuning was implemented by updating authored sample content (`data/entities.json`, `data/encounters.json`) rather than adding runtime special-case logic.
 - **Rationale:** The sample must validate intended engine workflows (content pipeline -> runtime hydration -> replay/package checks) and remain representative for creators.

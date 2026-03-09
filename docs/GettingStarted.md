@@ -66,6 +66,14 @@ Run this before publishing content changes.
 4. Run replay verification.
 5. Fix warnings/errors before sharing.
 
+
+## Project structure at a glance
+- `data/`: canonical authored source content used for pack generation.
+- `examples/content_packs/`: starter templates you can copy for new packs.
+- `docs/`: creator-facing workflow guides.
+- `tools/`: PowerShell build/test/release automation entry points.
+- `include/engine/public/`: stable API/plugin boundary for host integrations.
+
 ## 6) Creator documentation map
 - Build/run options: `docs/BuildAndRun.md`
 - Asset import: `docs/AssetImportWorkflow.md`
@@ -78,3 +86,10 @@ Run this before publishing content changes.
 - Plugin/mod overview: `docs/PluginAndModOverview.md`
 - Creator performance guidance: `docs/CreatorPerformanceGuide.md`
 - Troubleshooting: `docs/Troubleshooting.md`
+
+
+## 7) Recommended final pre-ship checks
+1. `ctest --test-dir build --output-on-failure` (or `-C Release` on Windows multi-config).
+2. `./build/EngineDemo --headless --renderer-smoke-test --ticks 10 --content-pack content.pak`
+3. `./build/EngineDemo --replay-verify --headless --ticks 1200 --seed 1337 --content-pack content.pak`
+4. Run packaging validation (`tools/release_validate.ps1`) before distribution.

@@ -1,3 +1,9 @@
+# Changelog
+
+## Unreleased
+### Changed
+- Completed final external-facing documentation/polish pass: added repository `README.md`, refreshed creator index + onboarding flow, and aligned product-facing workflow guidance across build/run, authoring, validation, and release packaging docs.
+- Documented final creator documentation architecture in `docs/Architecture.md` and recorded closure state in spec/plan/decision/audit docs to reduce stale guidance drift for package consumers.
 ## 2026-03-09
 - Polished the shipped vertical-slice encounter data for stronger showcase pacing: Stage 01 now uses a mixed elite enemy set (`Basic Enemy Shooter` + `Vanguard Lancer`) with retuned intro/elite/event durations.
 - Added `Vanguard Lancer` as an authored enemy profile (Spread Lattice pattern + Scarlet Wave palette) so the sample demonstrates multi-enemy pressure and content pipeline extensibility without runtime hacks.
