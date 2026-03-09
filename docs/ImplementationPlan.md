@@ -709,6 +709,7 @@ Completed release-engineering closure work:
 ## 2026-03-08 — GameplaySession responsibility refactor
 
 ### Completed
+- [x] Finalized public API/plugin/mod boundary documentation: explicit stable surface (`engine/public/*`), host lifecycle expectations, plugin compatibility/versioning behavior, and content-pack-based mod extension structure for v1.
 - Extracted concern-specific runtime interfaces into `include/engine/gameplay_session_subsystems.h` and `src/engine/gameplay_session_subsystems.cpp`.
 - Routed player aim/movement/graze and defensive-special trigger checks through `PlayerCombatSubsystem`.
 - Routed upgrade navigation semantics through `ProgressionSubsystem`.

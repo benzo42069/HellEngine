@@ -1,4 +1,5 @@
 ## Unreleased
+- Public API/extensibility closure pass: finalized supported external scope (`include/engine/public/*`), documented plugin lifecycle/ownership/compatibility expectations, and formalized content-pack layering as the primary mod extension contract for commercial v1.
 
 ### Changed
 - Finalized content import validation for production authoring: art manifests now enforce `assetManifestType: "art-import"`, reject duplicate asset GUID/source path entries, and require non-empty identifier-style `atlasGroup` values.

@@ -1,6 +1,8 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-09: Public API/extensibility closure finalized for commercial-v1 positioning. Public contract explicitly scoped to `include/engine/public/*`; plugin lifecycle expectations (metadata, compatibility preflight, registration/unregister/clear teardown, host ownership) and mod/content layering semantics (multi-pack order, GUID override, conflict logging) are now documented as the supported extension boundary.
+
 - 2026-03-09: Audio subsystem finalization pass completed: authored audio parsing now enforces duplicate/unknown-reference/empty-path validation; runtime audio reconfiguration now frees old clip resources before reload and auto-starts configured looping music after content load. Audio dispatch remains presentation-side outside deterministic replay hashing.
 - 2026-03-09: Finalized creator-facing content import closure for sprites/palettes/atlases/animation variants/audio. Art manifests now require `assetManifestType: "art-import"`, reject duplicate GUID/source-path records, normalize+validate atlas naming, and carry palette-template dependency tags into `importRegistry` invalidation metadata to make source-vs-runtime boundaries explicit in pack outputs.
 

@@ -442,6 +442,11 @@ Residual risk:
 - The remediation introduces centralized CMake helpers for plain and Catch tests and a single reusable Windows DLL deployment helper (`TARGET_RUNTIME_DLLS` copy) applied to all test targets.
 
 
+## Public API / extensibility closure (2026-03-09)
+- Public contract is now explicitly constrained to `include/engine/public/*`, with `include/engine/internal/*` and `src/engine/*` documented as non-contract internals.
+- Plugin lifecycle expectations are explicit: metadata + API compatibility checks, deterministic registration rejection categories, host-owned plugin instances, and explicit unregister/clear teardown requirements.
+- Mod/content extension is formalized as multi-pack content layering (`--content-pack`) with left-to-right merge and later GUID overrides.
+- Net result: clearer commercial-v1 extension posture without broadening unstable ABI exposure.
 ## Audit follow-up update (2026-03-09): Audio workflow finalization
 - Closed remaining authoring resilience gaps by validating duplicate clip ids, duplicate event bindings, empty clip paths, and unknown `music`/event clip references at audio parse time.
 - Closed runtime reload safety gap by clearing previously loaded mixer chunks before reconfigure to prevent stale-memory accumulation during content reload paths.
