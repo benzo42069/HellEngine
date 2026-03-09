@@ -2,6 +2,11 @@
 #ifndef SDL_MAIN_HANDLED
 #define SDL_MAIN_HANDLED
 #endif
+#include <windows.h>
+#include <SDL.h>
+
+extern int __argc;
+extern char** __argv;
 #include <SDL.h>
 #endif
 
@@ -15,8 +20,12 @@
 #include <filesystem>
 #include <atomic>
 #include <exception>
+#include <filesystem>
 #include <string>
 
+namespace {
+
+int runApplication(int argc, char** argv) {
 int main(int argc, char** argv) {
 #ifdef _WIN32
     static std::atomic_flag mainEntered = ATOMIC_FLAG_INIT;
@@ -86,3 +95,19 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+
+} // namespace
+
+int main(int argc, char** argv) {
+#ifdef _WIN32
+    SDL_SetMainReady();
+#endif
+    return runApplication(argc, argv);
+}
+
+#ifdef _WIN32
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+    SDL_SetMainReady();
+    return runApplication(__argc, __argv);
+}
+#endif
