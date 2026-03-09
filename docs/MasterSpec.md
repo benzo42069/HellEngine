@@ -1,3 +1,4 @@
+- 2026-03-09: Final missing-main closure for `boss_phase_tests` completed. Root cause: target wiring could still produce a link line without explicit Catch2 entrypoint ownership for this executable, resulting in unresolved `main` / `LNK1120` on Windows. Exact CMake fix: made `boss_phase_tests` explicit in target setup (`engine_add_test_target` + explicit `target_link_libraries(... Catch2::Catch2WithMain)` + forced Catch discovery property + `engine_register_test`) while preserving target name, discovery path, and runtime DLL deployment helper usage. A full clean rebuild from a deleted build directory is required so regenerated linker/discovery commands are applied.
 # MasterSpec
 
 ## Build Notes

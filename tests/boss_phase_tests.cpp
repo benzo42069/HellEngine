@@ -2,11 +2,11 @@
 #include <engine/patterns.h>
 #include <engine/projectiles.h>
 
-#include <cstdlib>
-#include <iostream>
+#include <catch2/catch_test_macros.hpp>
+
 #include <vector>
 
-int main() {
+TEST_CASE("Boss phases emit runtime events and rewards") {
     engine::PatternBank pb;
     if (!pb.loadFromFile("assets/patterns/sandbox_patterns.json") && !pb.loadFromFile("../assets/patterns/sandbox_patterns.json")) {
         pb.loadFallbackDefaults();
@@ -44,10 +44,7 @@ int main() {
     for (int i = 0; i < 30; ++i) {
         sys.update(1.0F / 60.0F, proj, {0.0F, 0.0F});
     }
-    if (proj.stats().activeCount != 0) {
-        std::cerr << "boss fired during intro sequence\n";
-        return EXIT_FAILURE;
-    }
+    REQUIRE(proj.stats().activeCount == 0);
 
     bool sawTelegraph = false;
     bool sawHazardSync = false;
@@ -63,27 +60,14 @@ int main() {
     }
 
     const auto& stats = sys.stats();
-    if (stats.bossPhaseTransitions == 0) {
-        std::cerr << "boss phase transition did not trigger\n";
-        return EXIT_FAILURE;
-    }
-    if (stats.defeatedBosses == 0) {
-        std::cerr << "boss was not defeated after final phase\n";
-        return EXIT_FAILURE;
-    }
-    if (stats.upgradeCurrency < 60.0F || stats.healthRecoveryAccum < 10.0F || stats.buffTimeRemaining <= 0.0F) {
-        std::cerr << "boss reward drops missing\n";
-        return EXIT_FAILURE;
-    }
-    if (!sawTelegraph || !sawHazardSync || !sawBossDefeatedEvent) {
-        std::cerr << "boss runtime events missing\n";
-        return EXIT_FAILURE;
-    }
-    if (stats.telegraphEvents == 0 || stats.hazardSyncEvents == 0) {
-        std::cerr << "boss event counters missing\n";
-        return EXIT_FAILURE;
-    }
-
-    std::cout << "boss_phase_tests passed\n";
-    return EXIT_SUCCESS;
+    REQUIRE(stats.bossPhaseTransitions > 0);
+    REQUIRE(stats.defeatedBosses > 0);
+    REQUIRE(stats.upgradeCurrency >= 60.0F);
+    REQUIRE(stats.healthRecoveryAccum >= 10.0F);
+    REQUIRE(stats.buffTimeRemaining > 0.0F);
+    REQUIRE(sawTelegraph);
+    REQUIRE(sawHazardSync);
+    REQUIRE(sawBossDefeatedEvent);
+    REQUIRE(stats.telegraphEvents > 0);
+    REQUIRE(stats.hazardSyncEvents > 0);
 }

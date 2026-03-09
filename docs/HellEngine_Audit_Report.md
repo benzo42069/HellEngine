@@ -1,3 +1,5 @@
+> **2026-03-09 boss_phase_tests linker closure:** Root cause for last red build was missing guaranteed Catch entrypoint ownership on `boss_phase_tests.exe`, yielding unresolved `main`/`LNK1120` on Windows. Applied minimal CMake target fix to explicitly link `Catch2::Catch2WithMain` while keeping target naming, Catch discovery flow, and runtime DLL deployment behavior intact. Validation requires clean rebuild from a deleted build directory so regenerated linker/test-discovery commands are active.
+
 # HellEngine Audit Report
 
 ## 2026-03-09 Addendum — External Documentation Closure

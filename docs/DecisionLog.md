@@ -1,3 +1,8 @@
+## 2026-03-09 — Decision: Explicit Catch2 main link for boss_phase_tests
+- **Context**: `boss_phase_tests.exe` remained the last missing-main linker failure on Windows (`unresolved external symbol main`, `LNK1120`), indicating the executable could still be produced without guaranteed Catch entrypoint ownership.
+- **Decision**: Apply a minimal target-local CMake fix by wiring `boss_phase_tests` through `engine_add_test_target(...)`, then explicitly linking `Catch2::Catch2WithMain`, forcing Catch discovery property, and registering via `engine_register_test(...)`.
+- **Consequence**: Target name and discovery semantics stay unchanged, runtime DLL deployment remains via helper path, and the test now always receives Catch main ownership for clean-link stability. A clean rebuild is required to refresh generated link/discovery commands.
+
 ## 2026-03-09 — Build hotfix: Catch main linkage + guarded DLL copy command
 - **Context:** Remaining Windows link failures reported unresolved `main` for `content_packer_tests`, `editor_tools_tests`, `boss_phase_tests`, and `entity_tests`; `ContentPacker` post-build also failed when `copy_if_different` received only a destination path.
 - **Decision:** Keep helpers and target names intact; add a minimal forced Catch classification list for the four failing test targets in `engine_link_catch_main_if_needed(...)`, and keep existing `NOT main(...)` gate before linking `Catch2::Catch2WithMain`. In `engine_deploy_runtime_dlls(...)`, emit copy only when `$<TARGET_RUNTIME_DLLS:target>` is non-empty via generator-expression command guarding.
