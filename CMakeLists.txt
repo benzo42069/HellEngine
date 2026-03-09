@@ -268,22 +268,6 @@ endfunction()
 engine_deploy_runtime_dlls(EngineDemo)
 engine_deploy_runtime_dlls(ContentPacker)
 
-function(engine_source_uses_catch out_var source_file)
-  if(IS_ABSOLUTE "${source_file}")
-    set(_engine_test_source_path "${source_file}")
-  else()
-    set(_engine_test_source_path "${CMAKE_CURRENT_SOURCE_DIR}/${source_file}")
-  endif()
-
-  file(READ "${_engine_test_source_path}" _engine_test_source_contents)
-  string(REGEX MATCH "#include[ \t]*[<\"]catch2/" _engine_catch_include_match "${_engine_test_source_contents}")
-  if(_engine_catch_include_match)
-    set(${out_var} TRUE PARENT_SCOPE)
-  else()
-    set(${out_var} FALSE PARENT_SCOPE)
-  endif()
-endfunction()
-
 function(engine_source_defines_main out_var source_file)
   if(IS_ABSOLUTE "${source_file}")
     set(_engine_test_source_path "${source_file}")
@@ -301,21 +285,11 @@ function(engine_source_defines_main out_var source_file)
 endfunction()
 
 function(engine_link_catch_main_if_needed target_name source_file)
-  engine_source_uses_catch(_engine_test_is_catch "${source_file}")
   engine_source_defines_main(_engine_test_has_main "${source_file}")
 
-  set(_engine_force_catch_main_targets
-    content_packer_tests
-    editor_tools_tests
-    boss_phase_tests
-    entity_tests
-    pattern_graph_perf_tests
-  )
-  if(target_name IN_LIST _engine_force_catch_main_targets)
-    set(_engine_test_is_catch TRUE)
-  endif()
-
-  if(_engine_test_is_catch AND NOT _engine_test_has_main)
+  # Unified rule: any test target without a real main() receives Catch2's entrypoint.
+  # Standalone tests that intentionally provide their own main() are left untouched.
+  if(NOT _engine_test_has_main)
     target_link_libraries(${target_name} PRIVATE Catch2::Catch2WithMain)
     set(_engine_target_uses_catch_with_main TRUE PARENT_SCOPE)
   else()
@@ -378,19 +352,11 @@ engine_add_test(content_import_pipeline_tests tests/content_import_pipeline_test
 engine_add_test(entity_tests tests/entity_tests.cpp)
 engine_add_test(trait_tests tests/trait_tests.cpp)
 engine_add_test(archetype_tests tests/archetype_tests.cpp)
-engine_add_test_target(boss_phase_tests tests/boss_phase_tests.cpp)
-# Final missing-main guard: keep explicit Catch2 main linkage for this target.
-target_link_libraries(boss_phase_tests PRIVATE Catch2::Catch2WithMain)
-set_property(TARGET boss_phase_tests PROPERTY ENGINE_TEST_USES_CATCH_DISCOVERY TRUE)
-engine_register_test(boss_phase_tests)
+engine_add_test(boss_phase_tests tests/boss_phase_tests.cpp)
 engine_add_test(run_structure_tests tests/run_structure_tests.cpp)
 engine_add_test(meta_progression_tests tests/meta_progression_tests.cpp)
 engine_add_test(persistence_tests tests/persistence_tests.cpp)
-engine_add_test_target(editor_tools_tests tests/editor_tools_tests.cpp)
-# Final missing-main guard: keep explicit Catch2 main linkage for this target.
-target_link_libraries(editor_tools_tests PRIVATE Catch2::Catch2WithMain)
-set_property(TARGET editor_tools_tests PROPERTY ENGINE_TEST_USES_CATCH_DISCOVERY TRUE)
-engine_register_test(editor_tools_tests)
+engine_add_test(editor_tools_tests tests/editor_tools_tests.cpp)
 engine_add_test(replay_tests tests/replay_tests.cpp)
 engine_add_test(upgrade_ui_tests tests/upgrade_ui_tests.cpp)
 engine_add_test(upgrade_ui_model_tests tests/upgrade_ui_model_tests.cpp)
