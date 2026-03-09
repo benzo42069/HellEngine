@@ -22,15 +22,48 @@ bool containsCaseInsensitive(const std::string& haystack, const std::string& nee
 }
 } // namespace
 
+void ControlCenterToolSuite::refreshContentBrowserEntries() {
+    browserEntries_.clear();
+
+    namespace fs = std::filesystem;
+    const fs::path root("data");
+    std::error_code ec;
+    if (!fs::exists(root, ec)) {
+        return;
+    }
+
+    for (const fs::directory_entry& e : fs::recursive_directory_iterator(root, ec)) {
+        if (ec) {
+            break;
+        }
+        if (!e.is_regular_file()) {
+            continue;
+        }
+        const fs::path rel = fs::relative(e.path(), fs::current_path(), ec);
+        if (ec) {
+            continue;
+        }
+        const std::string ext = e.path().extension().string();
+        if (ext == ".json" || ext == ".png" || ext == ".ogg" || ext == ".wav") {
+            browserEntries_.push_back(rel.generic_string());
+        }
+    }
+
+    std::sort(browserEntries_.begin(), browserEntries_.end());
+    if (selectedAssetPath_.empty() && !browserEntries_.empty()) {
+        selectedAssetPath_ = browserEntries_.front();
+    }
+}
+
 void ControlCenterToolSuite::drawWorkspaceShell(const ToolRuntimeSnapshot& snapshot) {
+
 if (!initialized_) return;
 
 frameHistoryMs_.push_back(snapshot.frameMs);
 if (frameHistoryMs_.size() > 240) frameHistoryMs_.pop_front();
 
 if (browserEntries_.empty()) {
-    browserEntries_ = {"data/entities.json", "data/difficulty_profiles.json", "assets/patterns/sandbox_patterns.json", "data/generated_demo/demo_traits.json", "data/generated_encounters/stage_encounter.json"};
-    selectedAssetPath_ = browserEntries_.front();
+    refreshContentBrowserEntries();
 }
 
 if (validatorRequested_) {
@@ -110,6 +143,42 @@ ImGui::TextUnformatted("Unified tools workspace");
 ImGui::SameLine();
 ImGui::TextDisabled("| %s", statusMessage_.c_str());
 
+ImGui::SeparatorText("Workflow Shortcuts");
+if (ImGui::Button("Content Pass")) {
+    showContentBrowser_ = true;
+    showInspector_ = true;
+    showPreviewViewport_ = false;
+    showPatternEditor_ = false;
+    showPaletteFxTemplates_ = false;
+    showWaveEditor_ = false;
+    showValidator_ = true;
+    statusMessage_ = "Workflow: Content Pass";
+}
+ImGui::SameLine();
+if (ImGui::Button("Pattern Pass")) {
+    showContentBrowser_ = true;
+    showInspector_ = true;
+    showPreviewViewport_ = true;
+    showPatternEditor_ = true;
+    showPaletteFxTemplates_ = false;
+    statusMessage_ = "Workflow: Pattern Pass";
+}
+ImGui::SameLine();
+if (ImGui::Button("Palette/FX Pass")) {
+    showPaletteFxTemplates_ = true;
+    showPreviewViewport_ = true;
+    showPatternEditor_ = false;
+    statusMessage_ = "Workflow: Palette / FX Pass";
+}
+ImGui::SameLine();
+if (ImGui::Button("Diagnostics Pass")) {
+    showPreviewViewport_ = true;
+    showProfiler_ = true;
+    showValidator_ = true;
+    statusMessage_ = "Workflow: Diagnostics Pass";
+    validatorRequested_ = true;
+}
+
 if (ImGui::BeginTable("tools_workspace_grid", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp)) {
     ImGui::TableSetupColumn("Assets", ImGuiTableColumnFlags_WidthStretch, 0.26F);
     ImGui::TableSetupColumn("Preview", ImGuiTableColumnFlags_WidthStretch, 0.48F);
@@ -122,6 +191,13 @@ if (ImGui::BeginTable("tools_workspace_grid", 3, ImGuiTableFlags_Resizable | ImG
         ImGui::InputText("Search", &browserSearch_);
         ImGui::InputText("Tag Filter", &browserTagFilter_);
         ImGui::Separator();
+        if (browserEntries_.empty()) {
+            ImGui::TextDisabled("No content files discovered under data/.");
+            if (ImGui::Button("Rescan Content")) {
+                refreshContentBrowserEntries();
+                statusMessage_ = browserEntries_.empty() ? "No content discovered" : "Content browser rescanned";
+            }
+        }
         for (const std::string& e : browserEntries_) {
             if (!containsCaseInsensitive(e, browserSearch_)) continue;
             if (!browserTagFilter_.empty() && !containsCaseInsensitive(e, browserTagFilter_)) continue;
@@ -156,7 +232,7 @@ if (ImGui::BeginTable("tools_workspace_grid", 3, ImGuiTableFlags_Resizable | ImG
     if (showInspector_ && ImGui::BeginChild("Inspector", ImVec2(0.0F, 0.0F), ImGuiChildFlags_Border)) {
         ImGui::TextUnformatted("Inspector");
         if (selectedAssetPath_.empty()) {
-            ImGui::TextDisabled("No asset selected.");
+            ImGui::TextDisabled("No asset selected. Use Content Browser > Rescan Content.");
         } else {
             ImGui::Text("Path: %s", selectedAssetPath_.c_str());
             ImGui::Text("Tag: %s", selectedAssetTag_.empty() ? "(none)" : selectedAssetTag_.c_str());

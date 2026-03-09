@@ -4,9 +4,24 @@
 ### Changed
 - Completed final external-facing documentation/polish pass: added repository `README.md`, refreshed creator index + onboarding flow, and aligned product-facing workflow guidance across build/run, authoring, validation, and release packaging docs.
 - Documented final creator documentation architecture in `docs/Architecture.md` and recorded closure state in spec/plan/decision/audit docs to reduce stale guidance drift for package consumers.
+## 2026-03-09
+- Polished the shipped vertical-slice encounter data for stronger showcase pacing: Stage 01 now uses a mixed elite enemy set (`Basic Enemy Shooter` + `Vanguard Lancer`) with retuned intro/elite/event durations.
+- Added `Vanguard Lancer` as an authored enemy profile (Spread Lattice pattern + Scarlet Wave palette) so the sample demonstrates multi-enemy pressure and content pipeline extensibility without runtime hacks.
+- Updated Stage 01 boss flow authoring to run `Wave Weave` -> `Spread Lattice` -> `Composed Helix` and trigger `boss_phase_shift`, improving phase readability and authored audio transition validation.
+- Refreshed sample vertical-slice documentation/runbook to reflect the finalized encounter composition and validation scope.
 
 ## Unreleased
+- Public API/extensibility closure pass: finalized supported external scope (`include/engine/public/*`), documented plugin lifecycle/ownership/compatibility expectations, and formalized content-pack layering as the primary mod extension contract for commercial v1.
+
+### Changed
+- Finalized content import validation for production authoring: art manifests now enforce `assetManifestType: "art-import"`, reject duplicate asset GUID/source path entries, and require non-empty identifier-style `atlasGroup` values.
+- Import fingerprint dependency metadata now includes explicit palette-template tags (`paletteTemplate:<name>`) so reimport invalidation reasons better reflect color-workflow dependencies.
+
 ### Fixed
+- Finalized renderer stack ownership contract across code/docs: `render_pipeline` orchestrates path selection, `render2d` provides shared SDL 2D primitives, `modern_renderer` handles post-FX composition, `gl_bullet_renderer` handles GL projectile submission, and `gpu_bullets` remains presentation-only (`CpuMassRender`) with no deterministic gameplay authority.
+- Added explicit `ProjectileRenderPath` ownership comments in `render_pipeline` to keep backend selection centralized and reduce future overlap drift.
+- Finalized CMake test target consistency by introducing a two-step helper flow (`engine_add_test_target` + `engine_register_test`), removing target-name Catch overrides, and keeping Catch/non-Catch registration behavior uniform across all test executables.
+- Preserved and codified runtime DLL deployment for test executables so Windows execution and Catch discovery continue to resolve SDL/other runtime dependencies reliably.
 - Fixed remaining missing-main linker failures (`unresolved external symbol main`, `LNK1120`) for `content_packer_tests`, `entity_tests`, and `boss_phase_tests` by extending the shared CMake Catch safety override to include `boss_phase_tests`, ensuring `Catch2::Catch2WithMain` is linked whenever these targets lack a local `main(...)`.
 - Noted operational requirement: perform a clean rebuild from a deleted build directory so regenerated link state fully picks up the CMake test-target fix.
 - Added a minimal shared CMake safety override in `engine_link_catch_main_if_needed(...)` so `content_packer_tests` and `entity_tests` are forced to link `Catch2::Catch2WithMain` when they do not define their own `main(...)`, resolving the remaining unresolved-`main` / `LNK1120` follow-up failures.
@@ -14,7 +29,17 @@
 - Unified helper-path test registration via `engine_add_test(...)` + source-based Catch detection so Catch targets consistently link `Catch2::Catch2WithMain` and use `catch_discover_tests` (covering targets such as `render2d_tests`, `pattern_tests`, and `entity_tests` class checks during audit).
 - Closed the remaining manual target gap by applying shared Catch/main detection to `content_packer_tests` too, ensuring any Catch-based test executable without a local `main(...)` links `Catch2::Catch2WithMain` regardless of whether it is created via helper or direct `add_executable` path.
 
+# Changelog
+
+## 2026-03-09 — Editor tooling structure closure + UX polish
+- Added `src/engine/editor/editor_tools_gameplay_panel.cpp` and moved gameplay authoring responsibilities out of the pattern panel (projectile debug, encounter/wave editor, trait/upgrade preview, and encounter asset helpers).
+- Updated CMake source registration to compile the new gameplay editor module.
+- Improved workspace UX with explicit workflow shortcuts (Content, Pattern, Palette/FX, Diagnostics), dynamic content browser scanning from `data/`, and clearer empty states/rescan guidance.
+- Preserved existing runtime/editor behavior while reducing panel responsibility density and improving workflow discoverability.
+
 ## Unreleased
+- Finalized audio workflow resilience: audio content parsing now rejects duplicate clip/event bindings, empty clip paths, and unknown music/event clip references so authoring errors fail fast before runtime.
+- Audio runtime now clears/reloads clip memory safely during reconfiguration and auto-starts configured loop music after content load, preserving the deterministic simulation boundary while improving creator-facing reliability.
 ### Fixed
 - Standardized Catch2 target setup through shared CMake helpers so all Catch-based test executables are linked with `Catch2::Catch2WithMain`, eliminating Windows `unresolved external symbol main`/`LNK1120` failures caused by per-target drift.
 - Added Windows runtime DLL deployment for every test executable by copying each target's `TARGET_RUNTIME_DLLS` into the test binary output directory at build time, preventing `0xc0000135` failures during `catch_discover_tests` discovery when SDL2/SDL2_mixer DLLs were missing.
@@ -195,3 +220,8 @@
 ### Fixed
 - Fixed Windows test-link missing-main failures for `render2d_tests` and `pattern_tests` by switching both targets to the shared Catch2 helper path (`engine_add_catch_test`) so `Catch2::Catch2WithMain` is linked consistently.
 - Converted `tests/render2d_tests.cpp` and `tests/pattern_tests.cpp` to Catch `TEST_CASE` style so test entrypoint ownership remains centralized in Catch2 main.
+
+## 2026-03-09
+- Finalized GameplaySession runtime ownership cleanup by adding `SessionOrchestrationSubsystem` for session-level hot-reload cadence and upgrade cadence/debug policy.
+- Delegated remaining orchestration-policy blocks out of `GameplaySession::updateGameplay()` while preserving deterministic tick order and replay-sensitive behavior.
+- Extended `gameplay_session_state_tests` with coverage for orchestration subsystem upgrade cadence and debug-option application paths.

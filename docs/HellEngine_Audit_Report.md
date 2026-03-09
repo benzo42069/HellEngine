@@ -5,6 +5,22 @@
 - Current package state now includes creator-facing guides for onboarding, content import, palette/grayscale workflows, pattern and boss authoring, replay/debug, audio authoring, sample usage, testing, release packaging, troubleshooting, and performance guidance.
 - Repository presentation has been productized with a top-level `README.md` and a normalized documentation navigation path (`README` -> `GettingStarted` -> `AuthoringGuide` + domain guides).
 - This report should be interpreted as historical architecture risk analysis plus this addendum for present external-facing documentation status.
+## 2026-03-09 Addendum — Editor tooling closure follow-up
+- Gameplay authoring controls (projectile debug, encounter/wave, trait/upgrade preview) were extracted into `src/engine/editor/editor_tools_gameplay_panel.cpp` to complete panel responsibility separation.
+- Workspace shell now provides task-oriented workflow shortcuts (Content, Pattern, Palette/FX, Diagnostics) and dynamic content discovery/empty-state guidance for a more commercial-grade editing loop.
+- Functionality was preserved while reducing module coupling and improving maintainability.
+# Renderer ownership closure update (2026-03-09)
+
+A targeted closure pass confirmed renderer stack boundaries are now explicit and intentionally stable without functional redesign:
+- `render_pipeline` owns path selection + frame composition order.
+- `render2d` owns reusable SDL 2D drawing primitives/infrastructure.
+- `modern_renderer` owns post-processing/compositing resources and passes.
+- `gl_bullet_renderer` owns OpenGL projectile draw prep/submission only.
+- `gpu_bullets` (`CpuMassBulletRenderSystem`) remains a non-authoritative presentation path.
+
+Residual intentional note: `CpuMassRender` is presentation-focused and must not be treated as gameplay-authoritative collision ownership unless a future explicit mode is introduced.
+
+---
 
 ## 2026-03-09 Build/Release reliability closure update
 - Top-level runtime binaries now share the same runtime-DLL deployment mechanism as tests (`TARGET_RUNTIME_DLLS` via `engine_deploy_runtime_dlls`), reducing clean/incremental drift risk on Windows.
@@ -19,11 +35,18 @@
 
 # HellEngine — Pre-Finalization Architecture Audit
 
+> **2026-03-09 CMake/tests finalization:** Test-target wiring now follows a single two-step helper model (`engine_add_test_target` + `engine_register_test`) with source-based Catch classification and no target-name exceptions; Catch targets without local `main(...)` link `Catch2::Catch2WithMain`, standalone tests keep explicit `main(...)`, and runtime DLL deployment remains applied before execution/discovery on Windows.
+
 **Auditor role:** Principal Engine Architect / Technical Director  
 **Date:** 2026-03-05  
 **Codebase snapshot:** HellEngine-main (v0.2.0)  
 **Total implementation:** ~7,700 LOC engine source, ~2,600 LOC headers, ~1,800 LOC tests, ~480K total including third-party
 
+
+## Audit Follow-up Update (2026-03-09)
+- Vertical-slice content polish was completed through authored data changes only (no runtime one-off hooks), reinforcing architecture discipline for product validation.
+- Stage 01 encounter pacing now demonstrates clearer escalation via mixed elite pressure and explicit three-motif boss cadence.
+- Sample docs were synchronized with final showcase content to preserve reproducible build/pack/run/replay validation workflows.
 
 ## Audit Follow-up Update (2026-03-08)
 - A product-validation vertical slice was authored and documented to close the previously noted "engine-only" perception risk.
@@ -429,3 +452,28 @@ Residual risk:
   1. Catch target-definition drift allowed some Catch executables to be defined without `Catch2::Catch2WithMain`, producing missing `main` link failures.
   2. Runtime DLL deployment for tests was not standardized, causing `0xc0000135` during Catch discovery when SDL2/SDL2_mixer DLLs were unavailable beside test binaries.
 - The remediation introduces centralized CMake helpers for plain and Catch tests and a single reusable Windows DLL deployment helper (`TARGET_RUNTIME_DLLS` copy) applied to all test targets.
+
+
+## Public API / extensibility closure (2026-03-09)
+- Public contract is now explicitly constrained to `include/engine/public/*`, with `include/engine/internal/*` and `src/engine/*` documented as non-contract internals.
+- Plugin lifecycle expectations are explicit: metadata + API compatibility checks, deterministic registration rejection categories, host-owned plugin instances, and explicit unregister/clear teardown requirements.
+- Mod/content extension is formalized as multi-pack content layering (`--content-pack`) with left-to-right merge and later GUID overrides.
+- Net result: clearer commercial-v1 extension posture without broadening unstable ABI exposure.
+## Audit follow-up update (2026-03-09): Audio workflow finalization
+- Closed remaining authoring resilience gaps by validating duplicate clip ids, duplicate event bindings, empty clip paths, and unknown `music`/event clip references at audio parse time.
+- Closed runtime reload safety gap by clearing previously loaded mixer chunks before reconfigure to prevent stale-memory accumulation during content reload paths.
+- Clarified event/bus model boundary: gameplay emits presentation events, runtime maps them to authored bindings, and bus gains remain master/music/sfx at playback time only.
+## Audit Follow-up (2026-03-09): GameplaySession ownership finalization
+- **Status**: Addressed.
+- Implemented a final ownership cleanup pass by introducing `SessionOrchestrationSubsystem` and moving the remaining policy-heavy orchestration logic out of `GameplaySession::updateGameplay()`.
+
+### What moved out of `GameplaySession`
+- content hot-reload polling cadence and content-type dispatch/fanout.
+- periodic upgrade cadence policy and upgrade-debug policy application.
+
+### Final boundary result
+- `GameplaySession` is now a deterministic coordinator that sequences dedicated subsystems rather than embedding policy logic inline.
+- Runtime behavior contract is preserved: deterministic update order and replay behavior are unchanged.
+
+### Extensibility guidance
+- New session policy/cadence features should be introduced via `SessionOrchestrationSubsystem` to avoid reintroducing orchestration-policy coupling inside `GameplaySession`.

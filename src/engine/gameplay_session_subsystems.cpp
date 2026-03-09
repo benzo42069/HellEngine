@@ -165,6 +165,56 @@ void EncounterSimulationSubsystem::emitZoneTransitionFeedback(const ZoneDefiniti
     }
 }
 
+
+void SessionOrchestrationSubsystem::pollContentHotReloads(ContentWatcher& watcher, const std::uint64_t tickIndex, const std::uint64_t pollIntervalTicks, std::uint64_t& nextPollTick, const HotReloadCallbacks& callbacks) const {
+    if (tickIndex < nextPollTick) return;
+    nextPollTick = tickIndex + pollIntervalTicks;
+
+    for (const ContentChange& change : watcher.pollChanges()) {
+        switch (change.type) {
+            case ContentType::Patterns:
+                if (callbacks.reloadPatterns) callbacks.reloadPatterns(change.path);
+                break;
+            case ContentType::Entities:
+                if (callbacks.reloadEntities) callbacks.reloadEntities(change.path);
+                break;
+            case ContentType::Traits:
+                if (callbacks.reloadTraits) callbacks.reloadTraits(change.path);
+                break;
+            case ContentType::Difficulty:
+                if (callbacks.reloadDifficulty) callbacks.reloadDifficulty(change.path);
+                break;
+            case ContentType::Palettes:
+                if (callbacks.reloadPalettes) callbacks.reloadPalettes(change.path);
+                break;
+        }
+    }
+}
+
+void SessionOrchestrationSubsystem::updateUpgradeCadence(const std::uint64_t tickIndex, const bool hasPendingChoices, bool& upgradeScreenOpen, const std::function<bool()>& rollChoices) const {
+    if (tickIndex == 0 || tickIndex % 300 != 0 || hasPendingChoices) return;
+    if (rollChoices && rollChoices()) upgradeScreenOpen = true;
+}
+
+void SessionOrchestrationSubsystem::applyUpgradeDebugOptions(const UpgradeDebugOptions& options,
+                                                             const bool hasPendingChoices,
+                                                             bool& perfHudOpen,
+                                                             bool& dangerFieldEnabled,
+                                                             bool& upgradeScreenOpen,
+                                                             const std::function<bool()>& rollChoices,
+                                                             const std::function<void(TraitRarity)>& forcePendingRarity) const {
+    perfHudOpen = options.showPerfHud;
+    dangerFieldEnabled = options.showDangerField;
+
+    if (options.spawnUpgradeScreen && !hasPendingChoices) {
+        if (rollChoices && rollChoices()) upgradeScreenOpen = true;
+    }
+
+    if (options.forcedRarity >= 0 && hasPendingChoices && forcePendingRarity) {
+        forcePendingRarity(static_cast<TraitRarity>(options.forcedRarity));
+    }
+}
+
 void EncounterSimulationSubsystem::emitAmbientZoneFeedback(const ZoneDefinition* zoneAfterUpdate, std::vector<ShakeParams>& cameraShakes) const {
     if (zoneAfterUpdate && (zoneAfterUpdate->type == ZoneType::Combat || zoneAfterUpdate->type == ZoneType::Elite || zoneAfterUpdate->type == ZoneType::Boss)) {
         cameraShakes.push_back(ShakeParams {
