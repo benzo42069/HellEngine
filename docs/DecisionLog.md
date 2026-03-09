@@ -1,3 +1,9 @@
+## 2026-03-09 — Vertical slice encounter polish remains content-authored
+- **Decision:** Final showcase tuning was implemented by updating authored sample content (`data/entities.json`, `data/encounters.json`) rather than adding runtime special-case logic.
+- **Rationale:** The sample must validate intended engine workflows (content pipeline -> runtime hydration -> replay/package checks) and remain representative for creators.
+- **Applied changes:** Added `Vanguard Lancer` authored enemy profile, elevated Stage 01 elite composition to mixed pressure, tightened event lane downtime, and switched Stage 01 boss flow ordering to include `Spread Lattice` with explicit `boss_phase_shift` audio transition cue.
+- **Consequence:** The polished slice better demonstrates combat readability and phase variety while preserving determinism and avoiding architecture bypasses.
+
 ## 2026-03-09 — Immediate Catch2 main-link closure for content_packer/entity/boss tests
 
 ## 2026-03-09 — Build/release reproducibility and DLL deployment closure

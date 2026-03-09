@@ -11,7 +11,7 @@
         {
           "zoneId": "lane_intro",
           "type": "combat",
-          "durationSeconds": 45.0,
+          "durationSeconds": 50.0,
           "enemySet": [
             "Basic Enemy Shooter"
           ],
@@ -20,16 +20,17 @@
         {
           "zoneId": "lane_elite",
           "type": "elite",
-          "durationSeconds": 55.0,
+          "durationSeconds": 65.0,
           "enemySet": [
-            "Basic Enemy Shooter"
+            "Basic Enemy Shooter",
+            "Vanguard Lancer"
           ],
-          "targetThreat": 1.35
+          "targetThreat": 1.55
         },
         {
           "zoneId": "lane_event",
           "type": "event",
-          "durationSeconds": 35.0,
+          "durationSeconds": 30.0,
           "enemySet": [
             "Currency Crystal",
             "Med Bloom",
@@ -51,10 +52,10 @@
         "bossEntity": "Asterion Dreadnought",
         "phaseOrder": [
           "Wave Weave",
-          "Composed Helix",
-          "Wave Weave"
+          "Spread Lattice",
+          "Composed Helix"
         ],
-        "phaseChangeAudioEvent": "boss_warning",
+        "phaseChangeAudioEvent": "boss_phase_shift",
         "phaseGateRewards": [
           {
             "atPhase": 1,
