@@ -1,3 +1,14 @@
+#ifdef _WIN32
+#ifndef SDL_MAIN_HANDLED
+#define SDL_MAIN_HANDLED
+#endif
+#include <windows.h>
+#include <SDL.h>
+
+extern int __argc;
+extern char** __argv;
+#endif
+
 #include <engine/config.h>
 #include <engine/crash_handler.h>
 #include <engine/diagnostics.h>
@@ -5,11 +16,13 @@
 #include <engine/runtime.h>
 #include <engine/version.h>
 
-#include <filesystem>
 #include <exception>
+#include <filesystem>
 #include <string>
 
-int main(int argc, char** argv) {
+namespace {
+
+int runApplication(int argc, char** argv) {
     engine::Logger::instance().setLevel(engine::LogLevel::Info);
 
     engine::EngineConfig config = engine::loadConfigFromFile("engine_config.json");
@@ -69,3 +82,19 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+
+} // namespace
+
+int main(int argc, char** argv) {
+#ifdef _WIN32
+    SDL_SetMainReady();
+#endif
+    return runApplication(argc, argv);
+}
+
+#ifdef _WIN32
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+    SDL_SetMainReady();
+    return runApplication(__argc, __argv);
+}
+#endif
