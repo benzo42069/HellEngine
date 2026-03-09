@@ -1,4 +1,5 @@
 ## Unreleased
+- Public API/extensibility closure pass: finalized supported external scope (`include/engine/public/*`), documented plugin lifecycle/ownership/compatibility expectations, and formalized content-pack layering as the primary mod extension contract for commercial v1.
 ### Fixed
 - Fixed remaining missing-main linker failures (`unresolved external symbol main`, `LNK1120`) for `content_packer_tests`, `entity_tests`, and `boss_phase_tests` by extending the shared CMake Catch safety override to include `boss_phase_tests`, ensuring `Catch2::Catch2WithMain` is linked whenever these targets lack a local `main(...)`.
 - Noted operational requirement: perform a clean rebuild from a deleted build directory so regenerated link state fully picks up the CMake test-target fix.

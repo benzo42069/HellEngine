@@ -715,3 +715,9 @@
 - **Decision**: Route `render2d_tests` and `pattern_tests` through `engine_add_catch_test(...)` instead of `engine_add_plain_test(...)` to inherit `Catch2::Catch2WithMain` from the shared helper.
 - **Rationale**: Keeps Catch entrypoint ownership centralized in one helper and prevents per-target drift that can reintroduce missing-main linker failures.
 - **Status**: Accepted.
+
+## 2026-03-09 — Finalize public/plugin/mod extension boundary
+- **Context**: Extensibility behavior existed, but final v1 packaging needed an explicit commercial-facing contract for public API scope, plugin lifecycle, and mod/content extension structure.
+- **Decision**: Freeze the supported boundary to `include/engine/public/*`; keep internal registry/layout/storage details non-contract; formalize plugin host lifecycle expectations (metadata/compatibility checks, registration diagnostics, unregister-or-clear teardown, host ownership); and position content-pack layering as the primary supported mod extension path.
+- **Consequences**: Integrators get a clear, supportable extension story with minimal ABI risk; engine internals can keep evolving without accidental external coupling; plugin/mod guidance is now consistent across API, architecture, and overview docs.
+

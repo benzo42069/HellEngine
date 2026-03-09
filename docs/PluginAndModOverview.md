@@ -49,7 +49,7 @@ Merge rules:
 - Later pack entries override earlier ones by `guid`.
 - Conflicts are logged.
 
-## 4) Versioning and compatibility
+## 5) Versioning and compatibility
 
 Public API policy:
 - PATCH: bugfixes only.
@@ -58,13 +58,13 @@ Public API policy:
 
 Deprecations are marked and retained for at least one MINOR before MAJOR removal.
 
-## 5) Recommended extension workflow
+## 6) Recommended extension workflow
 1. Build a content pack or plugin against current public headers.
 2. Validate with headless run + replay verify.
 3. Pin against a compatible runtime version.
 4. Avoid internal include reliance to reduce breakage risk.
 
-## 6) Plugin lifecycle boundary
+## 7) Plugin lifecycle boundary
 
 Expected host lifecycle:
 1. Construct plugin instances.
@@ -80,7 +80,7 @@ Registration validates:
 This boundary keeps plugin management in the public layer while keeping registry storage and ordering internal/unstable.
 
 
-## 7) Compatibility + diagnostics expectations
+## 8) Compatibility + diagnostics expectations
 
 - Host tools can call `isPluginTargetCompatible(metadata)` for registration preflight before attempting registration.
 - Failed registration results should be surfaced via `pluginRegistrationErrorMessage(error)` to keep diagnostics stable for end users.
@@ -88,8 +88,15 @@ This boundary keeps plugin management in the public layer while keeping registry
 - Later pack assets override earlier assets by GUID.
 - Conflicts are logged for diagnostics.
 
-## 5) Creator-safe extension workflow
+## 9) Creator-safe extension workflow
 1. Build against public headers only.
 2. Run smoke + replay verify with your pack/plugin.
 3. Pin your integration to a compatible runtime public API version.
 4. Avoid internal include dependencies to reduce breakage risk.
+
+
+## Commercial v1 support statement
+- Supported extension contracts are intentionally narrow: content packs, shader pack descriptors, and tool panels.
+- Anything outside `engine/public/*` is implementation detail and may change without deprecation guarantees.
+- Compatibility is evaluated against runtime public API version (major exact, plugin minor <= runtime minor).
+- Plugin/module hosts are responsible for object lifetime and teardown ordering.

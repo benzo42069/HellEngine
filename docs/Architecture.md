@@ -1,5 +1,13 @@
 # Architecture
 
+
+## Public API / extension boundary (finalized v1)
+- **Stable public boundary:** `include/engine/public/*` only.
+- **Explicitly unstable internals:** `include/engine/internal/*`, `src/engine/*`, and any internal registry/container details.
+- **Plugin lifecycle contract:** metadata-declared target API version, registration-time compatibility gating, duplicate/null/id validation, explicit unregister/clear teardown.
+- **Mod/content contract:** content-pack layering via `--content-pack` (`,`/`;` separators), left-to-right merge, later GUID override wins, conflicts logged.
+- **Ownership rule:** plugin objects are host-owned, engine stores non-owning pointers and requires unregister-before-destroy.
+
 ## Public extensibility boundaries (2026-03-08)
 
 - Public contract for embedders/mod tooling remains constrained to `include/engine/public/*` only.

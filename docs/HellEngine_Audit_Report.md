@@ -421,3 +421,10 @@ Residual risk:
   1. Catch target-definition drift allowed some Catch executables to be defined without `Catch2::Catch2WithMain`, producing missing `main` link failures.
   2. Runtime DLL deployment for tests was not standardized, causing `0xc0000135` during Catch discovery when SDL2/SDL2_mixer DLLs were unavailable beside test binaries.
 - The remediation introduces centralized CMake helpers for plain and Catch tests and a single reusable Windows DLL deployment helper (`TARGET_RUNTIME_DLLS` copy) applied to all test targets.
+
+
+## Public API / extensibility closure (2026-03-09)
+- Public contract is now explicitly constrained to `include/engine/public/*`, with `include/engine/internal/*` and `src/engine/*` documented as non-contract internals.
+- Plugin lifecycle expectations are explicit: metadata + API compatibility checks, deterministic registration rejection categories, host-owned plugin instances, and explicit unregister/clear teardown requirements.
+- Mod/content extension is formalized as multi-pack content layering (`--content-pack`) with left-to-right merge and later GUID overrides.
+- Net result: clearer commercial-v1 extension posture without broadening unstable ABI exposure.
