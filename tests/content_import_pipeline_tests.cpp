@@ -164,6 +164,37 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    nlohmann::json duplicateClipAudioDoc = {
+        {"audio", {
+            {"clips", nlohmann::json::array({
+                {{"id", "dup"}, {"path", "sfx/a.wav"}},
+                {{"id", "dup"}, {"path", "sfx/b.wav"}}
+            })}
+        }}
+    };
+    audioError.clear();
+    if (engine::parseAudioContentDatabase(duplicateClipAudioDoc, audioDb, audioError) || audioError.find("duplicate audio clip id") == std::string::npos) {
+        std::cerr << "duplicate clip id validation failed\n";
+        return EXIT_FAILURE;
+    }
+
+    nlohmann::json unknownRefAudioDoc = {
+        {"audio", {
+            {"clips", nlohmann::json::array({
+                {{"id", "sfx_hit"}, {"path", "sfx/hit.wav"}}
+            })},
+            {"music", "missing_music"},
+            {"events", nlohmann::json::array({
+                {{"name", "hit"}, {"clip", "missing_clip"}, {"gain", 1.0}}
+            })}
+        }}
+    };
+    audioError.clear();
+    if (engine::parseAudioContentDatabase(unknownRefAudioDoc, audioDb, audioError) || audioError.find("audio.music references unknown clip id") == std::string::npos) {
+        std::cerr << "unknown music clip validation failed\n";
+        return EXIT_FAILURE;
+    }
+
     nlohmann::json pack = {
         {"importRegistry", nlohmann::json::array({
             {{"guid", imported[0].source.guid}, {"importFingerprint", imported[0].importFingerprint}},

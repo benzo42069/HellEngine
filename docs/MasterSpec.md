@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-09: Audio subsystem finalization pass completed: authored audio parsing now enforces duplicate/unknown-reference/empty-path validation; runtime audio reconfiguration now frees old clip resources before reload and auto-starts configured looping music after content load. Audio dispatch remains presentation-side outside deterministic replay hashing.
 - 2026-03-09: Finalized creator-facing content import closure for sprites/palettes/atlases/animation variants/audio. Art manifests now require `assetManifestType: "art-import"`, reject duplicate GUID/source-path records, normalize+validate atlas naming, and carry palette-template dependency tags into `importRegistry` invalidation metadata to make source-vs-runtime boundaries explicit in pack outputs.
 
 - 2026-03-09: Editor tooling closure pass completed for commercial UX polish. Gameplay-focused tools were split from the pattern panel into a dedicated module (`editor_tools_gameplay_panel.cpp`) so responsibilities are now workspace shell/content flow, pattern authoring, gameplay encounter/projectile/trait editing, and shared services. Workspace now includes explicit workflow shortcuts (content/pattern/palette-diagnostics), dynamic content browser scanning, and clearer empty states for missing content selection.
@@ -37,6 +38,7 @@
 
 
 ## Build Notes
+- 2026-03-09: Audio subsystem finalization pass completed: authored audio parsing now enforces duplicate/unknown-reference/empty-path validation; runtime audio reconfiguration now frees old clip resources before reload and auto-starts configured looping music after content load. Audio dispatch remains presentation-side outside deterministic replay hashing.
 - 2026-03-08: Removed generic content pipeline -> runtime audio header coupling by extracting audio pack schema types into `audio_content.h`; `content_pipeline.h` no longer includes `audio_system.h`, so SDL_mixer headers are no longer required for generic content/tool include paths. Follow-up: keep runtime playback APIs confined to `audio_system` and avoid reintroducing SDL-facing includes into content headers.
 - 2026-03-08: Consolidated third-party CMake dependency registration into a single `engine_register_dependency(...)` workflow and one `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})` materialization pass. This replaces fragmented declaration patterns with one auditable dependency list while preserving existing targets (`SDL2`, `SDL2_mixer`, `imgui`, `nlohmann_json`, `Catch2`) and downstream link wiring.
 - 2026-03-08: `ContentPacker` dependency surface was re-audited after audio schema extraction to `audio_content.h`; it now links only `nlohmann_json` and no longer links SDL2/SDL2_mixer because pack-generation code does not invoke runtime audio APIs.

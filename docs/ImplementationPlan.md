@@ -759,6 +759,12 @@ Completed release-engineering closure work:
 - Applied minimal build fix in shared target wiring usage: switched both targets to `engine_add_catch_test(...)` so `Catch2::Catch2WithMain` is linked automatically.
 - Kept executable names and test intent unchanged; updated test sources to `TEST_CASE` format to align with Catch-driven main provisioning and discovery.
 
+
+## 2026-03-09 — Audio workflow/runtime finalization pass (completed)
+- [x] Audited authored audio flow end-to-end (`data/audio.json` -> `parseAudioContentDatabase` -> `AudioSystem` -> presentation event dispatch in `Runtime`).
+- [x] Hardened authoring validation with duplicate/unknown reference checks and required clip paths.
+- [x] Hardened runtime reconfigure lifecycle by freeing previously loaded chunks before reloading and auto-starting authored loop music after successful configure.
+- [x] Confirmed deterministic boundary remains intact: audio routing is still presentation-side and outside replay hash state.
 ## 2026-03-09 — GameplaySession architecture finalization (session orchestration ownership)
 
 ### Summary

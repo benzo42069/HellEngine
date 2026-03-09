@@ -197,6 +197,11 @@ Ownership rule: simulation authority is never inferred from renderer naming; det
 - `GlBulletRenderer` consumes Projectile SoA data (including trails) each frame, resolves palette/gradient color on CPU, builds preallocated quad buffers, and submits one indexed draw.
 - SpriteBatch procedural bullet rendering remains the fallback path if GL init fails or is unavailable.
 
+
+## Audio Authoring/Runtime Boundary (2026-03-09 update)
+- Authoring boundary: `audio` content (`clips`, `events`, `music`) is parsed by content pipeline schema types (`audio_content.h`) with strict reference validation before runtime configuration.
+- Runtime boundary: `AudioSystem` owns SDL_mixer resources, bus gain application (master/music/sfx), and event playback; deterministic gameplay systems only emit presentation audio events.
+- Integration boundary: `Runtime::dispatchAudioEvents()` maps gameplay presentation events to authored audio event ids and dispatches after simulation tick, preserving replay determinism.
 ## Runtime ownership update (2026-03-09)
 
 `GameplaySession` ownership boundaries are now finalized as:

@@ -745,6 +745,12 @@
 - **Rationale**: Keeps Catch entrypoint ownership centralized in one helper and prevents per-target drift that can reintroduce missing-main linker failures.
 - **Status**: Accepted.
 
+
+## 2026-03-09 — Audio authoring validation is strict; runtime remains graceful
+- Decision: treat malformed authored audio metadata (duplicate clip ids, duplicate event bindings, empty paths, unknown clip references) as parse-time validation failures in `parseAudioContentDatabase`.
+- Rationale: fail fast for creators during content packaging/loading instead of silently degrading routing maps.
+- Decision: keep runtime mixer behavior resilient (missing files still warn/no-op) while ensuring reconfiguration frees previous chunks and auto-starts configured loop music.
+- Boundary note: deterministic simulation remains unchanged because audio dispatch/update still execute in presentation path after `simTick()`.
 ## 2026-03-09 — GameplaySession final orchestration-policy extraction
 - **Context**: After prior subsystem decomposition, `GameplaySession::updateGameplay()` still directly owned two policy-heavy concerns: content hot-reload poll/fanout and upgrade cadence/debug mutation policy.
 - **Decision**: Introduce `SessionOrchestrationSubsystem` in `gameplay_session_subsystems` and route both concerns through explicit subsystem interfaces.
