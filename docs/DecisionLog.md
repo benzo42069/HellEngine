@@ -715,3 +715,10 @@
 - **Decision**: Route `render2d_tests` and `pattern_tests` through `engine_add_catch_test(...)` instead of `engine_add_plain_test(...)` to inherit `Catch2::Catch2WithMain` from the shared helper.
 - **Rationale**: Keeps Catch entrypoint ownership centralized in one helper and prevents per-target drift that can reintroduce missing-main linker failures.
 - **Status**: Accepted.
+
+
+## 2026-03-09 — Audio authoring validation is strict; runtime remains graceful
+- Decision: treat malformed authored audio metadata (duplicate clip ids, duplicate event bindings, empty paths, unknown clip references) as parse-time validation failures in `parseAudioContentDatabase`.
+- Rationale: fail fast for creators during content packaging/loading instead of silently degrading routing maps.
+- Decision: keep runtime mixer behavior resilient (missing files still warn/no-op) while ensuring reconfiguration frees previous chunks and auto-starts configured loop music.
+- Boundary note: deterministic simulation remains unchanged because audio dispatch/update still execute in presentation path after `simTick()`.

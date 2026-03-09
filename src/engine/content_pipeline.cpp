@@ -10,6 +10,7 @@
 #include <regex>
 #include <set>
 #include <sstream>
+#include <unordered_set>
 
 namespace engine {
 
@@ -552,11 +553,14 @@ std::unordered_map<std::string, std::string> extractImportFingerprintByGuid(cons
 
 bool parseAudioContentDatabase(const nlohmann::json& doc, AudioContentDatabase& out, std::string& error) {
     out = {};
+    error.clear();
     if (!doc.contains("audio") || !doc["audio"].is_object()) {
         return true;
     }
 
     const auto& audio = doc["audio"];
+    std::unordered_set<std::string> clipIds;
+    std::unordered_set<AudioEventId> eventIds;
     if (audio.contains("clips")) {
         if (!audio["clips"].is_array()) {
             error = "`audio.clips` must be an array";
@@ -578,6 +582,14 @@ bool parseAudioContentDatabase(const nlohmann::json& doc, AudioContentDatabase& 
             clip.baseGain = clipJson.value("baseGain", 1.0F);
             if (clip.id.empty()) {
                 error = "audio clip id cannot be empty";
+                return false;
+            }
+            if (clip.path.empty()) {
+                error = "audio clip path cannot be empty for clip id: " + clip.id;
+                return false;
+            }
+            if (!clipIds.insert(clip.id).second) {
+                error = "duplicate audio clip id: " + clip.id;
                 return false;
             }
             out.clips.push_back(std::move(clip));
@@ -616,11 +628,27 @@ bool parseAudioContentDatabase(const nlohmann::json& doc, AudioContentDatabase& 
                 error = "audio event clip id cannot be empty";
                 return false;
             }
+            if (!eventIds.insert(binding.event).second) {
+                error = "duplicate audio event binding for event: " + name;
+                return false;
+            }
             out.events.push_back(std::move(binding));
         }
     }
 
     out.musicClipId = audio.value("music", std::string());
+    if (!out.musicClipId.empty() && clipIds.find(out.musicClipId) == clipIds.end()) {
+        error = "audio.music references unknown clip id: " + out.musicClipId;
+        return false;
+    }
+
+    for (const AudioEventBinding& binding : out.events) {
+        if (clipIds.find(binding.clipId) == clipIds.end()) {
+            error = "audio event references unknown clip id: " + binding.clipId;
+            return false;
+        }
+    }
+
     return true;
 }
 } // namespace engine

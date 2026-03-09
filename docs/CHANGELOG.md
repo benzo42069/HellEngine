@@ -10,6 +10,8 @@
 # Changelog
 
 ## Unreleased
+- Finalized audio workflow resilience: audio content parsing now rejects duplicate clip/event bindings, empty clip paths, and unknown music/event clip references so authoring errors fail fast before runtime.
+- Audio runtime now clears/reloads clip memory safely during reconfiguration and auto-starts configured loop music after content load, preserving the deterministic simulation boundary while improving creator-facing reliability.
 ### Fixed
 - Standardized Catch2 target setup through shared CMake helpers so all Catch-based test executables are linked with `Catch2::Catch2WithMain`, eliminating Windows `unresolved external symbol main`/`LNK1120` failures caused by per-target drift.
 - Added Windows runtime DLL deployment for every test executable by copying each target's `TARGET_RUNTIME_DLLS` into the test binary output directory at build time, preventing `0xc0000135` failures during `catch_discover_tests` discovery when SDL2/SDL2_mixer DLLs were missing.

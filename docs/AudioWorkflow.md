@@ -36,3 +36,14 @@ Example:
 - Keep event names stable; avoid renaming without updating references.
 - Validate boss warnings and phase transitions audibly in playtests.
 - Treat missing audio assets as fix-now authoring errors even if runtime degrades gracefully.
+
+
+## 6) Finalized event and bus model
+- Buses are intentionally minimal and creator-facing: `master`, `music`, `sfx`.
+- Event bindings are one-per-event (`hit`, `graze`, `player_damage`, `enemy_death`, `boss_warning`, `boss_phase_shift`, `defensive_special`, `run_clear`, `ui_click`, `ui_confirm`).
+- Runtime maps gameplay presentation events into authored event bindings; sim code never directly plays clips.
+
+## 7) Authoring validation and resilience rules
+- Audio parse now fails fast for duplicate clip ids, duplicate event bindings, empty clip paths, and unknown clip references (including `audio.music`).
+- Runtime still degrades gracefully for missing files at load time (`logWarn` + skip) so packs remain inspectable during iteration.
+- On successful configure, looped authored `audio.music` is auto-started and kept in sync with bus volume updates.

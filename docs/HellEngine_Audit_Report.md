@@ -421,3 +421,9 @@ Residual risk:
   1. Catch target-definition drift allowed some Catch executables to be defined without `Catch2::Catch2WithMain`, producing missing `main` link failures.
   2. Runtime DLL deployment for tests was not standardized, causing `0xc0000135` during Catch discovery when SDL2/SDL2_mixer DLLs were unavailable beside test binaries.
 - The remediation introduces centralized CMake helpers for plain and Catch tests and a single reusable Windows DLL deployment helper (`TARGET_RUNTIME_DLLS` copy) applied to all test targets.
+
+
+## Audit follow-up update (2026-03-09): Audio workflow finalization
+- Closed remaining authoring resilience gaps by validating duplicate clip ids, duplicate event bindings, empty clip paths, and unknown `music`/event clip references at audio parse time.
+- Closed runtime reload safety gap by clearing previously loaded mixer chunks before reconfigure to prevent stale-memory accumulation during content reload paths.
+- Clarified event/bus model boundary: gameplay emits presentation events, runtime maps them to authored bindings, and bus gains remain master/music/sfx at playback time only.

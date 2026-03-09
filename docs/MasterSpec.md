@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-09: Audio subsystem finalization pass completed: authored audio parsing now enforces duplicate/unknown-reference/empty-path validation; runtime audio reconfiguration now frees old clip resources before reload and auto-starts configured looping music after content load. Audio dispatch remains presentation-side outside deterministic replay hashing.
 - 2026-03-09: Build/release reproducibility closure pass completed. CMake now deploys runtime DLL dependencies for top-level runtime tools (`EngineDemo`, `ContentPacker`) using the same `TARGET_RUNTIME_DLLS` post-build flow as tests, eliminating stale/manual DLL copy drift between clean and incremental builds. Portable manifest generation is now deterministic (stable sorted relative paths, static format header, no timestamp/path entropy) so repeated package runs from identical inputs produce identical manifest content.
 
 - 2026-03-09: Immediate missing-main build fix completed for `content_packer_tests`, `entity_tests`, and `boss_phase_tests`. Root cause was helper safety-override drift: `engine_link_catch_main_if_needed(...)` only force-classified two legacy targets, leaving `boss_phase_tests` exposed when Catch classification bypassed local include detection. Applied minimal CMake change to extend the existing override set to include `boss_phase_tests` (still guarded by `NOT main(...)`) so all three targets reliably link `Catch2::Catch2WithMain` when needed. Preserve target names, test registration shape, and runtime-DLL deployment; perform a clean rebuild from a deleted build directory to fully validate regenerated link state.
@@ -31,6 +32,7 @@
 
 
 ## Build Notes
+- 2026-03-09: Audio subsystem finalization pass completed: authored audio parsing now enforces duplicate/unknown-reference/empty-path validation; runtime audio reconfiguration now frees old clip resources before reload and auto-starts configured looping music after content load. Audio dispatch remains presentation-side outside deterministic replay hashing.
 - 2026-03-08: Removed generic content pipeline -> runtime audio header coupling by extracting audio pack schema types into `audio_content.h`; `content_pipeline.h` no longer includes `audio_system.h`, so SDL_mixer headers are no longer required for generic content/tool include paths. Follow-up: keep runtime playback APIs confined to `audio_system` and avoid reintroducing SDL-facing includes into content headers.
 - 2026-03-08: Consolidated third-party CMake dependency registration into a single `engine_register_dependency(...)` workflow and one `FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})` materialization pass. This replaces fragmented declaration patterns with one auditable dependency list while preserving existing targets (`SDL2`, `SDL2_mixer`, `imgui`, `nlohmann_json`, `Catch2`) and downstream link wiring.
 - 2026-03-08: `ContentPacker` dependency surface was re-audited after audio schema extraction to `audio_content.h`; it now links only `nlohmann_json` and no longer links SDL2/SDL2_mixer because pack-generation code does not invoke runtime audio APIs.
