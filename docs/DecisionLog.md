@@ -1,3 +1,9 @@
+## 2026-03-09 — Renderer subsystem ownership closure
+- **Context**: Multiple renderer-related modules (`render2d`, `render_pipeline`, `modern_renderer`, `gl_bullet_renderer`, `gpu_bullets`) were functionally correct but still easy to misread as overlapping owners.
+- **Decision**: Freeze ownership boundaries as documentation contract: `render_pipeline` is sole path/orchestration owner; `gl_bullet_renderer` is GL projectile draw backend only; `render2d` is shared 2D primitive layer; `modern_renderer` is post-FX/compositing only; `gpu_bullets` (`CpuMassBulletRenderSystem`) is presentation-only for `CpuMassRender`.
+- **Rationale**: Removes residual ambiguity without redesign, preserving replay/determinism and current rendering behavior.
+- **Consequence**: Future GPU/compute simulation work must arrive as an explicitly new authoritative simulation mode, not by repurposing existing presentation subsystems.
+
 ## 2026-03-09 — Immediate Catch2 main-link closure for content_packer/entity/boss tests
 
 ## 2026-03-09 — Build/release reproducibility and DLL deployment closure

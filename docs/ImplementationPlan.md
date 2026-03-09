@@ -1,3 +1,10 @@
+## 2026-03-09 — Renderer stack ownership finalization
+- [x] Audited `render2d`, `render_pipeline`, `modern_renderer`, `gl_bullet_renderer`, and `gpu_bullets` boundaries against current runtime behavior.
+- [x] Confirmed projectile backend selection remains centralized in `RenderPipeline::resolveProjectileRenderPath(...)`.
+- [x] Added explicit inline ownership comments to prevent backend/simulation responsibility drift.
+- [x] Updated architecture/spec/decision/changelog/audit and renderer notes to freeze the final ownership contract.
+- [x] Preserved behavior/perf: no rendering-path logic changes and no simulation-authority transfer in this pass.
+
 ## 2026-03-09 — Immediate Build Fix: missing Catch main for remaining test executables (completed)
 
 - [x] Build/release reliability audit completed for clean rebuild, incremental rebuild, release packaging, and runtime DLL deployment paths.

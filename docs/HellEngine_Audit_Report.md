@@ -1,3 +1,16 @@
+# Renderer ownership closure update (2026-03-09)
+
+A targeted closure pass confirmed renderer stack boundaries are now explicit and intentionally stable without functional redesign:
+- `render_pipeline` owns path selection + frame composition order.
+- `render2d` owns reusable SDL 2D drawing primitives/infrastructure.
+- `modern_renderer` owns post-processing/compositing resources and passes.
+- `gl_bullet_renderer` owns OpenGL projectile draw prep/submission only.
+- `gpu_bullets` (`CpuMassBulletRenderSystem`) remains a non-authoritative presentation path.
+
+Residual intentional note: `CpuMassRender` is presentation-focused and must not be treated as gameplay-authoritative collision ownership unless a future explicit mode is introduced.
+
+---
+
 ## 2026-03-09 Build/Release reliability closure update
 - Top-level runtime binaries now share the same runtime-DLL deployment mechanism as tests (`TARGET_RUNTIME_DLLS` via `engine_deploy_runtime_dlls`), reducing clean/incremental drift risk on Windows.
 - Portable release manifest generation no longer includes timestamp/path entropy; inventory is stable-sorted by relative path with fixed format metadata for reproducible release validation diffs.
