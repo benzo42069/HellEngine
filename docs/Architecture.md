@@ -42,11 +42,18 @@
    - logger tail buffering for crash reports
 
 5. **Tooling/editor** (`editor_tools.*`)
+   - module split: `editor_tools_core`, `editor_tools_workspace_panel`, `editor_tools_pattern_panel`, `editor_tools_gameplay_panel`, `editor_tools_services`
+   - workflow-oriented shell: content browsing + inspector + telemetry preview + validator
+   - focused authoring panels: pattern graph/generation, palette/FX template editing, gameplay/encounter tooling
    - in-engine control center
    - pattern graph editing/preview
    - validation status and debug controls
 
 ## Data flow
+
+- Source-art pipeline boundary finalized: authored `art-import` manifests are source-only inputs; `sourceAssetRegistry`/`importRegistry`/`atlasBuild`/`animationBuild`/`variantBuild` are generated runtime-pack metadata consumed by tools/runtime loaders, not hand-authored runtime JSON tables.
+- Import validation now fails early on malformed manifest type, duplicate source GUIDs, duplicate source paths, and invalid atlas-group identifiers before import fingerprinting begins.
+
 
 - Author JSON content (`patterns`, `entities`, `traits`, `archetypes`, `encounters`, optional `graphs`).
 - Pack with `ContentPacker` -> `content.pak`.
@@ -70,6 +77,16 @@
 
 
 ## Renderer ownership boundaries (finalized)
+
+### Renderer subsystem role matrix
+- `render_pipeline`: frame orchestration owner (context lifecycle, projectile path decision, scene composition ordering).
+- `render2d`: SDL-side 2D drawing primitives and shared utilities (`SpriteBatch`, `DebugDraw`, `DebugText`, camera/texture helpers).
+- `modern_renderer`: post-processing/composition pipeline owner (offscreen targets + fullscreen passes only).
+- `gl_bullet_renderer`: OpenGL projectile draw backend owner (consumes projectile SoA snapshots and submits GL draws).
+- `gpu_bullets` (`CpuMassBulletRenderSystem`): non-authoritative CPU mass-render presentation path for `CpuMassRender` mode.
+
+Ownership rule: simulation authority is never inferred from renderer naming; deterministic gameplay ownership remains in simulation/session systems.
+
 
 - `render_pipeline` is the sole orchestration layer for renderer-path selection and frame composition; projectile-path checks are resolved once via `ProjectileRenderPath` and consumed consistently for prep + submit.
 - `gl_bullet_renderer` owns only OpenGL projectile draw preparation/submission from projectile SoA snapshots.
@@ -187,3 +204,20 @@
 - `RenderPipeline::buildSceneOverlay` now routes projectile presentation through `GlBulletRenderer` when OpenGL is ready and the renderer is initialized.
 - `GlBulletRenderer` consumes Projectile SoA data (including trails) each frame, resolves palette/gradient color on CPU, builds preallocated quad buffers, and submits one indexed draw.
 - SpriteBatch procedural bullet rendering remains the fallback path if GL init fails or is unavailable.
+
+
+## Audio Authoring/Runtime Boundary (2026-03-09 update)
+- Authoring boundary: `audio` content (`clips`, `events`, `music`) is parsed by content pipeline schema types (`audio_content.h`) with strict reference validation before runtime configuration.
+- Runtime boundary: `AudioSystem` owns SDL_mixer resources, bus gain application (master/music/sfx), and event playback; deterministic gameplay systems only emit presentation audio events.
+- Integration boundary: `Runtime::dispatchAudioEvents()` maps gameplay presentation events to authored audio event ids and dispatches after simulation tick, preserving replay determinism.
+## Runtime ownership update (2026-03-09)
+
+`GameplaySession` ownership boundaries are now finalized as:
+- **Coordinator role** (`GameplaySession`): deterministic phase orchestration and subsystem sequencing.
+- **Session orchestration policy** (`SessionOrchestrationSubsystem`): content hot-reload poll cadence/fanout and progression cadence/debug policy transitions.
+- **Player combat runtime** (`PlayerCombatSubsystem`): aim/movement/defensive-special trigger/graze collection.
+- **Progression runtime** (`ProgressionSubsystem`): upgrade navigation mutation flow.
+- **Encounter runtime** (`EncounterSimulationSubsystem`): collision/runtime-event handling and encounter-scoped presentation feedback.
+- **Presentation shaping** (`PresentationSubsystem`): non-sim feedback event emission (camera/audio).
+
+Deterministic/replay contract is unchanged: subsystem calls still execute from `GameplaySession::updateGameplay()` in stable fixed-tick order.

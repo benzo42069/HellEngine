@@ -3,6 +3,8 @@
 This guide explains how creators author palette templates and connect them to grayscale/monochrome asset workflows.
 
 ## 1) Where palette data lives
+> Editor note: use **Workflow Shortcuts → Palette/FX Pass** in Control Center to focus palette + preview panels before editing templates.
+
 - Palette templates: `data/palettes/palette_fx_templates.json`
 - Asset import manifests (grayscale/monochrome flags): `data/art_import_manifest.json` (or your own manifest file)
 
@@ -26,6 +28,14 @@ At runtime, templates are converted into rows in the palette ramp texture (`64 x
 - Archetypes/entities that reference palette templates are resolved during content load/spawn.
 
 ## 5) Grayscale/monochrome import workflow
+
+
+Validation expectations now enforced by the importer:
+- `assetManifestType` must be `art-import`.
+- `atlasGroup` must be a non-empty identifier.
+- Duplicate `guid` or duplicate `source` entries in the same manifest fail validation.
+- When `paletteTemplate` is authored, the import registry records a `paletteTemplate:<name>` dependency so reimport invalidations show color-ramp coupling explicitly.
+
 In art manifests (`assetManifestType: "art-import"`), set per-asset:
 - `colorWorkflow`: `full-color`, `grayscale`, or `monochrome`
 - `atlasGroup`: keep similarly shaded assets grouped

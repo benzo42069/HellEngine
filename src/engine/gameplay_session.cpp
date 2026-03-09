@@ -64,18 +64,13 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
     presentation_.pendingAudioEvents.clear();
     traitSystem_.onTick(simulation_.tickIndex);
 
-    if (simulation_.tickIndex >= nextHotReloadPollTick_) {
-        nextHotReloadPollTick_ = simulation_.tickIndex + kHotReloadPollTicks;
-        for (const ContentChange& change : contentWatcher_.pollChanges()) {
-            switch (change.type) {
-                case ContentType::Patterns: reloadPatterns(change.path); break;
-                case ContentType::Entities: reloadEntities(change.path); break;
-                case ContentType::Traits: reloadTraits(change.path); break;
-                case ContentType::Difficulty: reloadDifficulty(change.path); break;
-                case ContentType::Palettes: reloadPalettes(change.path); break;
-            }
-        }
-    }
+    SessionOrchestrationSubsystem::HotReloadCallbacks reloadCallbacks;
+    reloadCallbacks.reloadPatterns = [this](const std::string& path) { reloadPatterns(path); };
+    reloadCallbacks.reloadEntities = [this](const std::string& path) { reloadEntities(path); };
+    reloadCallbacks.reloadTraits = [this](const std::string& path) { reloadTraits(path); };
+    reloadCallbacks.reloadDifficulty = [this](const std::string& path) { reloadDifficulty(path); };
+    reloadCallbacks.reloadPalettes = [this](const std::string& path) { reloadPalettes(path); };
+    sessionOrchestration_.pollContentHotReloads(contentWatcher_, simulation_.tickIndex, kHotReloadPollTicks, nextHotReloadPollTick_, reloadCallbacks);
 
     playerCombat_.updateAimTarget(playerState_, simulation_.simClock);
 
@@ -103,20 +98,22 @@ void GameplaySession::updateGameplay(const double dt, const std::uint32_t inputM
         const MetaBonuses& mb = metaProgression_.bonuses();
         const auto rareChanceMultiplier = 1.0F + (archetype.stats.rareChance + mb.rarityBonus) * 0.06F;
         traitSystem_.setRareChanceMultiplier(rareChanceMultiplier);
-        if (simulation_.tickIndex > 0 && simulation_.tickIndex % 300 == 0 && !traitSystem_.hasPendingChoices()) {
-            (void)traitSystem_.rollChoices();
-            progression_.upgradeScreenOpen = true;
-        }
+        sessionOrchestration_.updateUpgradeCadence(
+            simulation_.tickIndex,
+            traitSystem_.hasPendingChoices(),
+            progression_.upgradeScreenOpen,
+            [this]() { return traitSystem_.rollChoices(); }
+        );
         const UpgradeDebugOptions& upgradeDebug = debugTools_.toolSuite.upgradeDebugOptions();
-        debugTools_.perfHudOpen = upgradeDebug.showPerfHud;
-        presentation_.dangerFieldEnabled = upgradeDebug.showDangerField;
-        if (upgradeDebug.spawnUpgradeScreen && !traitSystem_.hasPendingChoices()) {
-            (void)traitSystem_.rollChoices();
-            progression_.upgradeScreenOpen = true;
-        }
-        if (upgradeDebug.forcedRarity >= 0 && traitSystem_.hasPendingChoices()) {
-            traitSystem_.forcePendingRarity(static_cast<TraitRarity>(upgradeDebug.forcedRarity));
-        }
+        sessionOrchestration_.applyUpgradeDebugOptions(
+            upgradeDebug,
+            traitSystem_.hasPendingChoices(),
+            debugTools_.perfHudOpen,
+            presentation_.dangerFieldEnabled,
+            progression_.upgradeScreenOpen,
+            [this]() { return traitSystem_.rollChoices(); },
+            [this](const TraitRarity rarity) { traitSystem_.forcePendingRarity(rarity); }
+        );
 
         const TraitModifiers& tm = traitSystem_.modifiers();
         if (zoneBeforeUpdate) difficultyModel_.setStageZone(runStructure_.stageIndex(), zoneBeforeUpdate->type);

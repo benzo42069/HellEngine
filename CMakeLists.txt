@@ -165,6 +165,7 @@ add_library(engine_core STATIC
   src/engine/editor/editor_tools_services.cpp
   src/engine/editor/editor_tools_workspace_panel.cpp
   src/engine/editor/editor_tools_pattern_panel.cpp
+  src/engine/editor/editor_tools_gameplay_panel.cpp
   src/engine/entities.cpp
   src/engine/gpu_bullets.cpp
   src/engine/gl_bullet_renderer.cpp
@@ -276,8 +277,8 @@ function(engine_source_uses_catch out_var source_file)
   endif()
 
   file(READ "${_engine_test_source_path}" _engine_test_source_contents)
-  string(FIND "${_engine_test_source_contents}" "#include <catch2/" _engine_catch_include_idx)
-  if(_engine_catch_include_idx GREATER -1)
+  string(REGEX MATCH "#include[ \t]*[<\"]catch2/" _engine_catch_include_match "${_engine_test_source_contents}")
+  if(_engine_catch_include_match)
     set(${out_var} TRUE PARENT_SCOPE)
   else()
     set(${out_var} FALSE PARENT_SCOPE)
@@ -304,13 +305,6 @@ function(engine_link_catch_main_if_needed target_name source_file)
   engine_source_uses_catch(_engine_test_is_catch "${source_file}")
   engine_source_defines_main(_engine_test_has_main "${source_file}")
 
-  # Safety override for known Catch-authored targets that can be authored
-  # without a local include in the translation unit (e.g. shared helper headers).
-  if((target_name STREQUAL "content_packer_tests" OR target_name STREQUAL "entity_tests" OR target_name STREQUAL "boss_phase_tests")
-     AND NOT _engine_test_has_main)
-    set(_engine_test_is_catch TRUE)
-  endif()
-
   if(_engine_test_is_catch AND NOT _engine_test_has_main)
     target_link_libraries(${target_name} PRIVATE Catch2::Catch2WithMain)
     set(_engine_target_uses_catch_with_main TRUE PARENT_SCOPE)
@@ -319,18 +313,41 @@ function(engine_link_catch_main_if_needed target_name source_file)
   endif()
 endfunction()
 
-function(engine_add_test target_name source_file)
+function(engine_add_test_target target_name source_file)
   add_executable(${target_name} ${source_file})
   target_link_libraries(${target_name} PRIVATE engine_core)
   engine_link_catch_main_if_needed(${target_name} "${source_file}")
 
   engine_deploy_runtime_dlls(${target_name})
 
+  set_property(TARGET ${target_name} PROPERTY ENGINE_TEST_USES_CATCH_DISCOVERY ${_engine_target_uses_catch_with_main})
+endfunction()
+
+function(engine_register_test target_name)
+  cmake_parse_arguments(ENGINE_TEST "" "TEST_NAME" "COMMAND_ARGS;DEPENDS" ${ARGN})
+
+  if(NOT ENGINE_TEST_TEST_NAME)
+    set(ENGINE_TEST_TEST_NAME ${target_name})
+  endif()
+
+  get_target_property(_engine_target_uses_catch_with_main ${target_name} ENGINE_TEST_USES_CATCH_DISCOVERY)
+
   if(_engine_target_uses_catch_with_main)
+    if(ENGINE_TEST_COMMAND_ARGS)
+      message(FATAL_ERROR "engine_register_test(${target_name}) does not support COMMAND_ARGS when catch_discover_tests is active")
+    endif()
     catch_discover_tests(${target_name})
   else()
-    add_test(NAME ${target_name} COMMAND ${target_name})
+    add_test(NAME ${ENGINE_TEST_TEST_NAME} COMMAND ${target_name} ${ENGINE_TEST_COMMAND_ARGS})
+    if(ENGINE_TEST_DEPENDS)
+      set_tests_properties(${ENGINE_TEST_TEST_NAME} PROPERTIES DEPENDS "${ENGINE_TEST_DEPENDS}")
+    endif()
   endif()
+endfunction()
+
+function(engine_add_test target_name source_file)
+  engine_add_test_target(${target_name} ${source_file})
+  engine_register_test(${target_name})
 endfunction()
 
 engine_add_test(timing_tests tests/timing_tests.cpp)
@@ -339,13 +356,9 @@ engine_add_test(render2d_tests tests/render2d_tests.cpp)
 engine_add_test(projectile_tests tests/projectile_tests.cpp)
 engine_add_test(pattern_tests tests/pattern_tests.cpp)
 
-add_executable(content_packer_tests tests/content_packer_tests.cpp)
-target_link_libraries(content_packer_tests PRIVATE engine_core)
-engine_link_catch_main_if_needed(content_packer_tests tests/content_packer_tests.cpp)
-engine_deploy_runtime_dlls(content_packer_tests)
+engine_add_test_target(content_packer_tests tests/content_packer_tests.cpp)
 add_test(NAME content_packer_generate COMMAND ContentPacker --input ${CMAKE_SOURCE_DIR}/data --output ${CMAKE_BINARY_DIR}/content_test.pak)
-add_test(NAME content_packer_tests COMMAND content_packer_tests ${CMAKE_BINARY_DIR}/content_test.pak)
-set_tests_properties(content_packer_tests PROPERTIES DEPENDS content_packer_generate)
+engine_register_test(content_packer_tests COMMAND_ARGS ${CMAKE_BINARY_DIR}/content_test.pak DEPENDS content_packer_generate)
 
 engine_add_test(content_import_pipeline_tests tests/content_import_pipeline_tests.cpp)
 engine_add_test(entity_tests tests/entity_tests.cpp)

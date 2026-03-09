@@ -12,6 +12,10 @@ float clamp01(const float value) {
     return std::clamp(value, 0.0F, 1.0F);
 }
 
+float clampDistance(const float value) {
+    return std::max(1.0F, value);
+}
+
 std::string normalizeAssetRoot(const std::string& root) {
     if (root.empty()) return std::string();
     if (root.back() == '/' || root.back() == '\\') return root;
@@ -33,7 +37,7 @@ bool AudioSystem::initialize() {
     return true;
 }
 
-void AudioSystem::shutdown() {
+void AudioSystem::clearLoadedSounds() {
     for (Mix_Chunk*& chunk : sounds_) {
         if (chunk) {
             Mix_FreeChunk(chunk);
@@ -41,6 +45,10 @@ void AudioSystem::shutdown() {
         }
     }
     sounds_.clear();
+}
+
+void AudioSystem::shutdown() {
+    clearLoadedSounds();
     loadedClips_.clear();
     eventRoutes_.clear();
     musicClipId_.clear();
@@ -92,6 +100,7 @@ void AudioSystem::playSoundPositional(const SoundId id, const Vec2 position, con
 bool AudioSystem::configureFromContent(const AudioContentDatabase& content, const std::string& assetRoot) {
     if (!initialized_) return false;
 
+    clearLoadedSounds();
     loadedClips_.clear();
     eventRoutes_.clear();
     musicClipId_.clear();
@@ -116,10 +125,15 @@ bool AudioSystem::configureFromContent(const AudioContentDatabase& content, cons
         eventRoutes_[event.event] = EventRoute {.clipId = event.clipId, .gain = clamp01(event.gain)};
     }
 
-    if (!content.musicClipId.empty() && loadedClips_.find(content.musicClipId) != loadedClips_.end()) {
-        musicClipId_ = content.musicClipId;
+    if (!content.musicClipId.empty()) {
+        if (loadedClips_.find(content.musicClipId) != loadedClips_.end()) {
+            musicClipId_ = content.musicClipId;
+        } else {
+            logWarn("Audio music clip id not found in loaded clips: " + content.musicClipId);
+        }
     }
 
+    startMusicIfConfigured();
     return !loadedClips_.empty();
 }
 
@@ -162,6 +176,23 @@ float AudioSystem::resolvePlaybackGain(const LoadedClip& clip, const float event
     return clamp01(clip.baseGain * clamp01(eventGain) * masterVolume_ * busGain(clip.bus));
 }
 
+void AudioSystem::startMusicIfConfigured() {
+    if (!initialized_) return;
+    if (musicClipId_.empty()) return;
+    const auto clipIt = loadedClips_.find(musicClipId_);
+    if (clipIt == loadedClips_.end()) return;
+
+    const LoadedClip& clip = clipIt->second;
+    if (!clip.loop) return;
+    if (musicChannel_ >= 0 && Mix_Playing(musicChannel_)) return;
+    if (clip.soundId >= sounds_.size() || !sounds_[clip.soundId]) return;
+
+    Mix_Chunk* chunk = sounds_[clip.soundId];
+    const float gain = resolvePlaybackGain(clip, 1.0F);
+    Mix_VolumeChunk(chunk, static_cast<int>(std::lround(gain * static_cast<float>(MIX_MAX_VOLUME))));
+    musicChannel_ = Mix_PlayChannel(-1, chunk, -1);
+}
+
 void AudioSystem::dispatchEvent(const AudioEventId event, const Vec2 position) {
     if (!initialized_) return;
 
@@ -173,13 +204,13 @@ void AudioSystem::dispatchEvent(const AudioEventId event, const Vec2 position) {
     const LoadedClip& clip = clipIt->second;
     const float gain = resolvePlaybackGain(clip, routeIt->second.gain);
     if (clip.loop) {
-        if (musicChannel_ >= 0 && !Mix_Playing(musicChannel_)) musicChannel_ = -1;
-        if (musicChannel_ < 0) {
-            if (clip.soundId >= sounds_.size() || !sounds_[clip.soundId]) return;
-            Mix_Chunk* chunk = sounds_[clip.soundId];
-            Mix_VolumeChunk(chunk, static_cast<int>(std::lround(gain * static_cast<float>(MIX_MAX_VOLUME))));
-            musicChannel_ = Mix_PlayChannel(-1, chunk, -1);
+        if (event == AudioEventId::BossWarning || event == AudioEventId::BossPhaseShift) {
+            if (musicChannel_ >= 0) {
+                Mix_HaltChannel(musicChannel_);
+                musicChannel_ = -1;
+            }
         }
+        startMusicIfConfigured();
         return;
     }
 
@@ -187,7 +218,7 @@ void AudioSystem::dispatchEvent(const AudioEventId event, const Vec2 position) {
         const float dx = position.x - listener_.x;
         const float dy = position.y - listener_.y;
         const float distance = std::sqrt(dx * dx + dy * dy);
-        const float attenuation = 1.0F - std::clamp(distance / 400.0F, 0.0F, 1.0F);
+        const float attenuation = 1.0F - std::clamp(distance / clampDistance(400.0F), 0.0F, 1.0F);
         playSound(clip.soundId, gain * attenuation);
         return;
     }
@@ -196,6 +227,9 @@ void AudioSystem::dispatchEvent(const AudioEventId event, const Vec2 position) {
 }
 
 void AudioSystem::update() {
+    if (musicChannel_ < 0 && !musicClipId_.empty()) {
+        startMusicIfConfigured();
+    }
     if (musicChannel_ < 0 || musicClipId_.empty()) return;
     if (Mix_Playing(musicChannel_)) {
         const auto clipIt = loadedClips_.find(musicClipId_);
