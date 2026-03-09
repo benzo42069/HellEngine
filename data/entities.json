@@ -47,6 +47,34 @@
       "projectilePalette": "Sky Nova"
     },
     {
+      "name": "Vanguard Lancer",
+      "type": "enemy",
+      "movement": "linear",
+      "spawnPosition": [
+        -160.0,
+        -210.0
+      ],
+      "baseVelocity": [
+        22.0,
+        28.0
+      ],
+      "maxHealth": 55.0,
+      "contactDamage": 9.0,
+      "attacksEnabled": true,
+      "attackPatternName": "Spread Lattice",
+      "attackIntervalSeconds": 0.38,
+      "projectilePaletteIndex": 12,
+      "spawnRule": {
+        "enabled": true,
+        "initialDelaySeconds": 1.2,
+        "intervalSeconds": 4.0,
+        "maxAlive": 2
+      },
+      "guid": "enemy-4b8a96dc1030c59f",
+      "attackPatternGuid": "pattern-09e7b4ad3ff22ca1",
+      "projectilePalette": "Scarlet Wave"
+    },
+    {
       "name": "Asterion Dreadnought",
       "type": "boss",
       "movement": "linear",

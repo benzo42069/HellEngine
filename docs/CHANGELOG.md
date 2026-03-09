@@ -1,3 +1,9 @@
+## 2026-03-09
+- Polished the shipped vertical-slice encounter data for stronger showcase pacing: Stage 01 now uses a mixed elite enemy set (`Basic Enemy Shooter` + `Vanguard Lancer`) with retuned intro/elite/event durations.
+- Added `Vanguard Lancer` as an authored enemy profile (Spread Lattice pattern + Scarlet Wave palette) so the sample demonstrates multi-enemy pressure and content pipeline extensibility without runtime hacks.
+- Updated Stage 01 boss flow authoring to run `Wave Weave` -> `Spread Lattice` -> `Composed Helix` and trigger `boss_phase_shift`, improving phase readability and authored audio transition validation.
+- Refreshed sample vertical-slice documentation/runbook to reflect the finalized encounter composition and validation scope.
+
 ## Unreleased
 - Public API/extensibility closure pass: finalized supported external scope (`include/engine/public/*`), documented plugin lifecycle/ownership/compatibility expectations, and formalized content-pack layering as the primary mod extension contract for commercial v1.
 

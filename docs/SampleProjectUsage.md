@@ -39,3 +39,8 @@ Later packs override earlier assets by GUID.
 - Entities and boss phases: `data/entities.json`
 - Encounter pacing: `data/encounters.json`
 - Audio bindings: `data/audio.json`
+
+## Vertical slice focus notes
+- Stage 01 (`sample_slice_stage_01`) showcases authored escalation: onboarding combat, mixed elite pressure (`Vanguard Lancer` + shooter), a compact event recovery window, then a three-motif boss sequence.
+- Projectile readability is demonstrated with distinct authored projectile palettes (`Sky Nova`, `Crimson Burst`, `Scarlet Wave`) and pattern variation across elite/boss lanes.
+- Validate determinism after any sample-content edit by rebuilding `content.pak` and rerunning replay verification before packaging.

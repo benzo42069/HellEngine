@@ -1,3 +1,8 @@
+## 2026-03-09 — Final vertical-slice polish pass (completed)
+- [x] Raised encounter readability/pressure using authored content only (no runtime hardcoding): mixed elite composition plus retuned zone durations in `sample_slice_stage_01`.
+- [x] Added a new authored enemy profile (`Vanguard Lancer`) to exercise enemy flow/pattern/palette systems during the elite lane.
+- [x] Retuned stage-01 boss flow phase ordering to explicitly showcase three distinct authored motifs (`Wave Weave` -> `Spread Lattice` -> `Composed Helix`) with authored phase-shift audio event binding.
+- [x] Refreshed vertical-slice/sample docs and validation notes to match the final packaged showcase workflow.
 ## 2026-03-09 — Renderer stack ownership finalization
 - [x] Audited `render2d`, `render_pipeline`, `modern_renderer`, `gl_bullet_renderer`, and `gpu_bullets` boundaries against current runtime behavior.
 - [x] Confirmed projectile backend selection remains centralized in `RenderPipeline::resolveProjectileRenderPath(...)`.

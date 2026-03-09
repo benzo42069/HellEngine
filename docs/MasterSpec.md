@@ -1,6 +1,7 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-09: Polished vertical-slice content pass completed for showcase readiness. `sample_slice_stage_01` now escalates through a mixed elite lane (`Basic Enemy Shooter` + new `Vanguard Lancer`), tighter event downtime, and an authored boss phase order that explicitly includes `Spread Lattice` between `Wave Weave` and `Composed Helix`. This keeps encounter pacing authored through content-pack JSON while improving readability/variety and preserving deterministic replay workflow + packaging paths.
 - 2026-03-09: Public API/extensibility closure finalized for commercial-v1 positioning. Public contract explicitly scoped to `include/engine/public/*`; plugin lifecycle expectations (metadata, compatibility preflight, registration/unregister/clear teardown, host ownership) and mod/content layering semantics (multi-pack order, GUID override, conflict logging) are now documented as the supported extension boundary.
 
 - 2026-03-09: Audio subsystem finalization pass completed: authored audio parsing now enforces duplicate/unknown-reference/empty-path validation; runtime audio reconfiguration now frees old clip resources before reload and auto-starts configured looping music after content load. Audio dispatch remains presentation-side outside deterministic replay hashing.

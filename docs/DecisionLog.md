@@ -1,3 +1,8 @@
+## 2026-03-09 — Vertical slice encounter polish remains content-authored
+- **Decision:** Final showcase tuning was implemented by updating authored sample content (`data/entities.json`, `data/encounters.json`) rather than adding runtime special-case logic.
+- **Rationale:** The sample must validate intended engine workflows (content pipeline -> runtime hydration -> replay/package checks) and remain representative for creators.
+- **Applied changes:** Added `Vanguard Lancer` authored enemy profile, elevated Stage 01 elite composition to mixed pressure, tightened event lane downtime, and switched Stage 01 boss flow ordering to include `Spread Lattice` with explicit `boss_phase_shift` audio transition cue.
+- **Consequence:** The polished slice better demonstrates combat readability and phase variety while preserving determinism and avoiding architecture bypasses.
 ## 2026-03-09 — Renderer subsystem ownership closure
 - **Context**: Multiple renderer-related modules (`render2d`, `render_pipeline`, `modern_renderer`, `gl_bullet_renderer`, `gpu_bullets`) were functionally correct but still easy to misread as overlapping owners.
 - **Decision**: Freeze ownership boundaries as documentation contract: `render_pipeline` is sole path/orchestration owner; `gl_bullet_renderer` is GL projectile draw backend only; `render2d` is shared 2D primitive layer; `modern_renderer` is post-FX/compositing only; `gpu_bullets` (`CpuMassBulletRenderSystem`) is presentation-only for `CpuMassRender`.
