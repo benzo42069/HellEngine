@@ -10,7 +10,7 @@ This page is the command reference for compiling and running HellEngine locally.
 - Dear ImGui (fetched via CMake FetchContent)
 - nlohmann_json (fetched via CMake FetchContent)
 - GLAD (vendored at `third_party/glad`)
-- Catch2 (**not currently used**; test binaries are custom `main()` executables wired through CTest)
+- Catch2 (used for Catch-authored tests with auto-linked `Catch2::Catch2WithMain`; non-Catch tests remain custom `main()` executables wired through CTest)
 - SDL_mixer (actively used by `AudioSystem` for runtime WAV playback and event-driven bus/category mixing)
 
 Dependencies are fetched via CMake (`SDL2`, `SDL2_mixer`, Dear ImGui, nlohmann_json, Catch2).

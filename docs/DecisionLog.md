@@ -1,4 +1,11 @@
 ## 2026-03-09 — Immediate Catch2 main-link closure for content_packer/entity/boss tests
+
+## 2026-03-09 — Build/release reproducibility and DLL deployment closure
+- **Context**: Final release hardening still had two reliability gaps: top-level binaries (`EngineDemo`, `ContentPacker`) did not use the standardized runtime-DLL deployment helper, and release manifest generation included timestamp/path entropy that prevented deterministic package metadata across identical builds.
+- **Decision**: Keep changes minimal and production-focused by reusing existing CMake/runtime packaging infrastructure instead of introducing new tooling layers.
+- **Implementation**: Added `engine_deploy_runtime_dlls(EngineDemo)` and `engine_deploy_runtime_dlls(ContentPacker)` in top-level `CMakeLists.txt`; updated `tools/package_dist.ps1` to sort discovered DLL copies by name and generate `RELEASE_MANIFEST.txt` from a stable relative-path sorted inventory with fixed `FormatVersion=1` header.
+- **Consequence**: Clean and incremental Windows builds now deploy runtime DLLs consistently for runtime binaries/tests/tools, and portable release metadata is deterministic/reproducible when input artifacts are unchanged.
+
 - **Context**: Build Engineering reported unresolved `main` / `LNK1120` for `content_packer_tests`, `entity_tests`, and `boss_phase_tests` in clean Windows test builds.
 - **Decision**: Keep the fix minimal and local to existing shared helper logic by extending the known-target safety override set in `engine_link_catch_main_if_needed(...)` to include `boss_phase_tests` (while retaining the `NOT main(...)` guard).
 - **Implementation**: Updated CMake override condition from two targets to three (`content_packer_tests`, `entity_tests`, `boss_phase_tests`) so Catch classification fallback and `Catch2::Catch2WithMain` linkage are consistent for this failure class.

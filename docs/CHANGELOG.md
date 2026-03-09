@@ -43,6 +43,9 @@
 
 ## Unreleased
 ### Changed
+- Standardized Windows runtime DLL deployment by applying `engine_deploy_runtime_dlls(...)` to `EngineDemo` and `ContentPacker`, aligning runtime executables/tools/tests with one post-build dependency copy policy.
+- Made portable release manifest generation deterministic in `tools/package_dist.ps1` by removing timestamp/path entropy and sorting inventory by relative path.
+- Updated build/run release docs to reflect active Catch2 usage and reproducible packaging expectations.
 - Clarified public plugin boundary with explicit host ownership contract comments and added host-facing helpers `isPluginTargetCompatible(...)` + `pluginRegistrationErrorMessage(...)` for stable compatibility/error diagnostics.
 - Documented final public/plugin/mod compatibility expectations and lifecycle responsibilities across architecture/spec/plan/decision docs.
 - Refactored the pattern editor panel internals into focused helpers for generation controls, seed/testing controls, graph editing, and preview/analysis while preserving the single-window workflow and existing behavior.
