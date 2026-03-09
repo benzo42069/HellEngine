@@ -1,3 +1,20 @@
+## 2026-03-09 Addendum — Editor tooling closure follow-up
+- Gameplay authoring controls (projectile debug, encounter/wave, trait/upgrade preview) were extracted into `src/engine/editor/editor_tools_gameplay_panel.cpp` to complete panel responsibility separation.
+- Workspace shell now provides task-oriented workflow shortcuts (Content, Pattern, Palette/FX, Diagnostics) and dynamic content discovery/empty-state guidance for a more commercial-grade editing loop.
+- Functionality was preserved while reducing module coupling and improving maintainability.
+# Renderer ownership closure update (2026-03-09)
+
+A targeted closure pass confirmed renderer stack boundaries are now explicit and intentionally stable without functional redesign:
+- `render_pipeline` owns path selection + frame composition order.
+- `render2d` owns reusable SDL 2D drawing primitives/infrastructure.
+- `modern_renderer` owns post-processing/compositing resources and passes.
+- `gl_bullet_renderer` owns OpenGL projectile draw prep/submission only.
+- `gpu_bullets` (`CpuMassBulletRenderSystem`) remains a non-authoritative presentation path.
+
+Residual intentional note: `CpuMassRender` is presentation-focused and must not be treated as gameplay-authoritative collision ownership unless a future explicit mode is introduced.
+
+---
+
 ## 2026-03-09 Build/Release reliability closure update
 - Top-level runtime binaries now share the same runtime-DLL deployment mechanism as tests (`TARGET_RUNTIME_DLLS` via `engine_deploy_runtime_dlls`), reducing clean/incremental drift risk on Windows.
 - Portable release manifest generation no longer includes timestamp/path entropy; inventory is stable-sorted by relative path with fixed format metadata for reproducible release validation diffs.
@@ -10,6 +27,8 @@
 > **2026-03-08 CMake/tests follow-up:** Remaining Catch2 missing-main risk was closed by applying shared Catch/main detection to every test-target creation path (including manual `content_packer_tests`), so only Catch sources without a local `main(...)` link `Catch2::Catch2WithMain`.
 
 # HellEngine — Pre-Finalization Architecture Audit
+
+> **2026-03-09 CMake/tests finalization:** Test-target wiring now follows a single two-step helper model (`engine_add_test_target` + `engine_register_test`) with source-based Catch classification and no target-name exceptions; Catch targets without local `main(...)` link `Catch2::Catch2WithMain`, standalone tests keep explicit `main(...)`, and runtime DLL deployment remains applied before execution/discovery on Windows.
 
 **Auditor role:** Principal Engine Architect / Technical Director  
 **Date:** 2026-03-05  
@@ -427,3 +446,17 @@ Residual risk:
 - Closed remaining authoring resilience gaps by validating duplicate clip ids, duplicate event bindings, empty clip paths, and unknown `music`/event clip references at audio parse time.
 - Closed runtime reload safety gap by clearing previously loaded mixer chunks before reconfigure to prevent stale-memory accumulation during content reload paths.
 - Clarified event/bus model boundary: gameplay emits presentation events, runtime maps them to authored bindings, and bus gains remain master/music/sfx at playback time only.
+## Audit Follow-up (2026-03-09): GameplaySession ownership finalization
+- **Status**: Addressed.
+- Implemented a final ownership cleanup pass by introducing `SessionOrchestrationSubsystem` and moving the remaining policy-heavy orchestration logic out of `GameplaySession::updateGameplay()`.
+
+### What moved out of `GameplaySession`
+- content hot-reload polling cadence and content-type dispatch/fanout.
+- periodic upgrade cadence policy and upgrade-debug policy application.
+
+### Final boundary result
+- `GameplaySession` is now a deterministic coordinator that sequences dedicated subsystems rather than embedding policy logic inline.
+- Runtime behavior contract is preserved: deterministic update order and replay behavior are unchanged.
+
+### Extensibility guidance
+- New session policy/cadence features should be introduced via `SessionOrchestrationSubsystem` to avoid reintroducing orchestration-policy coupling inside `GameplaySession`.

@@ -6,6 +6,12 @@ This guide covers how to author and validate runtime audio behavior.
 Audio content is authored in JSON (typically `data/audio.json`) and compiled into `content.pak` by `ContentPacker`.
 
 ## 2) Runtime behavior model
+
+
+Source-vs-runtime boundary reminder:
+- `audio` blocks are source-authored input.
+- Runtime consumes audio data only after `ContentPacker` compiles it into `content.pak` alongside import metadata (`importRegistry`, `animationBuild`, `variantBuild`, etc.).
+
 - Runtime mixes audio through `AudioSystem`.
 - Gameplay emits audio events (hit, graze, damage, enemy death, boss warning, UI click/confirm).
 - Audio dispatch is presentation-side and not part of deterministic sim hashing.

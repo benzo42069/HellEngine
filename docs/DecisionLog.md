@@ -1,4 +1,18 @@
+## 2026-03-09 — Renderer subsystem ownership closure
+- **Context**: Multiple renderer-related modules (`render2d`, `render_pipeline`, `modern_renderer`, `gl_bullet_renderer`, `gpu_bullets`) were functionally correct but still easy to misread as overlapping owners.
+- **Decision**: Freeze ownership boundaries as documentation contract: `render_pipeline` is sole path/orchestration owner; `gl_bullet_renderer` is GL projectile draw backend only; `render2d` is shared 2D primitive layer; `modern_renderer` is post-FX/compositing only; `gpu_bullets` (`CpuMassBulletRenderSystem`) is presentation-only for `CpuMassRender`.
+- **Rationale**: Removes residual ambiguity without redesign, preserving replay/determinism and current rendering behavior.
+- **Consequence**: Future GPU/compute simulation work must arrive as an explicitly new authoritative simulation mode, not by repurposing existing presentation subsystems.
+
 ## 2026-03-09 — Immediate Catch2 main-link closure for content_packer/entity/boss tests
+
+
+## 2026-03-09 — Content pipeline production-closure validation pass
+- **Context**: Creator-facing import flow still allowed ambiguous manifests (missing/incorrect manifest type, duplicate asset identity entries, loose atlas naming), and pack invalidation metadata did not surface palette-template dependencies clearly.
+- **Decision**: Tighten validation at source-manifest parse time and minimally extend dependency metadata without changing runtime data model or pack layering behavior.
+- **Implementation**: `parseSourceArtManifest` now requires `assetManifestType: "art-import"`, trims/validates atlas and grouping identifiers, and rejects duplicate asset GUID/source-path entries within a manifest; import records now include `paletteTemplate:<name>` dependency tags when applicable.
+- **Consequence**: Import failures are clearer and earlier, reimport invalidation diagnostics are more actionable, and source-vs-runtime responsibilities are better delineated for content creators.
+
 
 ## 2026-03-09 — Build/release reproducibility and DLL deployment closure
 - **Context**: Final release hardening still had two reliability gaps: top-level binaries (`EngineDemo`, `ContentPacker`) did not use the standardized runtime-DLL deployment helper, and release manifest generation included timestamp/path entropy that prevented deterministic package metadata across identical builds.
@@ -33,6 +47,21 @@
 - **Consequence**: Content creators can iterate audio event bindings/bus assignments in authored data without touching runtime code, while deterministic sim boundaries remain unchanged (events still emitted in sim, playback still dispatched post-tick).
 
 # Decision Log
+
+## 2026-03-09 — Keep one editor window but split gameplay tooling module
+- **Decision:** Keep the existing single Control Center window workflow while extracting gameplay-focused panels into a dedicated translation unit (`editor_tools_gameplay_panel.cpp`).
+- **Rationale:** The previous pattern panel file still contained projectile/encounter/trait workflows, increasing cognitive load and maintenance friction. Separating these responsibilities improves maintainability without changing user-facing behavior.
+- **Result:** Clear module boundaries: workspace shell/content flow, pattern authoring, gameplay authoring, palette/FX + standards, and services/validation.
+
+## 2026-03-09 — Add explicit workflow shortcuts instead of adding more top-level panels
+- **Decision:** Add in-workspace workflow shortcuts (Content Pass, Pattern Pass, Palette/FX Pass, Diagnostics Pass) that toggle panel visibility defaults.
+- **Rationale:** This improves clarity for creators and reduces panel hunting while avoiding arbitrary visual churn or new persistent UI complexity.
+- **Result:** Faster task-oriented navigation with stable existing panel behavior and state.
+## 2026-03-09 — Unified test target model and registration contract
+- **Context**: Test wiring had accumulated mixed helper/manual paths and target-specific Catch safety overrides, creating long-term drift risk for missing-main and discovery behavior.
+- **Decision**: Use one shared model for all test targets: build/link/deploy in `engine_add_test_target(...)`, registration in `engine_register_test(...)`, Catch classification by source + local `main(...)` detection, no per-target overrides.
+- **Rationale**: Keeps target names stable while making Catch-vs-standalone behavior explicit, auditable, and consistent across Windows discovery and regular CTest execution.
+- **Status**: Implemented.
 
 ## 2026-03-08 — Catch2 missing-main class fix via unified test helper
 - **Context**: Catch-based tests were still split across multiple registration paths, and any Catch source wired through the plain-test path could miss `Catch2::Catch2WithMain`, causing unresolved `main`/`LNK1120` on Windows.
@@ -722,3 +751,9 @@
 - Rationale: fail fast for creators during content packaging/loading instead of silently degrading routing maps.
 - Decision: keep runtime mixer behavior resilient (missing files still warn/no-op) while ensuring reconfiguration frees previous chunks and auto-starts configured loop music.
 - Boundary note: deterministic simulation remains unchanged because audio dispatch/update still execute in presentation path after `simTick()`.
+## 2026-03-09 — GameplaySession final orchestration-policy extraction
+- **Context**: After prior subsystem decomposition, `GameplaySession::updateGameplay()` still directly owned two policy-heavy concerns: content hot-reload poll/fanout and upgrade cadence/debug mutation policy.
+- **Decision**: Introduce `SessionOrchestrationSubsystem` in `gameplay_session_subsystems` and route both concerns through explicit subsystem interfaces.
+- **Rationale**: Completes runtime ownership partitioning so `GameplaySession` acts as deterministic phase coordinator rather than policy + orchestration + runtime mutator in one unit.
+- **Determinism note**: Preserved tick-gated cadence (`kHotReloadPollTicks`, 300-tick upgrade roll cadence) and existing side-effect ordering.
+- **Migration Notes**: Public API unchanged (`GameplaySession::updateGameplay()`, `onUpgradeNavigation()`); behavior remains stable while internals are delegated.

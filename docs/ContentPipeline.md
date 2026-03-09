@@ -50,6 +50,13 @@ Entity->pattern references can use `attackPatternGuid` (preferred) or `attackPat
 Because references resolve by GUID-or-name, moving or renaming source JSON files does not break references.
 
 ## Sprite/texture import pipeline (schema v2, packVersion 4)
+
+Validation closure details:
+- Art manifests are accepted only when `assetManifestType == "art-import"`.
+- Duplicate `guid` or duplicate `source` rows inside a manifest are hard errors.
+- `atlasGroup` is normalized/trimmed and must be a non-empty identifier; invalid values fail before import fingerprinting.
+- Palette-linked assets now carry `paletteTemplate:<name>` dependency tags in `importRegistry.dependencies`, improving `importInvalidations` diagnostics.
+
 The packer now integrates authored source-art import instead of only procedural/generated art.
 
 - Source manifests use `assetManifestType: "art-import"` + `assets[]`.
