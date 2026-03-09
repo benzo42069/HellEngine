@@ -1,3 +1,10 @@
+#ifdef _WIN32
+#ifndef SDL_MAIN_HANDLED
+#define SDL_MAIN_HANDLED
+#endif
+#include <SDL.h>
+#endif
+
 #include <engine/config.h>
 #include <engine/crash_handler.h>
 #include <engine/diagnostics.h>
@@ -10,6 +17,9 @@
 #include <string>
 
 int main(int argc, char** argv) {
+#ifdef _WIN32
+    SDL_SetMainReady();
+#endif
     engine::Logger::instance().setLevel(engine::LogLevel::Info);
 
     engine::EngineConfig config = engine::loadConfigFromFile("engine_config.json");
