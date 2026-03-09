@@ -1,3 +1,10 @@
+## 2026-03-09 — Build hotfix: missing-main tests + empty copy_if_different (completed)
+- [x] Audited failing test targets: `content_packer_tests`, `editor_tools_tests`, `boss_phase_tests`, and `entity_tests`.
+- [x] Applied smallest safe CMake fix in shared helper: forced Catch classification list for those four targets while preserving `NOT main(...)` guard before linking `Catch2::Catch2WithMain`.
+- [x] Audited runtime DLL deployment helper and fixed empty-source post-build command emission by guarding `copy_if_different` behind a non-empty `$<TARGET_RUNTIME_DLLS:...>` condition.
+- [x] Preserved target names, existing registration/discovery behavior, and valid runtime DLL deployment semantics.
+- [x] Recorded requirement to run a full clean rebuild (delete build directory, reconfigure, rebuild).
+
 ## 2026-03-09 — Runtime build fix: upgrade callback signature mismatch (completed)
 - [x] Audited `GameplaySession` lambda callbacks passed to `SessionOrchestrationSubsystem::updateUpgradeCadence(...)` and `applyUpgradeDebugOptions(...)` against subsystem header contracts.
 - [x] Confirmed root cause: callbacks returned `TraitSystem::rollChoices()` (`std::array<Trait, 3>`) despite APIs requiring `std::function<bool()>`.
@@ -92,6 +99,9 @@
 - [x] Extend public API tests to cover duplicate-instance rejection, incompatible-version rejection, and unregister behavior.
 
 # Implementation Plan
+
+## Build Hotfix Log
+- 2026-03-09: Applied narrowly scoped CMake hotfix to recover green builds: forced Catch main linkage eligibility for `content_packer_tests`, `editor_tools_tests`, `boss_phase_tests`, and `entity_tests` via shared helper, and guarded runtime DLL `copy_if_different` emission behind a non-empty runtime-DLL list check. Next validation step is a full clean rebuild from a deleted build directory.
 
 ## 2026-03-08 — Extensibility boundary closeout
 - [x] Public API boundary audit completed (`engine/public` vs `engine/internal`/`src`).

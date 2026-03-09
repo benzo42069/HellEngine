@@ -258,9 +258,8 @@ function(engine_deploy_runtime_dlls target_name)
     add_custom_command(
       TARGET ${target_name}
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-              $<TARGET_RUNTIME_DLLS:${target_name}>
-              $<TARGET_FILE_DIR:${target_name}>
+      COMMAND ${CMAKE_COMMAND} -E true
+      COMMAND "$<$<BOOL:$<TARGET_RUNTIME_DLLS:${target_name}>>:${CMAKE_COMMAND};-E;copy_if_different;$<TARGET_RUNTIME_DLLS:${target_name}>;$<TARGET_FILE_DIR:${target_name}>>"
       COMMAND_EXPAND_LISTS
     )
   endif()
@@ -304,6 +303,16 @@ endfunction()
 function(engine_link_catch_main_if_needed target_name source_file)
   engine_source_uses_catch(_engine_test_is_catch "${source_file}")
   engine_source_defines_main(_engine_test_has_main "${source_file}")
+
+  set(_engine_force_catch_main_targets
+    content_packer_tests
+    editor_tools_tests
+    boss_phase_tests
+    entity_tests
+  )
+  if(target_name IN_LIST _engine_force_catch_main_targets)
+    set(_engine_test_is_catch TRUE)
+  endif()
 
   if(_engine_test_is_catch AND NOT _engine_test_has_main)
     target_link_libraries(${target_name} PRIVATE Catch2::Catch2WithMain)

@@ -2,6 +2,11 @@
 
 ## Unreleased
 ### Fixed
+- Fixed remaining Windows test link failures for `content_packer_tests`, `editor_tools_tests`, `boss_phase_tests`, and `entity_tests` by ensuring shared CMake helper links `Catch2::Catch2WithMain` whenever those targets are Catch-based and do not define `main(...)`.
+- Fixed `engine_deploy_runtime_dlls(...)` empty-runtime case by guarding `cmake -E copy_if_different` so the copy command is emitted only when runtime DLL sources exist (prevents invalid destination-only invocation, notably on `ContentPacker`).
+- Note: perform a full clean rebuild (delete build directory, reconfigure, rebuild) to fully validate regenerated link and post-build commands.
+
+### Fixed
 - Resolved `GameplaySession` compile failure caused by upgrade callback type mismatch: lambdas passed to `SessionOrchestrationSubsystem::updateUpgradeCadence(...)` and `applyUpgradeDebugOptions(...)` now explicitly match `std::function<bool()>` by returning `bool` after invoking `TraitSystem::rollChoices()`.
 ### Changed
 - Completed final external-facing documentation/polish pass: added repository `README.md`, refreshed creator index + onboarding flow, and aligned product-facing workflow guidance across build/run, authoring, validation, and release packaging docs.

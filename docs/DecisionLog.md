@@ -1,3 +1,8 @@
+## 2026-03-09 — Build hotfix: Catch main linkage + guarded DLL copy command
+- **Context:** Remaining Windows link failures reported unresolved `main` for `content_packer_tests`, `editor_tools_tests`, `boss_phase_tests`, and `entity_tests`; `ContentPacker` post-build also failed when `copy_if_different` received only a destination path.
+- **Decision:** Keep helpers and target names intact; add a minimal forced Catch classification list for the four failing test targets in `engine_link_catch_main_if_needed(...)`, and keep existing `NOT main(...)` gate before linking `Catch2::Catch2WithMain`. In `engine_deploy_runtime_dlls(...)`, emit copy only when `$<TARGET_RUNTIME_DLLS:target>` is non-empty via generator-expression command guarding.
+- **Consequences:** Test discovery behavior stays unchanged; valid DLL deployment still occurs; empty-runtime-DLL cases no longer fail post-build. Requires full clean rebuild to validate regenerated link and post-build steps.
+
 ## 2026-03-09 — Decision: keep subsystem callback contract, fix call-site lambdas
 - **Context:** Post-refactor `GameplaySession` passed lambdas returning `TraitSystem::rollChoices()` into orchestration APIs that accept `const std::function<bool()>&`.
 - **Root cause:** Return-type mismatch (`std::array<Trait, 3>` vs `bool`) at call sites, not in subsystem API definitions.
