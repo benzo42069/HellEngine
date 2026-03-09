@@ -40,6 +40,15 @@
 
 # Decision Log
 
+## 2026-03-09 — Keep one editor window but split gameplay tooling module
+- **Decision:** Keep the existing single Control Center window workflow while extracting gameplay-focused panels into a dedicated translation unit (`editor_tools_gameplay_panel.cpp`).
+- **Rationale:** The previous pattern panel file still contained projectile/encounter/trait workflows, increasing cognitive load and maintenance friction. Separating these responsibilities improves maintainability without changing user-facing behavior.
+- **Result:** Clear module boundaries: workspace shell/content flow, pattern authoring, gameplay authoring, palette/FX + standards, and services/validation.
+
+## 2026-03-09 — Add explicit workflow shortcuts instead of adding more top-level panels
+- **Decision:** Add in-workspace workflow shortcuts (Content Pass, Pattern Pass, Palette/FX Pass, Diagnostics Pass) that toggle panel visibility defaults.
+- **Rationale:** This improves clarity for creators and reduces panel hunting while avoiding arbitrary visual churn or new persistent UI complexity.
+- **Result:** Faster task-oriented navigation with stable existing panel behavior and state.
 ## 2026-03-09 — Unified test target model and registration contract
 - **Context**: Test wiring had accumulated mixed helper/manual paths and target-specific Catch safety overrides, creating long-term drift risk for missing-main and discovery behavior.
 - **Decision**: Use one shared model for all test targets: build/link/deploy in `engine_add_test_target(...)`, registration in `engine_register_test(...)`, Catch classification by source + local `main(...)` detection, no per-target overrides.

@@ -1,3 +1,7 @@
+## 2026-03-09 Addendum — Editor tooling closure follow-up
+- Gameplay authoring controls (projectile debug, encounter/wave, trait/upgrade preview) were extracted into `src/engine/editor/editor_tools_gameplay_panel.cpp` to complete panel responsibility separation.
+- Workspace shell now provides task-oriented workflow shortcuts (Content, Pattern, Palette/FX, Diagnostics) and dynamic content discovery/empty-state guidance for a more commercial-grade editing loop.
+- Functionality was preserved while reducing module coupling and improving maintainability.
 # Renderer ownership closure update (2026-03-09)
 
 A targeted closure pass confirmed renderer stack boundaries are now explicit and intentionally stable without functional redesign:

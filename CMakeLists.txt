@@ -165,6 +165,7 @@ add_library(engine_core STATIC
   src/engine/editor/editor_tools_services.cpp
   src/engine/editor/editor_tools_workspace_panel.cpp
   src/engine/editor/editor_tools_pattern_panel.cpp
+  src/engine/editor/editor_tools_gameplay_panel.cpp
   src/engine/entities.cpp
   src/engine/gpu_bullets.cpp
   src/engine/gl_bullet_renderer.cpp
