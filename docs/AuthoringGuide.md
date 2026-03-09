@@ -1,28 +1,32 @@
-# Authoring Guide (Index)
+# Authoring Guide (Creator Index)
 
-This file is a creator-facing index. Detailed workflows are split into focused guides.
+Use this page as the external-facing table of contents for HellEngine creator workflows.
 
-## Start here
-- `docs/GettingStarted.md`
-- `docs/BuildAndRun.md`
+## Onboarding and daily loop
+- `docs/GettingStarted.md` — first build/pack/run/replay verify loop.
+- `docs/BuildAndRun.md` — full CLI/build/test command reference.
 
-## Content authoring workflows
-- `docs/AssetImportWorkflow.md`
-- `docs/PaletteAndGrayscaleWorkflow.md`
-- `docs/PatternAuthoringGuide.md`
-- `docs/BossEncounterAuthoring.md`
-- `docs/AudioWorkflow.md`
-- `docs/SampleProjectUsage.md`
+## Content and visual authoring
+- `docs/AssetImportWorkflow.md` — source asset manifesting/import metadata.
+- `docs/ContentPipeline.md` — pack schema + pack generation behavior.
+- `docs/PaletteAndGrayscaleWorkflow.md` — grayscale sprite + palette ramp workflow.
+- `docs/PatternAuthoringGuide.md` — pattern graph/pattern JSON authoring.
+- `docs/BossEncounterAuthoring.md` — entities, phases, encounter sequencing.
+- `docs/AudioWorkflow.md` — authored clip/event routing and runtime mix controls.
 
-## Validation and quality workflows
-- `docs/ReplayAndDebugGuide.md`
-- `docs/CreatorPerformanceGuide.md`
-- `docs/Troubleshooting.md`
+## Validation and debugging
+- `docs/ReplayAndDebugGuide.md` — deterministic replay debugging techniques.
+- `docs/CreatorPerformanceGuide.md` — profiling/perf guardrails for creators.
+- `docs/Troubleshooting.md` — common setup/content/runtime failures.
+- `docs/SampleProjectUsage.md` — extending the sample without breaking schema expectations.
 
-## Extension workflows
-- `docs/PluginAndModOverview.md`
+## Shipping and extensibility
+- `docs/BuildAndRelease.md` — release package + installer/distribution workflow.
+- `docs/PluginAndModOverview.md` — plugin API boundaries and mod/content layering model.
 
-## Source-of-truth constraints
-Master architecture/constraints remain documented in:
+## Canonical engineering references
 - `docs/MasterSpec.md`
 - `docs/Architecture.md`
+- `docs/ImplementationPlan.md`
+- `docs/DecisionLog.md`
+- `docs/CHANGELOG.md`

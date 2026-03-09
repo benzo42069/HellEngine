@@ -1,3 +1,10 @@
+# Changelog
+
+## Unreleased
+### Changed
+- Completed final external-facing documentation/polish pass: added repository `README.md`, refreshed creator index + onboarding flow, and aligned product-facing workflow guidance across build/run, authoring, validation, and release packaging docs.
+- Documented final creator documentation architecture in `docs/Architecture.md` and recorded closure state in spec/plan/decision/audit docs to reduce stale guidance drift for package consumers.
+
 ## Unreleased
 ### Fixed
 - Fixed remaining missing-main linker failures (`unresolved external symbol main`, `LNK1120`) for `content_packer_tests`, `entity_tests`, and `boss_phase_tests` by extending the shared CMake Catch safety override to include `boss_phase_tests`, ensuring `Catch2::Catch2WithMain` is linked whenever these targets lack a local `main(...)`.
@@ -6,8 +13,6 @@
 - Fixed remaining Windows Catch test link failures caused by inconsistent test-helper routing: Catch-authored targets registered through plain wiring could miss `Catch2::Catch2WithMain` and fail with unresolved `main`/`LNK1120`.
 - Unified helper-path test registration via `engine_add_test(...)` + source-based Catch detection so Catch targets consistently link `Catch2::Catch2WithMain` and use `catch_discover_tests` (covering targets such as `render2d_tests`, `pattern_tests`, and `entity_tests` class checks during audit).
 - Closed the remaining manual target gap by applying shared Catch/main detection to `content_packer_tests` too, ensuring any Catch-based test executable without a local `main(...)` links `Catch2::Catch2WithMain` regardless of whether it is created via helper or direct `add_executable` path.
-
-# Changelog
 
 ## Unreleased
 ### Fixed

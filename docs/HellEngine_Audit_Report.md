@@ -1,3 +1,11 @@
+# HellEngine Audit Report
+
+## 2026-03-09 Addendum — External Documentation Closure
+- Prior audit findings in this file include historical risk framing that predates major runtime/audio/test/tooling updates.
+- Current package state now includes creator-facing guides for onboarding, content import, palette/grayscale workflows, pattern and boss authoring, replay/debug, audio authoring, sample usage, testing, release packaging, troubleshooting, and performance guidance.
+- Repository presentation has been productized with a top-level `README.md` and a normalized documentation navigation path (`README` -> `GettingStarted` -> `AuthoringGuide` + domain guides).
+- This report should be interpreted as historical architecture risk analysis plus this addendum for present external-facing documentation status.
+
 ## 2026-03-09 Build/Release reliability closure update
 - Top-level runtime binaries now share the same runtime-DLL deployment mechanism as tests (`TARGET_RUNTIME_DLLS` via `engine_deploy_runtime_dlls`), reducing clean/incremental drift risk on Windows.
 - Portable release manifest generation no longer includes timestamp/path entropy; inventory is stable-sorted by relative path with fixed format metadata for reproducible release validation diffs.

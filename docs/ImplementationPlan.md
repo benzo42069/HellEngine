@@ -1,3 +1,9 @@
+## 2026-03-09 — Final external-facing documentation/package polish pass (completed)
+- [x] Completed mandatory pre-pass audit of spec/architecture/plan/decision/changelog/audit + creator workflow docs.
+- [x] Added polished external `README.md` with accurate feature summary, versioning, quickstart, structure, and workflow links.
+- [x] Tightened onboarding/index docs (`GettingStarted`, `AuthoringGuide`) to cover project structure, testing, and release validation flow.
+- [x] Updated architecture + logs (`MasterSpec`, `DecisionLog`, `CHANGELOG`, audit report) to record final documentation state and stale-content corrections.
+
 ## 2026-03-09 — Immediate Build Fix: missing Catch main for remaining test executables (completed)
 
 - [x] Build/release reliability audit completed for clean rebuild, incremental rebuild, release packaging, and runtime DLL deployment paths.

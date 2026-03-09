@@ -1,5 +1,11 @@
 # Architecture
 
+
+## 2026-03-09 Documentation Information Architecture (Creator-Facing)
+- External onboarding entry points are now intentionally layered: `README.md` (product summary) -> `docs/GettingStarted.md` (first successful run) -> focused workflow guides (authoring/debug/release).
+- `docs/AuthoringGuide.md` is designated the canonical creator documentation index to prevent duplicate long-form drift and provide a stable navigation surface for package consumers.
+- Workflow docs are organized by creator task domain (content authoring, validation/debug, shipping/extensibility), while implementation-only details remain in engineering docs (`MasterSpec`, `ImplementationPlan`, `DecisionLog`).
+
 ## Public extensibility boundaries (2026-03-08)
 
 - Public contract for embedders/mod tooling remains constrained to `include/engine/public/*` only.
