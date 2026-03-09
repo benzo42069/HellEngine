@@ -1,3 +1,5 @@
+- Fixed final Windows test linker blocker for `editor_tools_tests` (`unresolved external symbol main`, `LNK1120`) by explicitly linking `Catch2::Catch2WithMain` in target setup while preserving existing discovery and runtime DLL deployment behavior.
+- Operational follow-up: run a clean rebuild from a deleted build directory so regenerated linker/discovery commands take effect.
 ## Unreleased
 ### Fixed
 - Fixed final Windows missing-main linker failure for `boss_phase_tests` by explicitly linking `Catch2::Catch2WithMain` in target setup while preserving Catch discovery and runtime DLL deployment behavior; requires a full clean rebuild so regenerated link commands are used.

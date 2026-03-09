@@ -1,3 +1,4 @@
+- 2026-03-09: Closed final missing-main blocker for `editor_tools_tests`. Root cause tracked to remaining target-specific Catch main ownership drift. Applied minimal CMake fix by making `editor_tools_tests` explicit (`engine_add_test_target` + explicit `Catch2::Catch2WithMain` link + `ENGINE_TEST_USES_CATCH_DISCOVERY=TRUE` + `engine_register_test`). Preserve existing target identity, Catch discovery flow, and DLL deployment semantics. Clean rebuild required to refresh generated link rules.
 ## 2026-03-09 — Final missing-main fix: boss_phase_tests (completed)
 - [x] Audited `boss_phase_tests` CMake target wiring against known-good Catch targets (`content_packer_tests`, `entity_tests`, `pattern_tests`).
 - [x] Confirmed root cause: the target still needed explicit Catch2 entrypoint linkage to guarantee `main` ownership under Windows link behavior.
