@@ -180,6 +180,10 @@ void Runtime::simTick(const double dt) {
 }
 
 int Runtime::run() {
+#ifdef _WIN32
+    SDL_SetMainReady();
+#endif
+
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO) != 0) {
         logError("SDL_Init failed: " + std::string(SDL_GetError()));
         return 1;
