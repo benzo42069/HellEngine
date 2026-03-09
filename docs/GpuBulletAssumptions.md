@@ -25,3 +25,8 @@ The runtime path is now explicitly documented as **CPU mass bullet render**:
 - Emission is O(1) via free-list.
 - Active traversal is O(k) over active slots.
 - Prepared quads are tracked for profiling via `preparedQuadCount()`.
+
+## Final Role (Renderer Stack Closure)
+- Subsystem ownership is explicitly frozen as presentation-only for this module.
+- `CpuMassBulletRenderSystem` should be consumed as an alternate visual path, not as a source of authoritative collision/gameplay simulation state.
+- Backend selection/ownership stays in `RenderPipeline`; this module must remain backend-execution only.

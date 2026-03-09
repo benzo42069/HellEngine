@@ -1,3 +1,16 @@
+## 2026-03-09 — Renderer stack ownership finalization
+- [x] Audited `render2d`, `render_pipeline`, `modern_renderer`, `gl_bullet_renderer`, and `gpu_bullets` boundaries against current runtime behavior.
+- [x] Confirmed projectile backend selection remains centralized in `RenderPipeline::resolveProjectileRenderPath(...)`.
+- [x] Added explicit inline ownership comments to prevent backend/simulation responsibility drift.
+- [x] Updated architecture/spec/decision/changelog/audit and renderer notes to freeze the final ownership contract.
+- [x] Preserved behavior/perf: no rendering-path logic changes and no simulation-authority transfer in this pass.
+## 2026-03-09 — Finalize test infrastructure and target consistency (completed)
+- [x] Audited every test target in `CMakeLists.txt` and verified Catch vs standalone categories based on source-level includes and local `main(...)`.
+- [x] Removed ad hoc target-name Catch safety overrides; classification now follows one coherent rule set for all targets.
+- [x] Split test helper responsibilities into `engine_add_test_target(...)` (build/link/deploy) and `engine_register_test(...)` (Catch discovery vs plain `add_test` registration).
+- [x] Migrated `content_packer_tests` to the same target helper path while preserving its generated-pack dependency chain (`content_packer_generate` -> `content_packer_tests`).
+- [x] Updated testing docs to reflect final model: Catch tests use `Catch2::Catch2WithMain` unless they intentionally define `main`, standalone tests intentionally keep explicit `main`, and Windows DLL deployment is required for both execution and discovery.
+
 ## 2026-03-09 — Immediate Build Fix: missing Catch main for remaining test executables (completed)
 
 - [x] Audited editor panel ownership and identified mixed gameplay responsibilities inside the pattern panel implementation unit.
@@ -738,3 +751,31 @@ Completed release-engineering closure work:
 - Identified target-level inconsistency: `render2d_tests` and `pattern_tests` used the plain test helper while Catch-oriented test binaries should use the Catch helper path.
 - Applied minimal build fix in shared target wiring usage: switched both targets to `engine_add_catch_test(...)` so `Catch2::Catch2WithMain` is linked automatically.
 - Kept executable names and test intent unchanged; updated test sources to `TEST_CASE` format to align with Catch-driven main provisioning and discovery.
+
+## 2026-03-09 — GameplaySession architecture finalization (session orchestration ownership)
+
+### Summary
+- Added `SessionOrchestrationSubsystem` (`gameplay_session_subsystems`) to own session-level hot-reload polling cadence and progression-debug cadence policy.
+- Removed remaining hot-reload switch/fanout and upgrade cadence/debug mutation blocks from inline `GameplaySession::updateGameplay()` and delegated them through subsystem APIs.
+- Kept deterministic tick order unchanged; delegation preserves call order, tick gating, and side effects.
+
+### Ownership boundaries after this pass
+1. **Session/sim orchestration (`GameplaySession`)**
+   - deterministic phase ordering
+   - subsystem coordination and state handoff
+2. **Session orchestration policy (`SessionOrchestrationSubsystem`)**
+   - content hot-reload poll cadence + content-type callback fanout
+   - periodic upgrade cadence and debug-driven upgrade/progression mutation policy
+3. **Player combat (`PlayerCombatSubsystem`)**
+   - aim, movement, defensive-special trigger, graze collection
+4. **Progression (`ProgressionSubsystem`)**
+   - upgrade navigation input transitions
+5. **Encounter runtime (`EncounterSimulationSubsystem`)**
+   - collision/runtime event glue, encounter presentation feedback emission
+6. **Presentation (`PresentationSubsystem`)**
+   - defensive-special + graze feedback shaping
+
+### Verification notes
+- Extended `gameplay_session_state_tests` with subsystem-level checks for:
+  - deterministic upgrade cadence gating behavior
+  - upgrade debug option application behavior (HUD toggles + rarity force path)

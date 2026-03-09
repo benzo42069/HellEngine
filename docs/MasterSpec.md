@@ -3,6 +3,8 @@
 ## Build Notes
 - 2026-03-09: Editor tooling closure pass completed for commercial UX polish. Gameplay-focused tools were split from the pattern panel into a dedicated module (`editor_tools_gameplay_panel.cpp`) so responsibilities are now workspace shell/content flow, pattern authoring, gameplay encounter/projectile/trait editing, and shared services. Workspace now includes explicit workflow shortcuts (content/pattern/palette-diagnostics), dynamic content browser scanning, and clearer empty states for missing content selection.
 
+- 2026-03-09: Renderer ownership closure pass finalized subsystem roles without behavioral changes: `render_pipeline` remains the sole projectile-path orchestrator, `gl_bullet_renderer` remains GL projectile draw-only, `render2d` remains shared SDL 2D primitive infrastructure, `modern_renderer` remains post-FX/compositing only, and `gpu_bullets` remains presentation-only CPU mass-render path (`CpuMassRender`) with no authoritative collision ownership.
+- 2026-03-09: Finalized test infrastructure consistency model. All test executables now go through `engine_add_test_target(...)` + `engine_register_test(...)`; Catch classification uses source inspection only (no per-target safety overrides), Catch targets without `main(...)` link `Catch2::Catch2WithMain` and use `catch_discover_tests`, standalone tests keep explicit `main(...)` and register through `add_test(...)`. Windows runtime DLL deployment remains mandatory via `engine_deploy_runtime_dlls(...)` before test/discovery execution.
 - 2026-03-09: Build/release reproducibility closure pass completed. CMake now deploys runtime DLL dependencies for top-level runtime tools (`EngineDemo`, `ContentPacker`) using the same `TARGET_RUNTIME_DLLS` post-build flow as tests, eliminating stale/manual DLL copy drift between clean and incremental builds. Portable manifest generation is now deterministic (stable sorted relative paths, static format header, no timestamp/path entropy) so repeated package runs from identical inputs produce identical manifest content.
 
 - 2026-03-09: Immediate missing-main build fix completed for `content_packer_tests`, `entity_tests`, and `boss_phase_tests`. Root cause was helper safety-override drift: `engine_link_catch_main_if_needed(...)` only force-classified two legacy targets, leaving `boss_phase_tests` exposed when Catch classification bypassed local include detection. Applied minimal CMake change to extend the existing override set to include `boss_phase_tests` (still guarded by `NOT main(...)`) so all three targets reliably link `Catch2::Catch2WithMain` when needed. Preserve target names, test registration shape, and runtime-DLL deployment; perform a clean rebuild from a deleted build directory to fully validate regenerated link state.
@@ -1726,3 +1728,22 @@ Behavioral contract remains unchanged: the owning simulation tick order is still
 - Affected test targets: `render2d_tests`, `pattern_tests`.
 - Exact CMake fix: switched both targets to `engine_add_catch_test(...)`, which centrally applies `Catch2::Catch2WithMain` and `catch_discover_tests(...)`.
 - Follow-up consistency fix: converted both files from ad-hoc `int main()` checks to Catch `TEST_CASE` definitions so entrypoint ownership is consistently provided by Catch2.
+
+## GameplaySession Runtime Ownership (2026-03-09 finalization)
+
+`GameplaySession` now acts as deterministic runtime phase coordinator with remaining policy-heavy orchestration moved into explicit subsystem ownership.
+
+Final concern split:
+- **GameplaySession**: deterministic update sequencing, subsystem handoff, run-structure integration.
+- **SessionOrchestrationSubsystem**: content hot-reload polling cadence + content-type reload callback fanout; periodic upgrade cadence and debug-policy application.
+- **PlayerCombatSubsystem**: aim, movement, defensive-special activation gating, graze point collection.
+- **ProgressionSubsystem**: upgrade navigation transitions.
+- **EncounterSimulationSubsystem**: deterministic collision/event flow and encounter-sourced presentation feedback.
+- **PresentationSubsystem**: camera/audio event shaping for defensive-special and graze responses.
+
+Behavioral guarantee remains unchanged:
+- replay/determinism-sensitive tick ordering remains owned and invoked by `GameplaySession::updateGameplay()`.
+- no public runtime API break at call-sites.
+
+Extensibility note:
+- future session-level cadence/policy additions (e.g., scheduled tutorial prompts, deterministic telemetry windows) should be added to `SessionOrchestrationSubsystem` rather than inlining additional policy branches into `GameplaySession::updateGameplay()`.
