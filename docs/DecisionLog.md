@@ -715,3 +715,10 @@
 - **Decision**: Route `render2d_tests` and `pattern_tests` through `engine_add_catch_test(...)` instead of `engine_add_plain_test(...)` to inherit `Catch2::Catch2WithMain` from the shared helper.
 - **Rationale**: Keeps Catch entrypoint ownership centralized in one helper and prevents per-target drift that can reintroduce missing-main linker failures.
 - **Status**: Accepted.
+
+## 2026-03-09 — GameplaySession final orchestration-policy extraction
+- **Context**: After prior subsystem decomposition, `GameplaySession::updateGameplay()` still directly owned two policy-heavy concerns: content hot-reload poll/fanout and upgrade cadence/debug mutation policy.
+- **Decision**: Introduce `SessionOrchestrationSubsystem` in `gameplay_session_subsystems` and route both concerns through explicit subsystem interfaces.
+- **Rationale**: Completes runtime ownership partitioning so `GameplaySession` acts as deterministic phase coordinator rather than policy + orchestration + runtime mutator in one unit.
+- **Determinism note**: Preserved tick-gated cadence (`kHotReloadPollTicks`, 300-tick upgrade roll cadence) and existing side-effect ordering.
+- **Migration Notes**: Public API unchanged (`GameplaySession::updateGameplay()`, `onUpgradeNavigation()`); behavior remains stable while internals are delegated.

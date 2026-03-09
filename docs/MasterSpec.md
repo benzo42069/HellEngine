@@ -1724,3 +1724,22 @@ Behavioral contract remains unchanged: the owning simulation tick order is still
 - Affected test targets: `render2d_tests`, `pattern_tests`.
 - Exact CMake fix: switched both targets to `engine_add_catch_test(...)`, which centrally applies `Catch2::Catch2WithMain` and `catch_discover_tests(...)`.
 - Follow-up consistency fix: converted both files from ad-hoc `int main()` checks to Catch `TEST_CASE` definitions so entrypoint ownership is consistently provided by Catch2.
+
+## GameplaySession Runtime Ownership (2026-03-09 finalization)
+
+`GameplaySession` now acts as deterministic runtime phase coordinator with remaining policy-heavy orchestration moved into explicit subsystem ownership.
+
+Final concern split:
+- **GameplaySession**: deterministic update sequencing, subsystem handoff, run-structure integration.
+- **SessionOrchestrationSubsystem**: content hot-reload polling cadence + content-type reload callback fanout; periodic upgrade cadence and debug-policy application.
+- **PlayerCombatSubsystem**: aim, movement, defensive-special activation gating, graze point collection.
+- **ProgressionSubsystem**: upgrade navigation transitions.
+- **EncounterSimulationSubsystem**: deterministic collision/event flow and encounter-sourced presentation feedback.
+- **PresentationSubsystem**: camera/audio event shaping for defensive-special and graze responses.
+
+Behavioral guarantee remains unchanged:
+- replay/determinism-sensitive tick ordering remains owned and invoked by `GameplaySession::updateGameplay()`.
+- no public runtime API break at call-sites.
+
+Extensibility note:
+- future session-level cadence/policy additions (e.g., scheduled tutorial prompts, deterministic telemetry windows) should be added to `SessionOrchestrationSubsystem` rather than inlining additional policy branches into `GameplaySession::updateGameplay()`.
