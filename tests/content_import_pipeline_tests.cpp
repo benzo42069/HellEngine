@@ -79,6 +79,25 @@ int main() {
         })},
     };
 
+    nlohmann::json invalidManifestType = manifest;
+    invalidManifestType["assetManifestType"] = "wrong-type";
+    std::vector<engine::SourceArtAssetRecord> invalidParsed;
+    std::vector<engine::ArtImportValidationError> invalidErrors;
+    if (engine::parseSourceArtManifest(invalidManifestType, "inline", invalidParsed, invalidErrors) || invalidErrors.empty()) {
+        std::cerr << "manifest type validation failed\n";
+        return EXIT_FAILURE;
+    }
+
+    nlohmann::json duplicateGuidManifest = manifest;
+    duplicateGuidManifest["assets"][0]["guid"] = "duplicate-guid";
+    duplicateGuidManifest["assets"][1]["guid"] = "duplicate-guid";
+    invalidParsed.clear();
+    invalidErrors.clear();
+    if (engine::parseSourceArtManifest(duplicateGuidManifest, "inline", invalidParsed, invalidErrors) || invalidErrors.empty()) {
+        std::cerr << "duplicate guid validation failed\n";
+        return EXIT_FAILURE;
+    }
+
     std::vector<engine::SourceArtAssetRecord> parsed;
     std::vector<engine::ArtImportValidationError> errors;
     if (!engine::parseSourceArtManifest(manifest, "inline", parsed, errors) || !errors.empty() || parsed.size() != 2) {
@@ -94,6 +113,10 @@ int main() {
 
     if (imported[0].importFingerprint.empty() || imported[0].settingsFingerprint.empty() || imported[0].sourceFingerprint.empty()) {
         std::cerr << "import fingerprints must be populated\n";
+        return EXIT_FAILURE;
+    }
+    if (imported[0].dependencies.size() < 3 || imported[0].dependencies[2] != "paletteTemplate:enemy_slime") {
+        std::cerr << "palette template dependency must be tracked\n";
         return EXIT_FAILURE;
     }
 

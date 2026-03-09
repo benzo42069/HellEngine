@@ -43,6 +43,10 @@
 
 ## Data flow
 
+- Source-art pipeline boundary finalized: authored `art-import` manifests are source-only inputs; `sourceAssetRegistry`/`importRegistry`/`atlasBuild`/`animationBuild`/`variantBuild` are generated runtime-pack metadata consumed by tools/runtime loaders, not hand-authored runtime JSON tables.
+- Import validation now fails early on malformed manifest type, duplicate source GUIDs, duplicate source paths, and invalid atlas-group identifiers before import fingerprinting begins.
+
+
 - Author JSON content (`patterns`, `entities`, `traits`, `archetypes`, `encounters`, optional `graphs`).
 - Pack with `ContentPacker` -> `content.pak`.
 - Runtime loads pack(s) and caches pattern/entity databases.

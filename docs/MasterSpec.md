@@ -1,6 +1,8 @@
 # MasterSpec
 
 ## Build Notes
+- 2026-03-09: Finalized creator-facing content import closure for sprites/palettes/atlases/animation variants/audio. Art manifests now require `assetManifestType: "art-import"`, reject duplicate GUID/source-path records, normalize+validate atlas naming, and carry palette-template dependency tags into `importRegistry` invalidation metadata to make source-vs-runtime boundaries explicit in pack outputs.
+
 - 2026-03-09: Editor tooling closure pass completed for commercial UX polish. Gameplay-focused tools were split from the pattern panel into a dedicated module (`editor_tools_gameplay_panel.cpp`) so responsibilities are now workspace shell/content flow, pattern authoring, gameplay encounter/projectile/trait editing, and shared services. Workspace now includes explicit workflow shortcuts (content/pattern/palette-diagnostics), dynamic content browser scanning, and clearer empty states for missing content selection.
 
 - 2026-03-09: Renderer ownership closure pass finalized subsystem roles without behavioral changes: `render_pipeline` remains the sole projectile-path orchestrator, `gl_bullet_renderer` remains GL projectile draw-only, `render2d` remains shared SDL 2D primitive infrastructure, `modern_renderer` remains post-FX/compositing only, and `gpu_bullets` remains presentation-only CPU mass-render path (`CpuMassRender`) with no authoritative collision ownership.

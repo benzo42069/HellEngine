@@ -1,5 +1,9 @@
 # Asset Import Workflow
 
+
+> Production-closure updates (2026-03-09): manifests must explicitly declare `assetManifestType: "art-import"`; duplicate `guid` or duplicate `source` entries in one manifest are rejected; `atlasGroup` must be a non-empty identifier (`[A-Za-z0-9_.-]`).
+
+
 This guide describes the creator-facing source-art import flow used by `ContentPacker`.
 
 ## 1) Manifest format

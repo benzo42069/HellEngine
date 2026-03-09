@@ -1,4 +1,9 @@
 ## Unreleased
+
+### Changed
+- Finalized content import validation for production authoring: art manifests now enforce `assetManifestType: "art-import"`, reject duplicate asset GUID/source path entries, and require non-empty identifier-style `atlasGroup` values.
+- Import fingerprint dependency metadata now includes explicit palette-template tags (`paletteTemplate:<name>`) so reimport invalidation reasons better reflect color-workflow dependencies.
+
 ### Fixed
 - Finalized renderer stack ownership contract across code/docs: `render_pipeline` orchestrates path selection, `render2d` provides shared SDL 2D primitives, `modern_renderer` handles post-FX composition, `gl_bullet_renderer` handles GL projectile submission, and `gpu_bullets` remains presentation-only (`CpuMassRender`) with no deterministic gameplay authority.
 - Added explicit `ProjectileRenderPath` ownership comments in `render_pipeline` to keep backend selection centralized and reduce future overlap drift.

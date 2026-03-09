@@ -13,6 +13,13 @@
 
 ## 2026-03-09 — Immediate Build Fix: missing Catch main for remaining test executables (completed)
 
+
+## 2026-03-09 — Production content import/runtime pack closure (completed)
+- [x] Audited full source asset -> import -> pack metadata -> runtime usage flow for grayscale sprites, palette templates, atlas plans, animation grouping/variants, and authored audio metadata.
+- [x] Hardened manifest validation with explicit `assetManifestType` enforcement, duplicate GUID/source-path rejection, and non-empty identifier validation for `atlasGroup`.
+- [x] Extended import dependency tracking so palette-template usage is visible in `importRegistry` invalidation metadata.
+- [x] Updated creator docs to clarify source-vs-runtime responsibilities and final import expectations.
+
 - [x] Audited editor panel ownership and identified mixed gameplay responsibilities inside the pattern panel implementation unit.
 - [x] Split gameplay authoring panels (projectile debug, encounter/wave editor, trait/upgrade preview, encounter asset helpers) into `editor_tools_gameplay_panel.cpp` to reduce mega-panel coupling.
 - [x] Added workspace workflow shortcuts for core creator flows (content, pattern, palette/FX, diagnostics) without changing runtime behavior.
