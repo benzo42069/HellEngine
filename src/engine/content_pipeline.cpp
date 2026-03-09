@@ -209,12 +209,19 @@ bool parseSourceArtManifest(const nlohmann::json& manifest,
                             const std::string& manifestPath,
                             std::vector<SourceArtAssetRecord>& out,
                             std::vector<ArtImportValidationError>& errors) {
+    if (manifest.value("assetManifestType", std::string()) != "art-import") {
+        errors.push_back({manifestPath, "art import manifest must set assetManifestType to `art-import`"});
+        return false;
+    }
+
     if (!manifest.contains("assets") || !manifest["assets"].is_array()) {
         errors.push_back({manifestPath, "`assets` array missing from art import manifest"});
         return false;
     }
 
     bool ok = true;
+    std::set<std::string> seenGuids;
+    std::set<std::string> seenSourcePaths;
     for (std::size_t index = 0; index < manifest["assets"].size(); ++index) {
         const auto& asset = manifest["assets"][index];
         if (!asset.is_object()) {
@@ -262,6 +269,15 @@ bool parseSourceArtManifest(const nlohmann::json& manifest,
             rec.settings.paletteTemplate = s.value("paletteTemplate", rec.settings.paletteTemplate);
         }
 
+        rec.settings.atlasGroup = trim(rec.settings.atlasGroup);
+        rec.settings.animationGroup = trim(rec.settings.animationGroup);
+        rec.settings.animationSet = trim(rec.settings.animationSet);
+        rec.settings.animationState = trim(rec.settings.animationState);
+        rec.settings.animationDirection = trim(rec.settings.animationDirection);
+        rec.settings.variantGroup = trim(rec.settings.variantGroup);
+        rec.settings.variantName = trim(rec.settings.variantName);
+        rec.settings.paletteTemplate = trim(rec.settings.paletteTemplate);
+
         if (!isKnownColorWorkflow(rec.settings.colorWorkflow)) {
             errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` has unsupported colorWorkflow"});
             ok = false;
@@ -276,6 +292,10 @@ bool parseSourceArtManifest(const nlohmann::json& manifest,
         }
         if (!isKnownMipPreference(rec.settings.mipPreference)) {
             errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` has unsupported mipPreference"});
+            ok = false;
+        }
+        if (rec.settings.atlasGroup.empty() || !isIdentifierLike(rec.settings.atlasGroup)) {
+            errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` atlasGroup must be a non-empty identifier"});
             ok = false;
         }
         if (rec.settings.pivotX < 0.0F || rec.settings.pivotX > 1.0F || rec.settings.pivotY < 0.0F || rec.settings.pivotY > 1.0F) {
@@ -312,6 +332,14 @@ bool parseSourceArtManifest(const nlohmann::json& manifest,
         }
         if (rec.settings.animationFps < 0.0F || !std::isfinite(rec.settings.animationFps)) {
             errors.push_back({manifestPath, "asset `" + rec.sourcePath + "` animationFps must be >= 0"});
+            ok = false;
+        }
+        if (!seenGuids.insert(rec.guid).second) {
+            errors.push_back({manifestPath, "duplicate asset guid in manifest: `" + rec.guid + "`"});
+            ok = false;
+        }
+        if (!seenSourcePaths.insert(rec.sourcePath).second) {
+            errors.push_back({manifestPath, "duplicate source path in manifest: `" + rec.sourcePath + "`"});
             ok = false;
         }
 
@@ -379,6 +407,9 @@ bool importSourceArtAssets(const std::vector<SourceArtAssetRecord>& sourceAssets
         record.settingsFingerprint = jsonFingerprint(settingsJson);
         record.importFingerprint = fnv1a64Hex(record.sourceFingerprint + ":" + record.settingsFingerprint);
         record.dependencies = {source.sourcePath, source.manifestPath};
+        if (!source.settings.paletteTemplate.empty()) {
+            record.dependencies.push_back("paletteTemplate:" + source.settings.paletteTemplate);
+        }
 
         imported.push_back(record);
     }

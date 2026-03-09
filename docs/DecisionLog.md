@@ -1,5 +1,13 @@
 ## 2026-03-09 — Immediate Catch2 main-link closure for content_packer/entity/boss tests
 
+
+## 2026-03-09 — Content pipeline production-closure validation pass
+- **Context**: Creator-facing import flow still allowed ambiguous manifests (missing/incorrect manifest type, duplicate asset identity entries, loose atlas naming), and pack invalidation metadata did not surface palette-template dependencies clearly.
+- **Decision**: Tighten validation at source-manifest parse time and minimally extend dependency metadata without changing runtime data model or pack layering behavior.
+- **Implementation**: `parseSourceArtManifest` now requires `assetManifestType: "art-import"`, trims/validates atlas and grouping identifiers, and rejects duplicate asset GUID/source-path entries within a manifest; import records now include `paletteTemplate:<name>` dependency tags when applicable.
+- **Consequence**: Import failures are clearer and earlier, reimport invalidation diagnostics are more actionable, and source-vs-runtime responsibilities are better delineated for content creators.
+
+
 ## 2026-03-09 — Build/release reproducibility and DLL deployment closure
 - **Context**: Final release hardening still had two reliability gaps: top-level binaries (`EngineDemo`, `ContentPacker`) did not use the standardized runtime-DLL deployment helper, and release manifest generation included timestamp/path entropy that prevented deterministic package metadata across identical builds.
 - **Decision**: Keep changes minimal and production-focused by reusing existing CMake/runtime packaging infrastructure instead of introducing new tooling layers.

@@ -1,5 +1,13 @@
 ## 2026-03-09 — Immediate Build Fix: missing Catch main for remaining test executables (completed)
 
+
+## 2026-03-09 — Production content import/runtime pack closure (completed)
+- [x] Audited full source asset -> import -> pack metadata -> runtime usage flow for grayscale sprites, palette templates, atlas plans, animation grouping/variants, and authored audio metadata.
+- [x] Hardened manifest validation with explicit `assetManifestType` enforcement, duplicate GUID/source-path rejection, and non-empty identifier validation for `atlasGroup`.
+- [x] Extended import dependency tracking so palette-template usage is visible in `importRegistry` invalidation metadata.
+- [x] Updated creator docs to clarify source-vs-runtime responsibilities and final import expectations.
+
+
 - [x] Build/release reliability audit completed for clean rebuild, incremental rebuild, release packaging, and runtime DLL deployment paths.
 - [x] Applied minimal CMake closure: route `EngineDemo` and `ContentPacker` through existing `engine_deploy_runtime_dlls(...)` helper for consistent post-build runtime dependency deployment on Windows.
 - [x] Hardened packaging determinism: `RELEASE_MANIFEST.txt` now emits stable sorted relative-path inventory with fixed format metadata (no generated timestamp/path noise).
