@@ -1,0 +1,19 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-build/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-build/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-build/external/ogg/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-build/external/opus/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-build/external/opusfile/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-build/external/libxmp/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-build/external/libxmp/examples/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-build/external/libxmp/docs/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-build/external/wavpack/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/nlohmann_json-build/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/catch2-build/cmake_install.cmake",
+		"C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/catch2-build/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

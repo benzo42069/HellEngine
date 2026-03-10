@@ -1,0 +1,21 @@
+# ninja log v6
+5	39	7948321717166183	sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-mkdir	97bc1c63a85c1e21
+5	39	7948321717166183	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-mkdir	97bc1c63a85c1e21
+40	36972	7948322086473375	sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-download	77f0df984808250f
+40	36972	7948322086473375	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-download	77f0df984808250f
+36973	37071	7948322086543442	sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-update	62aa428a7370b2d8
+36973	37071	7948322086543442	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-update	62aa428a7370b2d8
+37071	37108	7948322087854623	sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-patch	f6999a40cf1b5b79
+37071	37108	7948322087854623	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-patch	f6999a40cf1b5b79
+37108	37147	7948322088234977	sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-configure	5244f7d335eb044b
+37108	37147	7948322088234977	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-configure	5244f7d335eb044b
+37147	37185	7948322088615312	sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-build	a091a2919a10b014
+37147	37185	7948322088615312	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-build	a091a2919a10b014
+37186	37222	7948322088985650	sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-install	4c35b439c2f2f6b8
+37186	37222	7948322088985650	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-install	4c35b439c2f2f6b8
+37223	37258	7948322089355990	sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-test	c7df2ecc60c8d699
+37223	37258	7948322089355990	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-test	c7df2ecc60c8d699
+37259	37307	7948322089846437	CMakeFiles/sdl2_mixer-populate-complete	7280f701e4f543e4
+37259	37307	7948322089846437	sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-done	7280f701e4f543e4
+37259	37307	7948322089846437	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/CMakeFiles/sdl2_mixer-populate-complete	7280f701e4f543e4
+37259	37307	7948322089846437	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2_mixer-subbuild/sdl2_mixer-populate-prefix/src/sdl2_mixer-populate-stamp/sdl2_mixer-populate-done	7280f701e4f543e4

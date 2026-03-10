@@ -1,0 +1,40 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "MSVC",
+	"compiler-id" : "MSVC",
+	"compiler-simulate-id" : "",
+	"config" : "Release",
+	"cxx-modules" : {},
+	"database-info" : null,
+	"dir-cur-bld" : "C:/Users/UserName/Dev/HellEngine/build_fresh",
+	"dir-cur-src" : "C:/Users/UserName/Dev/HellEngine",
+	"dir-top-bld" : "C:/Users/UserName/Dev/HellEngine/build_fresh",
+	"dir-top-src" : "C:/Users/UserName/Dev/HellEngine",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : 
+	[
+		"C:\\Users\\UserName\\Dev\\HellEngine\\include",
+		"C:\\Users\\UserName\\Dev\\HellEngine\\third_party\\stb",
+		"C:\\Users\\UserName\\Dev\\HellEngine\\third_party\\glad\\include",
+		"generated",
+		"_deps\\sdl2-build\\include",
+		"_deps\\sdl2-build\\include\\SDL2",
+		"_deps\\sdl2-build\\include-config-release\\SDL2",
+		"_deps\\sdl2_mixer-src\\include",
+		"_deps\\imgui-src",
+		"_deps\\imgui-src\\backends",
+		"_deps\\nlohmann_json-src\\include"
+	],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "C:/Users/UserName/Dev/HellEngine/build_fresh/CMakeFiles/modern_renderer_tests.dir",
+	"sources" : 
+	{
+		"CMakeFiles/modern_renderer_tests.dir/tests/modern_renderer_tests.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/tests/modern_renderer_tests.cpp"
+		}
+	}
+}

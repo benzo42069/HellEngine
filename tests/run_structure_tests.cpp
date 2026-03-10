@@ -53,7 +53,7 @@ int main() {
     }
 
     run.reset();
-    for (int i = 0; i < 8000 && run.state() == engine::RunState::InProgress; ++i) {
+    for (int i = 0; i < 12000 && run.state() == engine::RunState::InProgress; ++i) {
         const auto* zone = run.currentZone();
         const unsigned bossDefeats = (zone && zone->type == engine::ZoneType::Boss) ? 99U : 0U;
         run.update(1.0F / 60.0F, bossDefeats, true);

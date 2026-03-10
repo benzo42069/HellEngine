@@ -1,0 +1,335 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "MSVC",
+	"compiler-id" : "MSVC",
+	"compiler-simulate-id" : "",
+	"config" : "Release",
+	"cxx-modules" : {},
+	"database-info" : null,
+	"dir-cur-bld" : "C:/Users/UserName/Dev/HellEngine/build_fresh",
+	"dir-cur-src" : "C:/Users/UserName/Dev/HellEngine",
+	"dir-top-bld" : "C:/Users/UserName/Dev/HellEngine/build_fresh",
+	"dir-top-src" : "C:/Users/UserName/Dev/HellEngine",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : 
+	[
+		"C:\\Users\\UserName\\Dev\\HellEngine\\include",
+		"C:\\Users\\UserName\\Dev\\HellEngine\\third_party\\stb",
+		"C:\\Users\\UserName\\Dev\\HellEngine\\third_party\\glad\\include",
+		"generated",
+		"_deps\\sdl2-build\\include",
+		"_deps\\sdl2-build\\include\\SDL2",
+		"_deps\\sdl2-build\\include-config-release\\SDL2",
+		"_deps\\sdl2_mixer-src\\include",
+		"_deps\\imgui-src",
+		"_deps\\imgui-src\\backends",
+		"_deps\\nlohmann_json-src\\include"
+	],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "C:/Users/UserName/Dev/HellEngine/build_fresh/CMakeFiles/engine_core.dir",
+	"sources" : 
+	{
+		"CMakeFiles/engine_core.dir/src/engine/archetypes.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/archetypes.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/audio_system.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/audio_system.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/background_layers.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/background_layers.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/bullet_palette.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/bullet_palette.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/bullet_sprite_gen.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/bullet_sprite_gen.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/camera_shake.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/camera_shake.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/config.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/config.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/content_pipeline.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/content_pipeline.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/content_watcher.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/content_watcher.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/crash_handler.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/crash_handler.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/danger_field.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/danger_field.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/defensive_special.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/defensive_special.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/deterministic_rng.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/deterministic_rng.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/diagnostics.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/diagnostics.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/difficulty_scaling.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/difficulty_scaling.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/editor/editor_tools_core.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/editor/editor_tools_core.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/editor/editor_tools_gameplay_panel.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/editor/editor_tools_gameplay_panel.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/editor/editor_tools_pattern_panel.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/editor/editor_tools_pattern_panel.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/editor/editor_tools_services.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/editor/editor_tools_services.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/editor/editor_tools_workspace_panel.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/editor/editor_tools_workspace_panel.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/editor_tools.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/editor_tools.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/encounter_graph.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/encounter_graph.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/entities.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/entities.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/gameplay_session.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/gameplay_session.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/gameplay_session_subsystems.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/gameplay_session_subsystems.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/gl_bullet_renderer.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/gl_bullet_renderer.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/gpu_bullets.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/gpu_bullets.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/gradient_animator.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/gradient_animator.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/input_system.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/input_system.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/job_system.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/job_system.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/level_tile_gen.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/level_tile_gen.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/logging.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/logging.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/memory.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/memory.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/meta_progression.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/meta_progression.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/modern_renderer.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/modern_renderer.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/palette_fx_templates.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/palette_fx_templates.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/palette_ramp.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/palette_ramp.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/particle_fx.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/particle_fx.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/pattern_generator.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/pattern_generator.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/pattern_graph.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/pattern_graph.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/pattern_signature.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/pattern_signature.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/patterns.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/patterns.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/perf_profiler.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/perf_profiler.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/persistence.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/persistence.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/plugin_registry.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/plugin_registry.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/projectiles.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/projectiles.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/public_api.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/public_api.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/render2d.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/render2d.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/render_pipeline.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/render_pipeline.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/replay.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/replay.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/run_structure.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/run_structure.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/runtime.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/runtime.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/shader_cache.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/shader_cache.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/sprite_atlas_gen.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/sprite_atlas_gen.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/standards.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/standards.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/timing.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/timing.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/traits.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/traits.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/engine/upgrade_ui_model.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/upgrade_ui_model.cpp"
+		},
+		"CMakeFiles/engine_core.dir/src/stb_impl.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/stb_impl.cpp"
+		},
+		"CMakeFiles/engine_core.dir/third_party/glad/src/glad.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/third_party/glad/src/glad.cpp"
+		}
+	}
+}

@@ -1,0 +1,13 @@
+prefix=C:/Program Files (x86)/EngineDemo
+exec_prefix=${prefix}
+libdir=C:/Program Files (x86)/EngineDemo/lib
+includedir=C:/Program Files (x86)/EngineDemo/include
+
+Name: libxmp
+Description: Xmp module player library
+Version: 4.6.1
+
+Requires:
+Libs: -L${libdir} -lxmp
+Cflags: -I${includedir}
+Libs.private: 

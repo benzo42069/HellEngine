@@ -70,6 +70,8 @@ void ProjectileSystem::initialize(const std::uint32_t capacity, const float worl
 
     pendingSpawnCount_ = 0;
     despawnEventCount_ = 0;
+    pendingSpawns_.resize(kMaxPendingSpawns);
+    despawnEvents_.resize(kMaxDespawnEvents);
 
     legacyCollisionEvents_.assign(capacity_, CollisionEvent {});
 

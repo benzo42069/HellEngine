@@ -175,59 +175,69 @@ bool PatternBank::loadFromFile(const std::string& filePath) {
             continue;
         }
 
-        std::string migrationMessage;
-        if (!migratePackJson(json, migrationMessage)) {
-            logError("Pattern pack schema error: " + migrationMessage + " path=" + packPath);
-            return false;
-        }
-        if (!migrationMessage.empty()) {
-            logWarn(migrationMessage + " path=" + packPath);
-        }
-
-        PackMetadata metadata;
-        std::string metaError;
-        if (!parsePackMetadata(json, metadata, metaError)) {
-            logError("Pattern pack metadata error: " + metaError + " path=" + packPath);
-            return false;
-        }
-        const int runtimePackVersion = kRuntimePackVersion;
-        if (runtimePackVersion < metadata.minRuntimePackVersion || runtimePackVersion > metadata.maxRuntimePackVersion) {
-            logError("Pattern pack compatibility mismatch for pack=" + metadata.packId + " path=" + packPath + " runtimeVersion=" + std::to_string(runtimePackVersion));
-            return false;
-        }
-
-        if (!json.contains("patterns") || !json["patterns"].is_array()) {
-            logWarn("Pattern pack missing `patterns` array: " + packPath);
+        if (!json.is_object()) {
+            logWarn("Pattern pack root is not a JSON object: " + packPath);
             continue;
         }
 
-        for (const nlohmann::json& item : json["patterns"]) {
-            PatternDefinition parsed = parsePatternDefinition(item);
-            if (parsed.guid.empty()) parsed.guid = stableGuidForAsset("pattern", parsed.name);
-            if (auto found = guidToIndex.find(parsed.guid); found != guidToIndex.end()) {
-                logWarn("Pattern conflict override guid=" + parsed.guid + " old=" + patterns_[found->second].name + " new=" + parsed.name + " pack=" + metadata.packId);
-                patterns_[found->second] = std::move(parsed);
-            } else {
-                guidToIndex[parsed.guid] = patterns_.size();
-                patterns_.push_back(std::move(parsed));
+        std::string migrationMessage;
+        try {
+            if (!migratePackJson(json, migrationMessage)) {
+                logError("Pattern pack schema error: " + migrationMessage + " path=" + packPath);
+                return false;
             }
-        }
+            if (!migrationMessage.empty()) {
+                logWarn(migrationMessage + " path=" + packPath);
+            }
 
-        if (json.contains("graphs") && json["graphs"].is_array()) {
-            std::vector<PatternGraphAsset> graphs;
-            std::vector<PatternGraphDiagnostic> readDiagnostics;
-            if (loadPatternGraphsFromFile(packPath, graphs, readDiagnostics)) {
-                graphDiagnostics_.insert(graphDiagnostics_.end(), readDiagnostics.begin(), readDiagnostics.end());
-                PatternGraphCompiler compiler;
-                for (const PatternGraphAsset& graph : graphs) {
-                    CompiledPatternGraph compiled;
-                    if (compiler.compile(graph, compiled)) {
-                        compiledGraphs_.push_back(std::move(compiled));
-                    } else {
-                        graphDiagnostics_.insert(graphDiagnostics_.end(), compiled.diagnostics.begin(), compiled.diagnostics.end());
+            PackMetadata metadata;
+            std::string metaError;
+            if (!parsePackMetadata(json, metadata, metaError)) {
+                logError("Pattern pack metadata error: " + metaError + " path=" + packPath);
+                return false;
+            }
+            const int runtimePackVersion = kRuntimePackVersion;
+            if (runtimePackVersion < metadata.minRuntimePackVersion || runtimePackVersion > metadata.maxRuntimePackVersion) {
+                logError("Pattern pack compatibility mismatch for pack=" + metadata.packId + " path=" + packPath + " runtimeVersion=" + std::to_string(runtimePackVersion));
+                return false;
+            }
+
+            if (!json.contains("patterns") || !json["patterns"].is_array()) {
+                logWarn("Pattern pack missing `patterns` array: " + packPath);
+                continue;
+            }
+
+            for (const nlohmann::json& item : json["patterns"]) {
+                PatternDefinition parsed = parsePatternDefinition(item);
+                if (parsed.guid.empty()) parsed.guid = stableGuidForAsset("pattern", parsed.name);
+                if (auto found = guidToIndex.find(parsed.guid); found != guidToIndex.end()) {
+                    logWarn("Pattern conflict override guid=" + parsed.guid + " old=" + patterns_[found->second].name + " new=" + parsed.name + " pack=" + metadata.packId);
+                    patterns_[found->second] = std::move(parsed);
+                } else {
+                    guidToIndex[parsed.guid] = patterns_.size();
+                    patterns_.push_back(std::move(parsed));
+                }
+            }
+
+            if (json.contains("graphs") && json["graphs"].is_array()) {
+                std::vector<PatternGraphAsset> graphs;
+                std::vector<PatternGraphDiagnostic> readDiagnostics;
+                if (loadPatternGraphsFromFile(packPath, graphs, readDiagnostics)) {
+                    graphDiagnostics_.insert(graphDiagnostics_.end(), readDiagnostics.begin(), readDiagnostics.end());
+                    PatternGraphCompiler compiler;
+                    for (const PatternGraphAsset& graph : graphs) {
+                        CompiledPatternGraph compiled;
+                        if (compiler.compile(graph, compiled)) {
+                            compiledGraphs_.push_back(std::move(compiled));
+                        } else {
+                            graphDiagnostics_.insert(graphDiagnostics_.end(), compiled.diagnostics.begin(), compiled.diagnostics.end());
+                        }
                     }
                 }
             }
+        } catch (const std::exception& ex) {
+            logWarn(std::string("Pattern pack processing exception (skipping pack): ") + ex.what() + " path=" + packPath);
+            continue;
         }
     }
 

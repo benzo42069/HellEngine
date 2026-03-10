@@ -1,0 +1,46 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "MSVC",
+	"compiler-id" : "MSVC",
+	"compiler-simulate-id" : "",
+	"config" : "Release",
+	"cxx-modules" : {},
+	"database-info" : null,
+	"dir-cur-bld" : "C:/Users/UserName/Dev/HellEngine/build_fresh",
+	"dir-cur-src" : "C:/Users/UserName/Dev/HellEngine",
+	"dir-top-bld" : "C:/Users/UserName/Dev/HellEngine/build_fresh",
+	"dir-top-src" : "C:/Users/UserName/Dev/HellEngine",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : 
+	[
+		"C:\\Users\\UserName\\Dev\\HellEngine\\include",
+		"_deps\\nlohmann_json-src\\include"
+	],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "C:/Users/UserName/Dev/HellEngine/build_fresh/CMakeFiles/ContentPacker.dir",
+	"sources" : 
+	{
+		"CMakeFiles/ContentPacker.dir/src/engine/content_pipeline.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/content_pipeline.cpp"
+		},
+		"CMakeFiles/ContentPacker.dir/src/engine/content_watcher.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/content_watcher.cpp"
+		},
+		"CMakeFiles/ContentPacker.dir/src/engine/palette_fx_templates.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/engine/palette_fx_templates.cpp"
+		},
+		"CMakeFiles/ContentPacker.dir/src/tools_content_packer.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "C:/Users/UserName/Dev/HellEngine/src/tools_content_packer.cpp"
+		}
+	}
+}

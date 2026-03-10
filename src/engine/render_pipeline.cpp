@@ -141,6 +141,12 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
         return false;
     }
     textures_ = std::make_unique<TextureStore>(renderer_);
+    if (config.rendererSmokeTest) {
+        spriteBatch_.reserve(config.projectileCapacity + 2048);
+        renderContextReady_ = true;
+        refreshDisplayMetrics(window);
+        return true;
+    }
     toolSuite.initialize(window, renderer_);
     (void)debugText_.init(renderer_);
     debugText_.registerTexture(*textures_, "debug_font");

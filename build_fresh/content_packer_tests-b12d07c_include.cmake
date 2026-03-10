@@ -1,0 +1,5 @@
+if(EXISTS "C:/Users/UserName/Dev/HellEngine/build_fresh/content_packer_tests-b12d07c_tests.cmake")
+  include("C:/Users/UserName/Dev/HellEngine/build_fresh/content_packer_tests-b12d07c_tests.cmake")
+else()
+  add_test(content_packer_tests_NOT_BUILT-b12d07c content_packer_tests_NOT_BUILT-b12d07c)
+endif()

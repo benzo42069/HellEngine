@@ -13,7 +13,8 @@ std::uint64_t runSimHash(const std::uint64_t seed) {
     constexpr int kTicks = 240;
     for (int i = 0; i < kTicks; ++i) {
         system.beginTick();
-        system.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
+        system.updateMotion(1.0F / 60.0F);
+        system.buildGrid();
     }
 
     return system.debugStateHash();

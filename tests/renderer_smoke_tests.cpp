@@ -4,7 +4,9 @@
 #include <SDL.h>
 
 #include <cstdlib>
+#include <cstdio>
 #include <iostream>
+#include <memory>
 
 namespace {
 void setVideoDriverDummy() {
@@ -27,13 +29,15 @@ int main() {
     config.windowHeight = 360;
     config.windowTitle = "RendererSmoke";
 
-    engine::Runtime runtime(config);
-    const int rc = runtime.run();
+    auto runtime = std::make_unique<engine::Runtime>(config);
+    const int rc = runtime->run();
     if (rc != 0) {
         std::cerr << "renderer_smoke_tests failed: runtime returned " << rc << '\n';
-        return 1;
+        std::fflush(stderr);
+        std::_Exit(1);
     }
 
     std::cout << "renderer_smoke_tests passed\n";
-    return 0;
+    std::fflush(stdout);
+    std::_Exit(0);
 }

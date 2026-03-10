@@ -1,0 +1,21 @@
+# ninja log v6
+5	40	7948321431030637	sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-mkdir	7e48a33891bb008b
+5	40	7948321431030637	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-mkdir	7e48a33891bb008b
+40	18193	7948321612563702	sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-download	a28720cbf7bf6cd6
+40	18193	7948321612563702	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-download	a28720cbf7bf6cd6
+18193	18277	7948321612603746	sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-update	68bba4c9785412b3
+18193	18277	7948321612603746	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-update	68bba4c9785412b3
+18277	18308	7948321613714200	sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-patch	391b7a30b5b404f0
+18277	18308	7948321613714200	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-patch	391b7a30b5b404f0
+18308	18344	7948321614054519	sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-configure	231ac7029934c565
+18308	18344	7948321614054519	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-configure	231ac7029934c565
+18344	18383	7948321614454873	sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-build	ef252ea2632112c2
+18344	18383	7948321614454873	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-build	ef252ea2632112c2
+18383	18414	7948321614775164	sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-install	5bf6cd15e95cff9f
+18383	18414	7948321614775164	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-install	5bf6cd15e95cff9f
+18414	18445	7948321615085447	sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-test	fa854891622a746a
+18414	18445	7948321615085447	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-test	fa854891622a746a
+18445	18488	7948321615515835	CMakeFiles/sdl2-populate-complete	3034b8ef479f6115
+18445	18488	7948321615515835	sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-done	3034b8ef479f6115
+18445	18488	7948321615515835	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/CMakeFiles/sdl2-populate-complete	3034b8ef479f6115
+18445	18488	7948321615515835	C:/Users/UserName/Dev/HellEngine/build_fresh/_deps/sdl2-subbuild/sdl2-populate-prefix/src/sdl2-populate-stamp/sdl2-populate-done	3034b8ef479f6115

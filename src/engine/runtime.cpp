@@ -295,20 +295,33 @@ int Runtime::run() {
     (void)session_.traitSystem_.rollChoices();
 
     if (!config_.headless) {
-        window_ = SDL_CreateWindow(config_.windowTitle.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, config_.windowWidth, config_.windowHeight, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL);
-        if (!window_) return 1;
-        if (!renderPipeline_.initialize(window_, config_, session_.debugTools_.toolSuite)) return 1;
-        if (renderPipeline_.renderer() && renderPipeline_.textures()) {
-            session_.projectiles_.configurePaletteAnimations(renderPipeline_.renderer(), *renderPipeline_.textures(), session_.bulletPaletteRegistry_);
+        const Uint32 baseWindowFlags = config_.rendererSmokeTest
+            ? SDL_WINDOW_HIDDEN
+            : (SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+        const Uint32 preferredWindowFlags = config_.rendererSmokeTest
+            ? baseWindowFlags
+            : (baseWindowFlags | SDL_WINDOW_OPENGL);
+        window_ = SDL_CreateWindow(config_.windowTitle.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, config_.windowWidth, config_.windowHeight, preferredWindowFlags);
+        if (!window_) {
+            // Retry without OpenGL flag (e.g. dummy/offscreen video driver in tests)
+            window_ = SDL_CreateWindow(config_.windowTitle.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, config_.windowWidth, config_.windowHeight, baseWindowFlags);
         }
-        renderPipeline_.generateBulletSprites(session_.bulletPaletteRegistry_, session_.bulletPaletteTable_);
-        renderPipeline_.generatePatternSignatures(session_.patternBank_, config_.simulationSeed);
+        if (!window_) {
+            logError("SDL_CreateWindow failed for renderer path: " + std::string(SDL_GetError()));
+            return 1;
+        }
+        if (!renderPipeline_.initialize(window_, config_, session_.debugTools_.toolSuite)) return 1;
         if (config_.rendererSmokeTest) {
             SDL_SetRenderDrawColor(renderPipeline_.renderer(), 12, 12, 16, 255);
             SDL_RenderClear(renderPipeline_.renderer());
             SDL_RenderPresent(renderPipeline_.renderer());
             return 0;
         }
+        if (renderPipeline_.renderer() && renderPipeline_.textures()) {
+            session_.projectiles_.configurePaletteAnimations(renderPipeline_.renderer(), *renderPipeline_.textures(), session_.bulletPaletteRegistry_);
+        }
+        renderPipeline_.generateBulletSprites(session_.bulletPaletteRegistry_, session_.bulletPaletteTable_);
+        renderPipeline_.generatePatternSignatures(session_.patternBank_, config_.simulationSeed);
     }
 
     input_.setUpgradeNavCallback([this](const UpgradeNavAction a) { session_.onUpgradeNavigation(a); });

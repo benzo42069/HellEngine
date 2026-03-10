@@ -166,11 +166,11 @@ class ProjectileSystem {
     std::array<std::uint8_t, BulletPaletteTable::kMaxPalettes> paletteAnimIds_ {};
 
     static constexpr std::uint32_t kMaxPendingSpawns = 4096;
-    std::array<ProjectileSpawn, kMaxPendingSpawns> pendingSpawns_ {};
+    std::vector<ProjectileSpawn> pendingSpawns_;
     std::uint32_t pendingSpawnCount_ {0};
 
     static constexpr std::uint32_t kMaxDespawnEvents = 4096;
-    std::array<ProjectileDespawnEvent, kMaxDespawnEvents> despawnEvents_ {};
+    std::vector<ProjectileDespawnEvent> despawnEvents_;
     std::uint32_t despawnEventCount_ {0};
 
     std::vector<CollisionEvent> legacyCollisionEvents_ {};

@@ -23,7 +23,7 @@
         "animationDirection": "down",
         "animationFrame": 0,
         "animationFps": 12.0,
-        "animationSequenceFromFilename": true,
+        "animationSequenceFromFilename": false,
         "animationNamingRegex": "^([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)_([A-Za-z0-9_-]+)_([0-9]+)$"
       }
     },

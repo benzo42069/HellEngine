@@ -49,8 +49,10 @@ TEST_CASE("Projectile behaviors remain deterministic", "[projectile][behavior]")
     for (int i = 0; i < 180; ++i) {
         a.beginTick();
         b.beginTick();
-        a.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
-        b.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
+        a.updateMotion(1.0F / 60.0F);
+        a.buildGrid();
+        b.updateMotion(1.0F / 60.0F);
+        b.buildGrid();
         hashA ^= a.debugStateHash() + static_cast<std::uint64_t>(i);
         hashB ^= b.debugStateHash() + static_cast<std::uint64_t>(i);
     }

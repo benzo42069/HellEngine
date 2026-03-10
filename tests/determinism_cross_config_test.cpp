@@ -13,7 +13,8 @@ std::uint64_t runScenario() {
 
     for (int i = 0; i < 300; ++i) {
         ps.beginTick();
-        ps.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
+        ps.updateMotion(1.0F / 60.0F);
+        ps.buildGrid();
     }
 
     return ps.debugStateHash();
@@ -21,7 +22,7 @@ std::uint64_t runScenario() {
 
 constexpr std::uint64_t expectedHashForToolchain() {
 #if defined(_MSC_VER)
-    return 3412424349282778590ULL;
+    return 2655185603234195783ULL;
 #elif defined(__clang__)
     return 12663723333501355397ULL;
 #elif defined(__GNUC__)

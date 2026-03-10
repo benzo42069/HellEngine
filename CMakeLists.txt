@@ -117,6 +117,9 @@ engine_register_dependency(Catch2
 
 FetchContent_MakeAvailable(${ENGINE_FETCHCONTENT_DEPENDENCIES})
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+# Vendored dependencies toggle the global BUILD_TESTING cache entry. Restore the
+# top-level project intent before enabling CTest integration.
+set(BUILD_TESTING ON CACHE BOOL "Enable top-level engine tests" FORCE)
 include(CTest)
 include(Catch)
 
@@ -367,7 +370,10 @@ engine_add_test(projectile_tests tests/projectile_tests.cpp)
 engine_add_test(pattern_tests tests/pattern_tests.cpp)
 
 engine_add_test_target(content_packer_tests tests/content_packer_tests.cpp)
-add_test(NAME content_packer_generate COMMAND ContentPacker --input ${CMAKE_SOURCE_DIR}/data --output ${CMAKE_BINARY_DIR}/content_test.pak)
+add_test(
+  NAME content_packer_generate
+  COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_SOURCE_DIR} $<TARGET_FILE:ContentPacker> --input data --output ${CMAKE_BINARY_DIR}/content_test.pak
+)
 engine_register_test(content_packer_tests DEPENDS content_packer_generate)
 
 engine_add_test(content_import_pipeline_tests tests/content_import_pipeline_tests.cpp)

@@ -1,0 +1,5 @@
+if(EXISTS "C:/Users/UserName/Dev/HellEngine/build_fresh/entity_tests-b12d07c_tests.cmake")
+  include("C:/Users/UserName/Dev/HellEngine/build_fresh/entity_tests-b12d07c_tests.cmake")
+else()
+  add_test(entity_tests_NOT_BUILT-b12d07c entity_tests_NOT_BUILT-b12d07c)
+endif()

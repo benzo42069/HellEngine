@@ -59,8 +59,10 @@ int main() {
     for (int t = 0; t < 180; ++t) {
         p1.beginTick();
         p2.beginTick();
-        p1.update(1.0F / 60.0F, {0.0F, 0.0F}, 10.0F, preset.enemyScale, preset.playerProjectileScale);
-        p2.update(1.0F / 60.0F, {0.0F, 0.0F}, 10.0F, preset.enemyScale, preset.playerProjectileScale);
+        p1.updateMotion(1.0F / 60.0F, preset.enemyScale, preset.playerProjectileScale);
+        p1.buildGrid();
+        p2.updateMotion(1.0F / 60.0F, preset.enemyScale, preset.playerProjectileScale);
+        p2.buildGrid();
     }
     if (p1.debugStateHash() != p2.debugStateHash()) {
         std::cerr << "time dilation determinism hash mismatch\n";

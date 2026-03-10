@@ -1,0 +1,5 @@
+if(EXISTS "C:/Users/UserName/Dev/HellEngine/build_fresh/replay_tests-b12d07c_tests.cmake")
+  include("C:/Users/UserName/Dev/HellEngine/build_fresh/replay_tests-b12d07c_tests.cmake")
+else()
+  add_test(replay_tests_NOT_BUILT-b12d07c replay_tests_NOT_BUILT-b12d07c)
+endif()

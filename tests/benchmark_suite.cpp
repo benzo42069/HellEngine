@@ -21,7 +21,8 @@ double runBulletStress(const std::uint32_t bulletCount, const int ticks) {
         ps.clear();
         ps.spawnRadialBurst(bulletCount, 120.0F, 2.0F, static_cast<std::uint64_t>(i));
         ps.beginTick();
-        ps.update(1.0F / 60.0F, {500.0F, 500.0F}, 8.0F);
+        ps.updateMotion(1.0F / 60.0F);
+        ps.buildGrid();
     }
     const auto t1 = Clock::now();
     return std::chrono::duration<double, std::milli>(t1 - t0).count();
@@ -38,7 +39,8 @@ double runCollisionHeavy(const std::uint32_t bulletCount, const int ticks) {
             (void)ps.spawn(engine::ProjectileSpawn {.pos = {0.0F, 0.0F}, .vel = {0.0F, 0.0F}, .radius = 2.0F});
         }
         ps.beginTick();
-        ps.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
+        ps.updateMotion(1.0F / 60.0F);
+        ps.buildGrid();
     }
     const auto t1 = Clock::now();
     return std::chrono::duration<double, std::milli>(t1 - t0).count();
