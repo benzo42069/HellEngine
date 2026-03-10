@@ -11,6 +11,7 @@
 #include <glad/glad.h>
 
 #include <cstdint>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -20,28 +21,32 @@ namespace engine {
 // Ownership: consumes ProjectileSystem SoA snapshots prepared by RenderPipeline.
 class GlBulletRenderer {
   public:
+    struct ProjectileSoAView {
+        std::span<const float> posX;
+        std::span<const float> posY;
+        std::span<const float> velX;
+        std::span<const float> velY;
+        std::span<const float> radius;
+        std::span<const float> life;
+        std::span<const std::uint8_t> paletteIndex;
+        std::span<const std::uint8_t> shape;
+        std::span<const std::uint8_t> active;
+        std::span<const std::uint8_t> allegiance;
+        std::span<const std::uint8_t> enableTrails;
+        std::span<const float> trailX;
+        std::span<const float> trailY;
+        std::span<const std::uint8_t> trailHead;
+        std::uint8_t trailLength {0};
+        std::span<const std::uint32_t> activeIndices;
+        std::uint32_t activeCount {0};
+    };
+
     bool initialize(ShaderCache& shaders, std::uint32_t maxBullets, std::string* error = nullptr);
     void shutdown();
     [[nodiscard]] bool initialized() const { return program_ != nullptr && vao_ != 0 && vbo_ != 0 && ebo_ != 0; }
 
     void buildVertexBuffer(
-        const float* posX,
-        const float* posY,
-        const float* velX,
-        const float* velY,
-        const float* radius,
-        const float* life,
-        const std::uint8_t* paletteIndex,
-        const std::uint8_t* shape,
-        const std::uint8_t* active,
-        const std::uint8_t* allegiance,
-        const std::uint8_t* enableTrails,
-        const float* trailX,
-        const float* trailY,
-        const std::uint8_t* trailHead,
-        std::uint8_t trailLength,
-        const std::uint32_t* activeIndices,
-        std::uint32_t activeCount,
+        const ProjectileSoAView& view,
         const Camera2D& camera,
         const GrayscaleSpriteAtlas& atlas,
         const PaletteRampTexture& paletteRamp,

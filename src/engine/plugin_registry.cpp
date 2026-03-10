@@ -2,12 +2,18 @@
 #include <engine/public/api.h>
 
 #include <algorithm>
+#include <mutex>
 
 namespace engine::internal {
 
 PluginRegistry& pluginRegistry() {
     static PluginRegistry r;
     return r;
+}
+
+std::mutex& pluginRegistryMutex() {
+    static std::mutex m;
+    return m;
 }
 
 } // namespace engine::internal
@@ -84,30 +90,37 @@ bool isPluginTargetCompatible(const PluginMetadata& metadata) {
 }
 
 PluginRegistrationResult registerShaderPackPlugin(IShaderPackPlugin* plugin) {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     return registerPlugin(engine::internal::pluginRegistry().shaderPacks, plugin);
 }
 
 PluginRegistrationResult registerContentPackPlugin(IContentPackPlugin* plugin) {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     return registerPlugin(engine::internal::pluginRegistry().contentPacks, plugin);
 }
 
 PluginRegistrationResult registerToolPanelPlugin(IToolPanelPlugin* plugin) {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     return registerPlugin(engine::internal::pluginRegistry().toolPanels, plugin);
 }
 
 bool unregisterShaderPackPlugin(const std::string& pluginId) {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     return unregisterPlugin(engine::internal::pluginRegistry().shaderPacks, pluginId);
 }
 
 bool unregisterContentPackPlugin(const std::string& pluginId) {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     return unregisterPlugin(engine::internal::pluginRegistry().contentPacks, pluginId);
 }
 
 bool unregisterToolPanelPlugin(const std::string& pluginId) {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     return unregisterPlugin(engine::internal::pluginRegistry().toolPanels, pluginId);
 }
 
 void clearRegisteredPlugins() {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     auto& reg = engine::internal::pluginRegistry();
     reg.shaderPacks.plugins.clear();
     reg.shaderPacks.ids.clear();
@@ -117,15 +130,18 @@ void clearRegisteredPlugins() {
     reg.toolPanels.ids.clear();
 }
 
-const std::vector<IShaderPackPlugin*>& shaderPackPlugins() {
+std::vector<IShaderPackPlugin*> shaderPackPlugins() {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     return engine::internal::pluginRegistry().shaderPacks.plugins;
 }
 
-const std::vector<IContentPackPlugin*>& contentPackPlugins() {
+std::vector<IContentPackPlugin*> contentPackPlugins() {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     return engine::internal::pluginRegistry().contentPacks.plugins;
 }
 
-const std::vector<IToolPanelPlugin*>& toolPanelPlugins() {
+std::vector<IToolPanelPlugin*> toolPanelPlugins() {
+    std::scoped_lock lock(engine::internal::pluginRegistryMutex());
     return engine::internal::pluginRegistry().toolPanels.plugins;
 }
 

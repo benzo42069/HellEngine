@@ -43,16 +43,24 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(ENGINE_DETERMINISTIC_BUILD "Enable deterministic/reproducible compiler and linker flags" OFF)
 option(HELLEngine_ENABLE_MODERN_RENDERER "Build experimental modern material/post renderer path" OFF)
-if(ENGINE_DETERMINISTIC_BUILD)
-  if(MSVC)
-    add_compile_options(/Brepro)
-    add_link_options(/Brepro)
-  else()
-    add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
-  endif()
-endif()
-
 include(FetchContent)
+
+function(engine_apply_target_defaults target_name)
+  if(MSVC)
+    target_compile_options(${target_name} PRIVATE /W4 /WX /permissive- /MP)
+  else()
+    target_compile_options(${target_name} PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+
+  if(ENGINE_DETERMINISTIC_BUILD)
+    if(MSVC)
+      target_compile_options(${target_name} PRIVATE /Brepro)
+      target_link_options(${target_name} PRIVATE /Brepro)
+    else()
+      target_compile_options(${target_name} PRIVATE -ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
+    endif()
+  endif()
+endfunction()
 
 # Third-party dependency setup (single registration/materialization flow).
 set(ENGINE_FETCHCONTENT_DEPENDENCIES)
@@ -140,6 +148,7 @@ target_include_directories(imgui_sdl2
 )
 
 target_link_libraries(imgui_sdl2 PUBLIC ${ENGINEDEMO_SDL_TARGET})
+engine_apply_target_defaults(imgui_sdl2)
 
 add_library(engine_core STATIC
   src/engine/archetypes.cpp
@@ -222,6 +231,7 @@ target_link_libraries(engine_core
 )
 
 target_compile_definitions(engine_core PUBLIC HELLEngine_ENABLE_MODERN_RENDERER=$<BOOL:${HELLEngine_ENABLE_MODERN_RENDERER}>)
+engine_apply_target_defaults(engine_core)
 
 if(MSVC)
   target_compile_options(engine_core PRIVATE /fp:strict)
@@ -238,6 +248,7 @@ add_executable(ContentPacker
 )
 
 target_include_directories(ContentPacker PRIVATE include)
+engine_apply_target_defaults(ContentPacker)
 target_link_libraries(ContentPacker
   PRIVATE
     nlohmann_json::nlohmann_json
@@ -248,6 +259,7 @@ add_executable(EngineDemo
 )
 
 target_link_libraries(EngineDemo PRIVATE engine_core)
+engine_apply_target_defaults(EngineDemo)
 
 if(WIN32)
   target_link_libraries(EngineDemo PRIVATE SDL2::SDL2main)
@@ -300,6 +312,7 @@ endfunction()
 function(engine_add_test_target target_name source_file)
   add_executable(${target_name} ${source_file})
   target_link_libraries(${target_name} PRIVATE engine_core)
+  engine_apply_target_defaults(${target_name})
   if(WIN32)
     target_compile_definitions(${target_name} PRIVATE SDL_MAIN_HANDLED)
   endif()
@@ -384,3 +397,16 @@ engine_add_test(collision_correctness_tests tests/collision_correctness_tests.cp
 engine_add_test(determinism_property_tests tests/determinism_property_tests.cpp)
 engine_add_test(content_fuzz_tests tests/content_fuzz_tests.cpp)
 engine_add_test(determinism_cross_config_test tests/determinism_cross_config_test.cpp)
+
+
+install(TARGETS EngineDemo ContentPacker
+  RUNTIME DESTINATION bin
+)
+
+install(DIRECTORY assets/ DESTINATION assets)
+install(DIRECTORY data/ DESTINATION data)
+
+if(WIN32)
+  install(FILES $<TARGET_RUNTIME_DLLS:EngineDemo> DESTINATION bin)
+  install(FILES $<TARGET_RUNTIME_DLLS:ContentPacker> DESTINATION bin)
+endif()

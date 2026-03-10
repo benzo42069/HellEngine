@@ -256,8 +256,11 @@ bool RendererModernPipeline::compileProgram(GLuint& program, const char* fragSha
 }
 
 bool RendererModernPipeline::checkFramebuffer(const GLuint fbo, std::string* error) const {
+    GLint previousFbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(previousFbo));
     if (status == GL_FRAMEBUFFER_COMPLETE) return true;
     if (error) *error = "framebuffer incomplete";
     return false;
@@ -329,11 +332,35 @@ void RendererModernPipeline::releaseTarget(RenderTarget& target) {
     target.height = 1;
 }
 
+void RendererModernPipeline::cacheUniformLocations() {
+    bloomLoc_.sceneTex = glGetUniformLocation(bloomProgram_, "u_sceneTex");
+    bloomLoc_.bloomTex = glGetUniformLocation(bloomProgram_, "u_bloomTex");
+    bloomLoc_.mode = glGetUniformLocation(bloomProgram_, "u_mode");
+    bloomLoc_.bloomThreshold = glGetUniformLocation(bloomProgram_, "u_bloomThreshold");
+    bloomLoc_.bloomIntensity = glGetUniformLocation(bloomProgram_, "u_bloomIntensity");
+    bloomLoc_.texelSize = glGetUniformLocation(bloomProgram_, "u_texelSize");
+
+    vignetteLoc_.sceneTex = glGetUniformLocation(vignetteProgram_, "u_sceneTex");
+    vignetteLoc_.vignetteIntensity = glGetUniformLocation(vignetteProgram_, "u_vignetteIntensity");
+    vignetteLoc_.vignetteRoundness = glGetUniformLocation(vignetteProgram_, "u_vignetteRoundness");
+
+    compositeLoc_.sceneTex = glGetUniformLocation(compositeProgram_, "u_sceneTex");
+    compositeLoc_.exposure = glGetUniformLocation(compositeProgram_, "u_exposure");
+    compositeLoc_.contrast = glGetUniformLocation(compositeProgram_, "u_contrast");
+    compositeLoc_.saturation = glGetUniformLocation(compositeProgram_, "u_saturation");
+    compositeLoc_.gamma = glGetUniformLocation(compositeProgram_, "u_gamma");
+    compositeLoc_.chromaticAberration = glGetUniformLocation(compositeProgram_, "u_chromaticAberration");
+    compositeLoc_.filmGrain = glGetUniformLocation(compositeProgram_, "u_filmGrain");
+    compositeLoc_.scanlineIntensity = glGetUniformLocation(compositeProgram_, "u_scanlineIntensity");
+    compositeLoc_.time = glGetUniformLocation(compositeProgram_, "u_time");
+}
+
 bool RendererModernPipeline::initializeGlResources(std::string* error) {
     ensureQuadGeometry();
     if (!compileProgram(bloomProgram_, kBloomFragPath, error)) return false;
     if (!compileProgram(vignetteProgram_, kVignetteFragPath, error)) return false;
     if (!compileProgram(compositeProgram_, kCompositeFragPath, error)) return false;
+    cacheUniformLocations();
     return true;
 }
 
@@ -472,15 +499,15 @@ void RendererModernPipeline::runBloomPass() {
 
     glUseProgram(bloomProgram_);
     glActiveTexture(GL_TEXTURE0);
-    glUniform1i(glGetUniformLocation(bloomProgram_, "u_sceneTex"), 0);
-    glUniform1f(glGetUniformLocation(bloomProgram_, "u_bloomThreshold"), fx_.bloomThreshold);
-    glUniform1f(glGetUniformLocation(bloomProgram_, "u_bloomIntensity"), fx_.bloomIntensity);
+    if (bloomLoc_.sceneTex >= 0) glUniform1i(bloomLoc_.sceneTex, 0);
+    if (bloomLoc_.bloomThreshold >= 0) glUniform1f(bloomLoc_.bloomThreshold, fx_.bloomThreshold);
+    if (bloomLoc_.bloomIntensity >= 0) glUniform1f(bloomLoc_.bloomIntensity, fx_.bloomIntensity);
 
     glViewport(0, 0, bloomBuffer_.width, bloomBuffer_.height);
     glBindFramebuffer(GL_FRAMEBUFFER, bloomBuffer_.fbo);
     glBindTexture(GL_TEXTURE_2D, sceneBuffer_.colorTex);
-    glUniform1i(glGetUniformLocation(bloomProgram_, "u_mode"), 0);
-    glUniform2f(glGetUniformLocation(bloomProgram_, "u_texelSize"), 1.0F / static_cast<float>(width_), 1.0F / static_cast<float>(height_));
+    if (bloomLoc_.mode >= 0) glUniform1i(bloomLoc_.mode, 0);
+    if (bloomLoc_.texelSize >= 0) glUniform2f(bloomLoc_.texelSize, 1.0F / static_cast<float>(width_), 1.0F / static_cast<float>(height_));
     drawFullscreenQuad();
 
     float step = std::max(1.0F, fx_.bloomRadius * 2.0F);
@@ -488,15 +515,15 @@ void RendererModernPipeline::runBloomPass() {
         glBindFramebuffer(GL_FRAMEBUFFER, outputBuffer_.fbo);
         glViewport(0, 0, outputBuffer_.width, outputBuffer_.height);
         glBindTexture(GL_TEXTURE_2D, bloomBuffer_.colorTex);
-        glUniform1i(glGetUniformLocation(bloomProgram_, "u_mode"), 1);
-        glUniform2f(glGetUniformLocation(bloomProgram_, "u_texelSize"), step / static_cast<float>(bloomBuffer_.width), step / static_cast<float>(bloomBuffer_.height));
+        if (bloomLoc_.mode >= 0) glUniform1i(bloomLoc_.mode, 1);
+        if (bloomLoc_.texelSize >= 0) glUniform2f(bloomLoc_.texelSize, step / static_cast<float>(bloomBuffer_.width), step / static_cast<float>(bloomBuffer_.height));
         drawFullscreenQuad();
 
         glBindFramebuffer(GL_FRAMEBUFFER, bloomBuffer_.fbo);
         glViewport(0, 0, bloomBuffer_.width, bloomBuffer_.height);
         glBindTexture(GL_TEXTURE_2D, outputBuffer_.colorTex);
-        glUniform1i(glGetUniformLocation(bloomProgram_, "u_mode"), 2);
-        glUniform2f(glGetUniformLocation(bloomProgram_, "u_texelSize"), step / static_cast<float>(bloomBuffer_.width), step / static_cast<float>(bloomBuffer_.height));
+        if (bloomLoc_.mode >= 0) glUniform1i(bloomLoc_.mode, 2);
+        if (bloomLoc_.texelSize >= 0) glUniform2f(bloomLoc_.texelSize, step / static_cast<float>(bloomBuffer_.width), step / static_cast<float>(bloomBuffer_.height));
         drawFullscreenQuad();
         step *= 0.85F;
     }
@@ -504,10 +531,10 @@ void RendererModernPipeline::runBloomPass() {
     glBindFramebuffer(GL_FRAMEBUFFER, outputBuffer_.fbo);
     glViewport(0, 0, outputBuffer_.width, outputBuffer_.height);
     glBindTexture(GL_TEXTURE_2D, sceneBuffer_.colorTex);
-    glUniform1i(glGetUniformLocation(bloomProgram_, "u_mode"), 3);
+    if (bloomLoc_.mode >= 0) glUniform1i(bloomLoc_.mode, 3);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, bloomBuffer_.colorTex);
-    glUniform1i(glGetUniformLocation(bloomProgram_, "u_bloomTex"), 1);
+    if (bloomLoc_.bloomTex >= 0) glUniform1i(bloomLoc_.bloomTex, 1);
     glActiveTexture(GL_TEXTURE0);
     drawFullscreenQuad();
 }
@@ -525,9 +552,9 @@ void RendererModernPipeline::runVignettePass(const GLuint inputTex, const GLuint
     glUseProgram(vignetteProgram_);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, inputTex);
-    glUniform1i(glGetUniformLocation(vignetteProgram_, "u_sceneTex"), 0);
-    glUniform1f(glGetUniformLocation(vignetteProgram_, "u_vignetteIntensity"), fx_.vignetteIntensity);
-    glUniform1f(glGetUniformLocation(vignetteProgram_, "u_vignetteRoundness"), fx_.vignetteRoundness);
+    if (vignetteLoc_.sceneTex >= 0) glUniform1i(vignetteLoc_.sceneTex, 0);
+    if (vignetteLoc_.vignetteIntensity >= 0) glUniform1f(vignetteLoc_.vignetteIntensity, fx_.vignetteIntensity);
+    if (vignetteLoc_.vignetteRoundness >= 0) glUniform1f(vignetteLoc_.vignetteRoundness, fx_.vignetteRoundness);
     drawFullscreenQuad();
 }
 
@@ -537,15 +564,15 @@ void RendererModernPipeline::runCompositePass(const GLuint inputTex, const GLuin
     glUseProgram(compositeProgram_);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, inputTex);
-    glUniform1i(glGetUniformLocation(compositeProgram_, "u_sceneTex"), 0);
-    glUniform1f(glGetUniformLocation(compositeProgram_, "u_exposure"), fx_.exposure);
-    glUniform1f(glGetUniformLocation(compositeProgram_, "u_contrast"), fx_.contrast);
-    glUniform1f(glGetUniformLocation(compositeProgram_, "u_saturation"), fx_.saturation);
-    glUniform1f(glGetUniformLocation(compositeProgram_, "u_gamma"), fx_.gamma);
-    glUniform1f(glGetUniformLocation(compositeProgram_, "u_chromaticAberration"), fx_.chromaticAberration);
-    glUniform1f(glGetUniformLocation(compositeProgram_, "u_filmGrain"), fx_.filmGrain);
-    glUniform1f(glGetUniformLocation(compositeProgram_, "u_scanlineIntensity"), fx_.scanlineIntensity);
-    glUniform1f(glGetUniformLocation(compositeProgram_, "u_time"), timeSeconds_);
+    if (compositeLoc_.sceneTex >= 0) glUniform1i(compositeLoc_.sceneTex, 0);
+    if (compositeLoc_.exposure >= 0) glUniform1f(compositeLoc_.exposure, fx_.exposure);
+    if (compositeLoc_.contrast >= 0) glUniform1f(compositeLoc_.contrast, fx_.contrast);
+    if (compositeLoc_.saturation >= 0) glUniform1f(compositeLoc_.saturation, fx_.saturation);
+    if (compositeLoc_.gamma >= 0) glUniform1f(compositeLoc_.gamma, fx_.gamma);
+    if (compositeLoc_.chromaticAberration >= 0) glUniform1f(compositeLoc_.chromaticAberration, fx_.chromaticAberration);
+    if (compositeLoc_.filmGrain >= 0) glUniform1f(compositeLoc_.filmGrain, fx_.filmGrain);
+    if (compositeLoc_.scanlineIntensity >= 0) glUniform1f(compositeLoc_.scanlineIntensity, fx_.scanlineIntensity);
+    if (compositeLoc_.time >= 0) glUniform1f(compositeLoc_.time, timeSeconds_);
     drawFullscreenQuad();
 }
 

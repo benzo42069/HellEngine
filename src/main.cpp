@@ -3,10 +3,8 @@
 #define SDL_MAIN_HANDLED
 #endif
 #include <windows.h>
+#include <shellapi.h>
 #include <SDL.h>
-
-extern int __argc;
-extern char** __argv;
 #endif
 
 #include <engine/config.h>
@@ -20,8 +18,33 @@ extern char** __argv;
 #include <exception>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace {
+
+#ifdef _WIN32
+void enableProcessDpiAwareness() {
+    using SetDpiContextFn = BOOL(WINAPI*)(HANDLE);
+    if (HMODULE user32 = LoadLibraryW(L"user32.dll")) {
+        if (auto setContext = reinterpret_cast<SetDpiContextFn>(GetProcAddress(user32, "SetProcessDpiAwarenessContext"))) {
+            (void)setContext(reinterpret_cast<HANDLE>(-4)); // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+            FreeLibrary(user32);
+            return;
+        }
+        FreeLibrary(user32);
+    }
+    (void)SetProcessDPIAware();
+}
+
+std::string wideToUtf8(const std::wstring& wide) {
+    if (wide.empty()) return {};
+    const int needed = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), static_cast<int>(wide.size()), nullptr, 0, nullptr, nullptr);
+    if (needed <= 0) return {};
+    std::string out(static_cast<std::size_t>(needed), '\0');
+    (void)WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), static_cast<int>(wide.size()), out.data(), needed, nullptr, nullptr);
+    return out;
+}
+#endif
 
 int runApplication(int argc, char** argv) {
 #ifdef _WIN32
@@ -31,6 +54,7 @@ int runApplication(int argc, char** argv) {
         return 2;
     }
 
+    enableProcessDpiAwareness();
     SDL_SetMainReady();
 #endif
     engine::Logger::instance().setLevel(engine::LogLevel::Info);
@@ -103,7 +127,26 @@ int main(int argc, char** argv) {
 }
 
 #ifdef _WIN32
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-    return main(__argc, __argv);
+int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
+    int argc = 0;
+    LPWSTR* argvWide = CommandLineToArgvW(GetCommandLineW(), &argc);
+    if (!argvWide || argc <= 0) {
+        return runApplication(0, nullptr);
+    }
+
+    std::vector<std::string> utf8Storage;
+    utf8Storage.reserve(static_cast<std::size_t>(argc));
+    std::vector<char*> argv;
+    argv.reserve(static_cast<std::size_t>(argc));
+
+    for (int i = 0; i < argc; ++i) {
+        utf8Storage.push_back(wideToUtf8(argvWide[i] ? argvWide[i] : L""));
+    }
+    for (std::string& arg : utf8Storage) {
+        argv.push_back(arg.data());
+    }
+
+    LocalFree(argvWide);
+    return runApplication(argc, argv.data());
 }
 #endif

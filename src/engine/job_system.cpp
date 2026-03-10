@@ -13,8 +13,13 @@ JobSystem::JobSystem(std::size_t workerCount) {
     }
 }
 
-JobSystem::~JobSystem() {
-    stop_ = true;
+JobSystem::~JobSystem() { shutdown(); }
+
+void JobSystem::shutdown() {
+    bool expected = false;
+    if (!stop_.compare_exchange_strong(expected, true)) {
+        return;
+    }
     cv_.notify_all();
 
     for (auto& worker : workers_) {
