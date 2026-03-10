@@ -3,6 +3,7 @@
 
 #include <SDL.h>
 
+#include <array>
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -23,6 +24,10 @@ double runBulletStress(const std::uint32_t bulletCount, const int ticks) {
         ps.beginTick();
         ps.updateMotion(1.0F / 60.0F);
         ps.buildGrid();
+        const engine::CollisionTarget playerTarget {.pos = {500.0F, 500.0F}, .radius = 8.0F, .id = 0U, .team = 0U};
+        std::array<engine::CollisionEvent, 60000> events {};
+        std::uint32_t eventCount = 0;
+        ps.resolveCollisions(std::span<const engine::CollisionTarget>(&playerTarget, 1), events, eventCount);
     }
     const auto t1 = Clock::now();
     return std::chrono::duration<double, std::milli>(t1 - t0).count();
@@ -41,6 +46,10 @@ double runCollisionHeavy(const std::uint32_t bulletCount, const int ticks) {
         ps.beginTick();
         ps.updateMotion(1.0F / 60.0F);
         ps.buildGrid();
+        const engine::CollisionTarget playerTarget {.pos = {0.0F, 0.0F}, .radius = 12.0F, .id = 0U, .team = 0U};
+        std::array<engine::CollisionEvent, 60000> events {};
+        std::uint32_t eventCount = 0;
+        ps.resolveCollisions(std::span<const engine::CollisionTarget>(&playerTarget, 1), events, eventCount);
     }
     const auto t1 = Clock::now();
     return std::chrono::duration<double, std::milli>(t1 - t0).count();
