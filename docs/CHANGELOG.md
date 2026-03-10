@@ -1,3 +1,7 @@
+## Unreleased
+### Fixed
+- Fixed MSVC `/W4 /WX` build breaks caused by warnings inside vendored `stb_image.h`/`stb_truetype.h` when compiling `src/stb_impl.cpp` by scoping `/WX-` only to that translation unit in CMake; first-party engine code remains under strict warnings-as-errors.
+
 ## 2026-03-10
 - Fixed MSVC `/W4 /WX` compile failure in `src/engine/patterns.cpp` (C4244 unsigned-to-`uint8_t` narrowing) by clamping and explicit safe casts for `maxBounces`, `splitCount`, `explodeShards`, and `beamSegmentSamples`.
 

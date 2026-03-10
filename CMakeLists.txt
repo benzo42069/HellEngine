@@ -213,6 +213,12 @@ add_library(engine_core STATIC
   third_party/glad/src/glad.cpp
 )
 
+if(MSVC)
+  # Keep strict /W4 /WX for first-party engine sources while allowing vendor stb
+  # warnings to remain warnings in their dedicated implementation TU.
+  set_source_files_properties(src/stb_impl.cpp PROPERTIES COMPILE_OPTIONS "/WX-")
+endif()
+
 target_include_directories(engine_core
   PUBLIC
     include
