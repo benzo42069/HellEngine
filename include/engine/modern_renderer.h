@@ -81,6 +81,25 @@ class RendererModernPipeline {
     [[nodiscard]] const PostFxSettings& postFx() const;
 
   private:
+    struct UniformLocations {
+        GLint sceneTex {-1};
+        GLint bloomTex {-1};
+        GLint mode {-1};
+        GLint bloomThreshold {-1};
+        GLint bloomIntensity {-1};
+        GLint texelSize {-1};
+        GLint vignetteIntensity {-1};
+        GLint vignetteRoundness {-1};
+        GLint exposure {-1};
+        GLint contrast {-1};
+        GLint saturation {-1};
+        GLint gamma {-1};
+        GLint chromaticAberration {-1};
+        GLint filmGrain {-1};
+        GLint scanlineIntensity {-1};
+        GLint time {-1};
+    };
+
     struct RenderTarget {
         GLuint fbo {0};
         GLuint colorTex {0};
@@ -101,6 +120,7 @@ class RendererModernPipeline {
     void runBloomPass();
     void runVignettePass(GLuint inputTex, GLuint outputFbo);
     void runCompositePass(GLuint inputTex, GLuint outputFbo);
+    void cacheUniformLocations();
     void drawBloomLiteFallback();
     void drawVignetteFallback();
     void drawColorGradeFallback();
@@ -116,6 +136,9 @@ class RendererModernPipeline {
     RenderTarget sceneBuffer_ {};
     RenderTarget bloomBuffer_ {};
     RenderTarget outputBuffer_ {};
+    UniformLocations bloomLoc_ {};
+    UniformLocations vignetteLoc_ {};
+    UniformLocations compositeLoc_ {};
 
     SDL_Texture* sceneTargetFallback_ {nullptr};
     SDL_Texture* bloomTargetFallback_ {nullptr};

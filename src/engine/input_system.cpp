@@ -25,10 +25,13 @@ void InputSystem::processEvent(const SDL_Event& event) {
         return;
     }
 
-    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_u) {
-        upgradeNavCallback_(UpgradeNavAction::ToggleScreen);
-    }
     if (event.type == SDL_KEYDOWN) {
+        if (event.key.repeat != 0) {
+            return;
+        }
+        if (event.key.keysym.sym == SDLK_u) {
+            upgradeNavCallback_(UpgradeNavAction::ToggleScreen);
+        }
         if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_a) upgradeNavCallback_(UpgradeNavAction::MoveLeft);
         if (event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_d) upgradeNavCallback_(UpgradeNavAction::MoveRight);
         if (event.key.keysym.sym == SDLK_1) upgradeNavCallback_(UpgradeNavAction::SelectSlot1);

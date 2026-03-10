@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <functional>
 #include <future>
+#include <stdexcept>
 #include <mutex>
 #include <queue>
 #include <thread>
@@ -16,6 +17,8 @@ class JobSystem {
   public:
     explicit JobSystem(std::size_t workerCount = std::thread::hardware_concurrency());
     ~JobSystem();
+
+    void shutdown();
 
     JobSystem(const JobSystem&) = delete;
     JobSystem& operator=(const JobSystem&) = delete;
@@ -29,6 +32,9 @@ class JobSystem {
 
         {
             std::scoped_lock lock(mutex_);
+            if (stop_.load()) {
+                throw std::runtime_error("JobSystem is shutting down; enqueue rejected");
+            }
             jobs_.push([task]() { (*task)(); });
         }
 

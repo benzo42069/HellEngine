@@ -12,6 +12,7 @@
 #include <cmath>
 #include <fstream>
 #include <iterator>
+#include <limits>
 #include <numbers>
 
 namespace engine {
@@ -188,6 +189,9 @@ void SpriteBatch::flush(SDL_Renderer* renderer, const TextureStore& textures) {
 
     auto flushGroup = [&](const TextureResource* texture) {
         if (!texture || vertices_.empty()) return;
+        if (vertices_.size() > static_cast<std::size_t>(std::numeric_limits<int>::max()) || indices_.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+            return;
+        }
         SDL_RenderGeometry(renderer, texture->texture, vertices_.data(), static_cast<int>(vertices_.size()), indices_.data(), static_cast<int>(indices_.size()));
         ++lastStats_.batchFlushes;
         vertices_.clear();

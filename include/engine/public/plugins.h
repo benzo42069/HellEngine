@@ -67,9 +67,9 @@ bool unregisterToolPanelPlugin(const std::string& pluginId);
 
 void clearRegisteredPlugins();
 
-const std::vector<IShaderPackPlugin*>& shaderPackPlugins();
-const std::vector<IContentPackPlugin*>& contentPackPlugins();
-const std::vector<IToolPanelPlugin*>& toolPanelPlugins();
+std::vector<IShaderPackPlugin*> shaderPackPlugins();
+std::vector<IContentPackPlugin*> contentPackPlugins();
+std::vector<IToolPanelPlugin*> toolPanelPlugins();
 
 // Returns true when plugin target version is accepted by current runtime policy.
 bool isPluginTargetCompatible(const PluginMetadata& metadata);
