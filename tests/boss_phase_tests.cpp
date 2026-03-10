@@ -4,6 +4,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <array>
 #include <vector>
 
 TEST_CASE("Boss phases emit runtime events and rewards") {
@@ -41,8 +42,18 @@ TEST_CASE("Boss phases emit runtime events and rewards") {
     engine::ProjectileSystem proj;
     proj.initialize(4096, 420.0F, 32, 18);
 
+    const std::array<engine::CollisionTarget, 1> playerTarget {
+        engine::CollisionTarget {.pos = {0.0F, 0.0F}, .radius = 12.0F, .id = 0U, .team = 0U},
+    };
+    std::array<engine::CollisionEvent, 2048> events {};
+
     for (int i = 0; i < 30; ++i) {
+        proj.beginTick();
         sys.update(1.0F / 60.0F, proj, {0.0F, 0.0F});
+        proj.updateMotion(1.0F / 60.0F);
+        proj.buildGrid();
+        std::uint32_t eventCount = 0;
+        proj.resolveCollisions(playerTarget, events, eventCount);
     }
     REQUIRE(proj.stats().activeCount == 0);
 
@@ -50,13 +61,17 @@ TEST_CASE("Boss phases emit runtime events and rewards") {
     bool sawHazardSync = false;
     bool sawBossDefeatedEvent = false;
     for (int i = 0; i < 220; ++i) {
+        proj.beginTick();
         sys.update(1.0F / 60.0F, proj, {0.0F, 0.0F});
         for (const engine::EntityRuntimeEvent& evt : sys.runtimeEvents()) {
             if (evt.type == engine::EntityRuntimeEventType::Telegraph) sawTelegraph = true;
             if (evt.type == engine::EntityRuntimeEventType::HazardSync) sawHazardSync = true;
             if (evt.type == engine::EntityRuntimeEventType::BossDefeated) sawBossDefeatedEvent = true;
         }
-        proj.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
+        proj.updateMotion(1.0F / 60.0F);
+        proj.buildGrid();
+        std::uint32_t eventCount = 0;
+        proj.resolveCollisions(playerTarget, events, eventCount);
     }
 
     const auto& stats = sys.stats();

@@ -1,5 +1,6 @@
 ## Unreleased
 ### Fixed
+- Migrated deprecated projectile test usage to the explicit tick pipeline in `tests/projectile_tests.cpp`, `tests/entity_tests.cpp`, and `tests/boss_phase_tests.cpp` (`beginTick()` -> `updateMotion()` -> `buildGrid()` -> `resolveCollisions(...)`) so C4996 from `ProjectileSystem::update(...)` no longer fails `/W4 /WX` builds.
 - Fixed MSVC `/W4 /WX` build breaks caused by warnings inside vendored `stb_image.h`/`stb_truetype.h` when compiling `src/stb_impl.cpp` by scoping `/WX-` only to that translation unit in CMake; first-party engine code remains under strict warnings-as-errors.
 
 ## 2026-03-10
