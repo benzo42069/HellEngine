@@ -7,7 +7,6 @@
 
 extern int __argc;
 extern char** __argv;
-#include <SDL.h>
 #endif
 
 #include <engine/config.h>
@@ -17,7 +16,6 @@ extern char** __argv;
 #include <engine/runtime.h>
 #include <engine/version.h>
 
-#include <filesystem>
 #include <atomic>
 #include <exception>
 #include <filesystem>
@@ -27,9 +25,9 @@ namespace {
 
 int runApplication(int argc, char** argv) {
 #ifdef _WIN32
-    static std::atomic_flag mainEntered = ATOMIC_FLAG_INIT;
-    if (mainEntered.test_and_set()) {
-        engine::logError("Detected recursive entry into main on Windows; aborting to prevent stack overflow.");
+    static std::atomic_flag entryInProgress = ATOMIC_FLAG_INIT;
+    if (entryInProgress.test_and_set()) {
+        engine::logError("Detected recursive process entry on Windows; aborting to prevent stack overflow.");
         return 2;
     }
 
@@ -106,7 +104,6 @@ int main(int argc, char** argv) {
 
 #ifdef _WIN32
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-    SDL_SetMainReady();
-    return runApplication(__argc, __argv);
+    return main(__argc, __argv);
 }
 #endif
