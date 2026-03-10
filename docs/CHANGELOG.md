@@ -1,3 +1,6 @@
+## 2026-03-10
+- Fixed MSVC `/W4 /WX` compile failure in `src/engine/patterns.cpp` (C4244 unsigned-to-`uint8_t` narrowing) by clamping and explicit safe casts for `maxBounces`, `splitCount`, `explodeShards`, and `beamSegmentSamples`.
+
 ## 2026-03-09 - Shared test helper: systemic Catch main rule
 - Fixed unresolved `main` / `LNK1120` failures across remaining test executables by updating shared CMake test creation logic.
 - Root cause: Catch classification relied on include matching and per-target force-lists, allowing Catch-based targets to miss `Catch2::Catch2WithMain`.

@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <numbers>
 #include <unordered_map>
+#include <limits>
 
 namespace engine {
 
@@ -54,13 +55,19 @@ PatternLayer parseLayer(const nlohmann::json& item) {
         layer.projectileBehavior.curvedAngularVelocityDegPerSec = b.value("curvedAngularVelocityDegPerSec", 0.0F);
         layer.projectileBehavior.accelerationPerSec = b.value("accelerationPerSec", 0.0F);
         layer.projectileBehavior.dragPerSec = b.value("dragPerSec", 0.0F);
-        layer.projectileBehavior.maxBounces = b.value("maxBounces", 0U);
-        layer.projectileBehavior.splitCount = b.value("splitCount", 0U);
+        constexpr unsigned kMaxByte = static_cast<unsigned>(std::numeric_limits<std::uint8_t>::max());
+        const unsigned maxBounces = std::clamp(b.value("maxBounces", 0U), 0U, kMaxByte);
+        const unsigned splitCount = std::clamp(b.value("splitCount", 0U), 0U, kMaxByte);
+        const unsigned explodeShards = std::clamp(b.value("explodeShards", 0U), 0U, kMaxByte);
+        const unsigned beamSegmentSamples = std::clamp(b.value("beamSegmentSamples", 0U), 0U, kMaxByte);
+
+        layer.projectileBehavior.maxBounces = static_cast<std::uint8_t>(maxBounces);
+        layer.projectileBehavior.splitCount = static_cast<std::uint8_t>(splitCount);
         layer.projectileBehavior.splitAngleSpreadDeg = b.value("splitAngleSpreadDeg", 0.0F);
         layer.projectileBehavior.splitDelaySeconds = b.value("splitDelaySeconds", 0.0F);
         layer.projectileBehavior.explodeRadius = b.value("explodeRadius", 0.0F);
-        layer.projectileBehavior.explodeShards = b.value("explodeShards", 0U);
-        layer.projectileBehavior.beamSegmentSamples = b.value("beamSegmentSamples", 0U);
+        layer.projectileBehavior.explodeShards = static_cast<std::uint8_t>(explodeShards);
+        layer.projectileBehavior.beamSegmentSamples = static_cast<std::uint8_t>(beamSegmentSamples);
         layer.projectileBehavior.beamDurationSeconds = b.value("beamDurationSeconds", 0.0F);
     }
     if (item.contains("modifiers")) {
