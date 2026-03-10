@@ -2,6 +2,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <array>
+
 TEST_CASE("Projectile system deterministic burst simulation", "[projectile]") {
     engine::ProjectileSystem systemA;
     engine::ProjectileSystem systemB;
@@ -12,9 +14,24 @@ TEST_CASE("Projectile system deterministic burst simulation", "[projectile]") {
     systemA.spawnRadialBurst(10000, 90.0F, 3.0F, 42);
     systemB.spawnRadialBurst(10000, 90.0F, 3.0F, 42);
 
+    const std::array<engine::CollisionTarget, 1> playerTarget {
+        engine::CollisionTarget {.pos = {0.0F, 0.0F}, .radius = 12.0F, .id = 0U, .team = 0U},
+    };
+    std::array<engine::CollisionEvent, 1024> eventsA {};
+    std::array<engine::CollisionEvent, 1024> eventsB {};
+
     for (int i = 0; i < 180; ++i) {
-        systemA.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
-        systemB.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
+        systemA.beginTick();
+        systemA.updateMotion(1.0F / 60.0F);
+        systemA.buildGrid();
+        std::uint32_t eventCountA = 0;
+        systemA.resolveCollisions(playerTarget, eventsA, eventCountA);
+
+        systemB.beginTick();
+        systemB.updateMotion(1.0F / 60.0F);
+        systemB.buildGrid();
+        std::uint32_t eventCountB = 0;
+        systemB.resolveCollisions(playerTarget, eventsB, eventCountB);
     }
 
     const auto& a = systemA.stats();

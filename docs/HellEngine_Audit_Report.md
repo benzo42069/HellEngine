@@ -1,3 +1,8 @@
+## Audit Update — 2026-03-10 (Projectile Test API Migration)
+- Root cause confirmed: deprecated `ProjectileSystem::update(...)` remained in `tests/projectile_tests.cpp`, `tests/entity_tests.cpp`, and `tests/boss_phase_tests.cpp`; with `/W4 /WX`, C4996 became a hard build failure.
+- Applied minimal migration to explicit production pipeline in each affected test loop: `beginTick()` -> `updateMotion()` -> `buildGrid()` -> `resolveCollisions(...)` using an explicit player collision target.
+- Outcome: deprecated API usage removed from all three affected tests while preserving existing test intent and assertions.
+
 ## Audit Update — 2026-03-09 (Tests/CMake Main Ownership)
 - Root cause confirmed in shared helper logic: Catch enablement was inferred via include-text scanning and supplemented by force-listed targets, which left non-matching Catch tests vulnerable to linking without an entrypoint (`main` unresolved/LNK1120).
 - Systemic rule adopted: executable ownership of `main()` is the only classifier. If test source defines `main()`, it is standalone; otherwise the target links `Catch2::Catch2WithMain` and uses Catch discovery.
