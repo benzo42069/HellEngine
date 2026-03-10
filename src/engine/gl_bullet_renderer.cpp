@@ -100,23 +100,7 @@ void GlBulletRenderer::shutdown() {
 }
 
 void GlBulletRenderer::buildVertexBuffer(
-    const float* posX,
-    const float* posY,
-    const float* velX,
-    const float* velY,
-    const float* radius,
-    const float* life,
-    const std::uint8_t* paletteIndex,
-    const std::uint8_t* shape,
-    const std::uint8_t* active,
-    const std::uint8_t* allegiance,
-    const std::uint8_t* enableTrails,
-    const float* trailX,
-    const float* trailY,
-    const std::uint8_t* trailHead,
-    const std::uint8_t trailLength,
-    const std::uint32_t* activeIndices,
-    const std::uint32_t activeCount,
+    const ProjectileSoAView& view,
     const Camera2D& camera,
     const GrayscaleSpriteAtlas& atlas,
     const PaletteRampTexture& paletteRamp,
@@ -124,8 +108,8 @@ void GlBulletRenderer::buildVertexBuffer(
     const GradientAnimator& gradientAnimator,
     const float simClock
 ) {
-    (void)velX;
-    (void)velY;
+    (void)view.velX;
+    (void)view.velY;
     if (!initialized()) return;
 
     quadCount_ = 0;
@@ -158,35 +142,52 @@ void GlBulletRenderer::buildVertexBuffer(
         ++quadCount_;
     };
 
-    for (std::uint32_t j = 0; j < activeCount; ++j) {
-        const std::uint32_t i = activeIndices[j];
-        if (active[i] == 0) continue;
+    const std::size_t soaSize = std::min({
+        view.posX.size(),
+        view.posY.size(),
+        view.radius.size(),
+        view.life.size(),
+        view.paletteIndex.size(),
+        view.shape.size(),
+        view.active.size(),
+        view.allegiance.size(),
+        view.enableTrails.size(),
+        view.trailHead.size(),
+    });
 
-        const std::uint8_t palette = paletteIndex[i];
+    for (std::uint32_t j = 0; j < view.activeCount && j < view.activeIndices.size(); ++j) {
+        const std::uint32_t i = view.activeIndices[j];
+        if (i >= maxBullets_ || i >= soaSize) continue;
+        if (view.active[i] == 0) continue;
+
+        const std::uint8_t palette = view.paletteIndex[i];
         std::array<float, 4> color;
         if (palette > 0) {
             const PaletteAnimationSettings& anim = paletteRamp.animationFor(palette);
             if (anim.mode != PaletteAnimationMode::None) {
-                color = toLinearColor(gradientAnimator.sample(palette, simClock, life[i], i));
+                color = toLinearColor(gradientAnimator.sample(palette, simClock, view.life[i], i));
             } else {
                 color = toLinearColor(paletteTable.get(palette).core);
             }
         } else {
-            const bool enemy = allegiance[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy);
+            const bool enemy = view.allegiance[i] == static_cast<std::uint8_t>(ProjectileAllegiance::Enemy);
             color = enemy ? std::array<float, 4> {1.0F, 220.0F / 255.0F, 120.0F / 255.0F, 220.0F / 255.0F}
                           : std::array<float, 4> {120.0F / 255.0F, 220.0F / 255.0F, 1.0F, 220.0F / 255.0F};
         }
 
-        const SpriteAtlasRegion uv = atlas.region(decodeShape(shape[i]));
-        const Vec2 screen = camera.worldToScreen({posX[i], posY[i]});
-        const float screenRadius = radius[i] * camera.zoom();
+        const SpriteAtlasRegion uv = atlas.region(decodeShape(view.shape[i]));
+        const Vec2 screen = camera.worldToScreen({view.posX[i], view.posY[i]});
+        const float screenRadius = view.radius[i] * camera.zoom();
 
-        if (enableTrails[i] != 0) {
-            const std::uint32_t trailBase = i * trailLength;
-            for (std::uint8_t t = 0; t < trailLength; ++t) {
-                const std::uint8_t idx = static_cast<std::uint8_t>((trailHead[i] + t) % trailLength);
-                const float tx = trailX[trailBase + idx];
-                const float ty = trailY[trailBase + idx];
+        if (view.enableTrails[i] != 0 && view.trailLength > 0) {
+            const std::uint32_t trailBase = i * view.trailLength;
+            if (trailBase + view.trailLength > view.trailX.size() || trailBase + view.trailLength > view.trailY.size()) {
+                continue;
+            }
+            for (std::uint8_t t = 0; t < view.trailLength; ++t) {
+                const std::uint8_t idx = static_cast<std::uint8_t>((view.trailHead[i] + t) % view.trailLength);
+                const float tx = view.trailX[trailBase + idx];
+                const float ty = view.trailY[trailBase + idx];
                 if (tx == 0.0F && ty == 0.0F) continue;
 
                 const float alpha = 0.15F + 0.15F * static_cast<float>(t);

@@ -13,10 +13,42 @@
 #include <chrono>
 #include <functional>
 #include <sstream>
+#include <string_view>
 
 namespace engine {
 
 namespace {
+
+#ifndef NDEBUG
+void APIENTRY glDebugMessageCallbackBridge(
+    GLenum,
+    GLenum,
+    GLuint,
+    GLenum severity,
+    GLsizei,
+    const GLchar* message,
+    const void*
+) {
+    if (!message) return;
+    if (severity == GL_DEBUG_SEVERITY_HIGH || severity == GL_DEBUG_SEVERITY_MEDIUM) {
+        logError(std::string("GL debug: ") + message);
+    } else {
+        logWarn(std::string("GL debug: ") + message);
+    }
+}
+#endif
+
+bool checkGlError(const std::string_view stage) {
+    bool ok = true;
+    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
+        ok = false;
+        std::ostringstream os;
+        os << "OpenGL error 0x" << std::hex << err << " at " << stage;
+        logError(os.str());
+    }
+    return ok;
+}
+
 constexpr const char* kBulletShaderName = "bullet";
 constexpr const char* kBulletVertPath = "assets/shaders/bullet_vs.glsl";
 constexpr const char* kBulletFragPath = "assets/shaders/bullet_fs.glsl";
@@ -78,8 +110,17 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
                 glReady_ = true;
                 SDL_GL_SetSwapInterval(1);
                 logInfo(std::string("OpenGL initialized: ") + reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+#ifndef NDEBUG
+                if (GLAD_GL_KHR_debug || GLAD_GL_VERSION_4_3) {
+                    glEnable(GL_DEBUG_OUTPUT);
+                    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+                    glDebugMessageCallback(glDebugMessageCallbackBridge, nullptr);
+                }
+#endif
                 (void)shaderCache_.compileFromFiles(kBulletShaderName, kBulletVertPath, kBulletFragPath);
+                (void)checkGlError("shader cache compile");
                 (void)spriteAtlas_.generate(32);
+                (void)checkGlError("sprite atlas generation");
             } else {
                 logWarn("GLAD initialization failed. Falling back to SDL_Renderer-only path.");
             }
@@ -115,6 +156,7 @@ bool RenderPipeline::initialize(SDL_Window* window, const EngineConfig& config, 
             logWarn("OpenGL bullet renderer init failed: " + bulletError + " Falling back to SpriteBatch bullets.");
             glBulletRenderer_.shutdown();
         }
+        (void)checkGlError("bullet renderer init");
     }
     spriteBatch_.reserve(config_.projectileCapacity + 2048);
 
@@ -290,23 +332,25 @@ void RenderPipeline::buildSceneOverlay(const SimSnapshot& snapshot, const double
         const auto& trailHead = s.projectiles_.trailHead();
         const auto& activeIndices = s.projectiles_.activeIndices();
         glBulletRenderer_.buildVertexBuffer(
-            posX.data(),
-            posY.data(),
-            velX.data(),
-            velY.data(),
-            radius.data(),
-            life.data(),
-            paletteIndex.data(),
-            shape.data(),
-            active.data(),
-            allegiance.data(),
-            enableTrails.data(),
-            trailX.data(),
-            trailY.data(),
-            trailHead.data(),
-            ProjectileSystem::kTrailLength,
-            activeIndices.data(),
-            s.projectiles_.activeCount(),
+            GlBulletRenderer::ProjectileSoAView {
+                .posX = posX,
+                .posY = posY,
+                .velX = velX,
+                .velY = velY,
+                .radius = radius,
+                .life = life,
+                .paletteIndex = paletteIndex,
+                .shape = shape,
+                .active = active,
+                .allegiance = allegiance,
+                .enableTrails = enableTrails,
+                .trailX = trailX,
+                .trailY = trailY,
+                .trailHead = trailHead,
+                .trailLength = ProjectileSystem::kTrailLength,
+                .activeIndices = activeIndices,
+                .activeCount = s.projectiles_.activeCount(),
+            },
             camera_,
             spriteAtlas_,
             paletteRamp_,
@@ -354,6 +398,7 @@ void RenderPipeline::renderFrame(const SimSnapshot& snapshot, const double frame
     spriteBatch_.flush(renderer_, *textures_);
     if (resolveProjectileRenderPath(snapshot.session) == ProjectileRenderPath::GlInstanced) {
         glBulletRenderer_.render(camera_, static_cast<float>(snapshot.session.simulation_.simClock), spriteAtlas_, paletteRamp_, camera_.viewportWidth(), camera_.viewportHeight());
+        (void)checkGlError("bullet renderer draw");
     }
     debugDraw_.flush(renderer_, camera_);
     snapshot.session.renderDangerFieldOverlay(renderer_, camera_);

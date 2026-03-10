@@ -2,6 +2,7 @@
 
 #include <engine/public/plugins.h>
 
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -20,5 +21,6 @@ struct PluginRegistry {
 };
 
 PluginRegistry& pluginRegistry();
+std::mutex& pluginRegistryMutex();
 
 } // namespace engine::internal

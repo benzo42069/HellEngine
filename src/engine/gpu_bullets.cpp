@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <limits>
 #include <cmath>
 #include <numbers>
 
@@ -145,6 +146,9 @@ void CpuMassBulletRenderSystem::render(SDL_Renderer* renderer, const Camera2D& c
     }
 
     if (!vertices_.empty() && !indices_.empty()) {
+        if (vertices_.size() > static_cast<std::size_t>(std::numeric_limits<int>::max()) || indices_.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+            return;
+        }
         SDL_RenderGeometry(renderer, texture->texture, vertices_.data(), static_cast<int>(vertices_.size()), indices_.data(), static_cast<int>(indices_.size()));
     }
 }

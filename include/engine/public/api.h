@@ -1,5 +1,6 @@
 #pragma once
 
+#include <engine/public/export.h>
 #include <engine/public/versioning.h>
 
 #include <cstdint>
@@ -15,7 +16,7 @@ struct EngineLaunchOptions {
     std::string contentPackPath {"content.pak"};
 };
 
-class EngineHost {
+class ENGINE_PUBLIC_API EngineHost {
   public:
     EngineHost();
     ~EngineHost();
@@ -30,6 +31,6 @@ class EngineHost {
     std::unique_ptr<Impl> impl_;
 };
 
-ApiVersion publicApiVersion();
+ENGINE_PUBLIC_API ApiVersion publicApiVersion();
 
 } // namespace engine::public_api
