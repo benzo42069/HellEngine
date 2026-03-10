@@ -189,7 +189,7 @@ void GlBulletRenderer::buildVertexBuffer(
                 const float ty = trailY[trailBase + idx];
                 if (tx == 0.0F && ty == 0.0F) continue;
 
-                const float alpha = 0.15F + 0.15F * static_cast<float>(t);
+                const float alpha = std::min(0.15F + 0.15F * static_cast<float>(t), 1.0F);
                 const float scale = 0.6F + 0.1F * static_cast<float>(t);
                 std::array<float, 4> trailColor;
                 if (palette == 0) {
@@ -218,6 +218,7 @@ void GlBulletRenderer::render(
 ) {
     (void)camera;
     if (!initialized() || quadCount_ == 0) return;
+    if (viewportWidth <= 0 || viewportHeight <= 0) return;
 
     const float left = 0.0F;
     const float right = static_cast<float>(viewportWidth);
