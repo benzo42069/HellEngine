@@ -1,6 +1,8 @@
 #include <engine/projectiles.h>
 
 #include <cstdint>
+
+#include <array>
 #include <cstdlib>
 #include <iostream>
 
@@ -13,7 +15,12 @@ std::uint64_t runScenario() {
 
     for (int i = 0; i < 300; ++i) {
         ps.beginTick();
-        ps.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
+        ps.updateMotion(1.0F / 60.0F);
+        ps.buildGrid();
+        const engine::CollisionTarget playerTarget {.pos = {0.0F, 0.0F}, .radius = 12.0F, .id = 0U, .team = 0U};
+        std::array<engine::CollisionEvent, 20000> events {};
+        std::uint32_t eventCount = 0;
+        ps.resolveCollisions(std::span<const engine::CollisionTarget>(&playerTarget, 1), events, eventCount);
     }
 
     return ps.debugStateHash();
