@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+#include <array>
+
 namespace {
 std::uint64_t runSimHash(const std::uint64_t seed) {
     engine::ProjectileSystem system;
@@ -13,7 +15,12 @@ std::uint64_t runSimHash(const std::uint64_t seed) {
     constexpr int kTicks = 240;
     for (int i = 0; i < kTicks; ++i) {
         system.beginTick();
-        system.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
+        system.updateMotion(1.0F / 60.0F);
+        system.buildGrid();
+        const engine::CollisionTarget playerTarget {.pos = {0.0F, 0.0F}, .radius = 12.0F, .id = 0U, .team = 0U};
+        std::array<engine::CollisionEvent, 4096> events {};
+        std::uint32_t eventCount = 0;
+        system.resolveCollisions(std::span<const engine::CollisionTarget>(&playerTarget, 1), events, eventCount);
     }
 
     return system.debugStateHash();

@@ -1,6 +1,7 @@
 #include <engine/defensive_special.h>
 #include <engine/projectiles.h>
 
+#include <array>
 #include <cstdlib>
 #include <iostream>
 
@@ -59,8 +60,17 @@ int main() {
     for (int t = 0; t < 180; ++t) {
         p1.beginTick();
         p2.beginTick();
-        p1.update(1.0F / 60.0F, {0.0F, 0.0F}, 10.0F, preset.enemyScale, preset.playerProjectileScale);
-        p2.update(1.0F / 60.0F, {0.0F, 0.0F}, 10.0F, preset.enemyScale, preset.playerProjectileScale);
+        p1.updateMotion(1.0F / 60.0F, preset.enemyScale, preset.playerProjectileScale);
+        p2.updateMotion(1.0F / 60.0F, preset.enemyScale, preset.playerProjectileScale);
+        p1.buildGrid();
+        p2.buildGrid();
+        const engine::CollisionTarget playerTarget {.pos = {0.0F, 0.0F}, .radius = 10.0F, .id = 0U, .team = 0U};
+        std::array<engine::CollisionEvent, 64> events1 {};
+        std::array<engine::CollisionEvent, 64> events2 {};
+        std::uint32_t eventCount1 = 0;
+        std::uint32_t eventCount2 = 0;
+        p1.resolveCollisions(std::span<const engine::CollisionTarget>(&playerTarget, 1), events1, eventCount1);
+        p2.resolveCollisions(std::span<const engine::CollisionTarget>(&playerTarget, 1), events2, eventCount2);
     }
     if (p1.debugStateHash() != p2.debugStateHash()) {
         std::cerr << "time dilation determinism hash mismatch\n";

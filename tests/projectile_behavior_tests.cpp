@@ -2,6 +2,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <array>
+
 TEST_CASE("Projectile behaviors remain deterministic", "[projectile][behavior]") {
     engine::ProjectileSystem a;
     engine::ProjectileSystem b;
@@ -49,8 +51,17 @@ TEST_CASE("Projectile behaviors remain deterministic", "[projectile][behavior]")
     for (int i = 0; i < 180; ++i) {
         a.beginTick();
         b.beginTick();
-        a.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
-        b.update(1.0F / 60.0F, {0.0F, 0.0F}, 12.0F);
+        a.updateMotion(1.0F / 60.0F);
+        b.updateMotion(1.0F / 60.0F);
+        a.buildGrid();
+        b.buildGrid();
+        const engine::CollisionTarget playerTarget {.pos = {0.0F, 0.0F}, .radius = 12.0F, .id = 0U, .team = 0U};
+        std::array<engine::CollisionEvent, 512> eventsA {};
+        std::array<engine::CollisionEvent, 512> eventsB {};
+        std::uint32_t eventCountA = 0;
+        std::uint32_t eventCountB = 0;
+        a.resolveCollisions(std::span<const engine::CollisionTarget>(&playerTarget, 1), eventsA, eventCountA);
+        b.resolveCollisions(std::span<const engine::CollisionTarget>(&playerTarget, 1), eventsB, eventCountB);
         hashA ^= a.debugStateHash() + static_cast<std::uint64_t>(i);
         hashB ^= b.debugStateHash() + static_cast<std::uint64_t>(i);
     }
