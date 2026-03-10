@@ -26,7 +26,6 @@ extern char** __argv;
 namespace {
 
 int runApplication(int argc, char** argv) {
-int main(int argc, char** argv) {
 #ifdef _WIN32
     static std::atomic_flag mainEntered = ATOMIC_FLAG_INIT;
     if (mainEntered.test_and_set()) {
